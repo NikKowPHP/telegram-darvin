@@ -215,7 +215,7 @@ This should consolidate everything correctly into `ai_dev_bot_platform/app/`. Af
     *   Action: Create an empty `__init__.py` file inside `ai_dev_bot_platform/app/background_tasks/`.
     *   Verification: Directory and `__init__.py` exist.
 
-*   `[ ]` **RF2.2: Create `ai_dev_bot_platform/tests/` Directory**
+*   `[x]` **RF2.2: Create `ai_dev_bot_platform/tests/` Directory**
     *   Action: Create the directory `tests` inside `ai_dev_bot_platform/`.
     *   Action: Create an empty `__init__.py` file inside `ai_dev_bot_platform/tests/` (optional for tests, but good practice).
     *   Verification: Directory exists.
