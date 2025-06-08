@@ -688,7 +688,7 @@ Let's begin.
         ```
     *   Verification: Bot responds differently to messages containing "plan" vs "implement".
 
-*   `[ ]` **P1.6: API Key Manager - Basic Structure**
+*   [x] **P1.6: API Key Manager - Basic Structure**
     *   File: `app/services/api_key_manager.py`
         *   Content:
             ```python
