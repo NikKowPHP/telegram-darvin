@@ -58,7 +58,9 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             
         await update.message.reply_text(
             f"Your current credit balance is: {user_db.credit_balance:.2f}\n"
-            f"Each credit is worth ${settings.PLATFORM_CREDIT_VALUE_USD:.4f}"
+            f"Each credit is worth ${settings.PLATFORM_CREDIT_VALUE_USD:.4f}\n\n"
+            "To purchase more credits, please visit our website (TODO: add link) "
+            "or contact support."
         )
     except Exception as e:
         logger.error(f"Error in credits_command for user {user_tg.id}: {e}", exc_info=True)
