@@ -1203,7 +1203,7 @@ Let's begin.
      *   Action: Add to `init_db.py` and run.
      *   Verification: Table created.
 
-*   `[ ]` **P2.8: `project_file_service.py` CRUD Operations**
+*   `[x]` **P2.8: `project_file_service.py` CRUD Operations**
      *   File: `app/services/project_file_service.py`
          *   Content: Basic CRUD (create, get by path, get all for project, update content).
      *   Verification: Service file created.
