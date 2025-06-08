@@ -502,7 +502,7 @@ This `implementation_todo.md` will assume:
     *   Action: Add to `init_db.py` and have human re-run.
     *   Verification: Model and schema files created. Table `credit_transactions` exists.
 
-*   `[ ]` **P4.4: Create `ModelPricingService`**
+*   `[x]` **P4.4: Create `ModelPricingService`**
     *   File: `app/services/billing_service.py` (new file, or merge services logically)
     *   Action:
         ```python
@@ -531,7 +531,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: Service class and methods created.
 
-*   `[ ]` **P4.5: Create `APIKeyUsageService`**
+*   `[x]` **P4.5: Create `APIKeyUsageService`**
     *   File: `app/services/billing_service.py` (or a new `api_usage_service.py`)
     *   Action:
         ```python
