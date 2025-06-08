@@ -9,7 +9,7 @@ This TODO list breaks tasks down into extremely small, explicit steps.
 
 **Instructions for Roo (the 4B LLM):**
 1.  Implement one task (marked `[ ]`) at a time.
-2.  After successfully implementing a task and verifying it, change `[ ]` to `[x]` for that task in *this* file (`fixit_todo.md`).
+2.  After successfully implementing a task and verifying it, change `[ ]` to `[x]` for that task in *this* file (`implementation_todo.md.md`).
 3.  Save this file.
 4.  Only proceed to the next task.
 
@@ -25,13 +25,13 @@ This TODO list breaks tasks down into extremely small, explicit steps.
         2.  Create an empty file named `ai_dev_bot_platform/app/api/__init__.py`.
     *   Verification: The directory `ai_dev_bot_platform/app/api/` exists and contains an empty `__init__.py` file.
 
-*   `[x]` **FIX1.2: Create `app/background_tasks/` directory and `__init__.py`**
+*   `[ ]` **FIX1.2: Create `app/background_tasks/` directory and `__init__.py`**
     *   Action:
         1.  Create the directory `ai_dev_bot_platform/app/background_tasks/`.
         2.  Create an empty file named `ai_dev_bot_platform/app/background_tasks/__init__.py`.
     *   Verification: The directory `ai_dev_bot_platform/app/background_tasks/` exists and contains an empty `__init__.py` file. (This addresses part of RF2.1)
 
-*   `[x]` **FIX1.3: Create `config/` directory (project root level for platform config)**
+*   `[ ]` **FIX1.3: Create `config/` directory (project root level for platform config)**
     *   Action: Create the directory `ai_dev_bot_platform/config/`.
     *   Verification: The directory `ai_dev_bot_platform/config/` exists.
 
@@ -147,13 +147,13 @@ This TODO list breaks tasks down into extremely small, explicit steps.
 
 **Goal:** Correct the status of specific tasks in the main `implementation_todo.md` file based on the verification summary.
 
-*   `[ ]` **FIX4.1: Mark P1.6 in `todos/implementation_todo.md` as Complete `[x]`**
+*   `[x]` **FIX4.1: Mark P1.6 in `todos/implementation_todo.md` as Complete `[x]`**
     *   File: `todos/implementation_todo.md`
     *   Action: Locate the line for task `P1.6: API Key Manager - Basic Structure`. Change `[ ]` to `[x]`.
     *   Line should become: `*   [x]` **P1.6: API Key Manager - Basic Structure**
     *   Verification: The line for P1.6 in `todos/implementation_todo.md` is correctly marked `[x]`.
 
-*   `[ ]` **FIX4.2: Mark RF2.1 in `todos/implementation_todo.md` as Incomplete `[ ]`**
+*   `[x]` **FIX4.2: Mark RF2.1 in `todos/implementation_todo.md` as Incomplete `[ ]`**
     *   File: `todos/implementation_todo.md`
     *   Action: Locate the line for task `RF2.1: Create ai_dev_bot_platform/app/background_tasks/ Directory`. Change `[x]` to `[ ]` because FIX1.2 addresses this. (Actually, this task in `implementation_todo.md` *was* marked as `[x]` but the directory was missing. Now that FIX1.2 will create it, this task from the *old* todo can be considered fulfilled by proxy, or more accurately, FIX1.2 made RF2.1 truly complete. Let's align: if FIX1.2 is done, RF2.1 in the *old* `implementation_todo.md` should remain `[x]` or be confirmed as `[x]` if it wasn't).
     *   **Clarification for Roo:** If FIX1.2 was successfully completed, the goal of RF2.1 *is* now met. Ensure the line for RF2.1 in `todos/implementation_todo.md` is `[x]`.
@@ -182,5 +182,5 @@ This TODO list breaks tasks down into extremely small, explicit steps.
 
 ---
 
-**End of `fixit_todo.md`.**
+**End of `implementation_todo.md.md`.**
 ```
