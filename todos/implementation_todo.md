@@ -551,7 +551,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: Service class and method created.
 
-*   `[ ]` **P4.6: Create `CreditTransactionService`**
+*   `[x]` **P4.6: Create `CreditTransactionService`**
     *   File: `app/services/billing_service.py` (or a new `transaction_service.py`)
     *   Action:
         ```python

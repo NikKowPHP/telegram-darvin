@@ -1,6 +1,10 @@
 from sqlalchemy.orm import Session
 from app.models.api_key_models import ModelPricing
 from app.schemas.api_key_schemas import ModelPricingCreate, ModelPricingUpdate
+from app.models.api_key_models import APIKeyUsage
+from app.schemas.api_key_schemas import APIKeyUsageCreate
+from app.models.transaction import CreditTransaction
+from app.schemas.transaction import CreditTransactionCreate
 from typing import Optional, List
 
 class ModelPricingService:
@@ -17,23 +21,6 @@ class ModelPricingService:
         db.commit()
         db.refresh(db_pricing)
         return db_pricing
-    
-    def update_pricing(self, db: Session, pricing_id: int, pricing_in: ModelPricingUpdate) -> Optional[ModelPricing]:
-        db_pricing = db.query(ModelPricing).filter(ModelPricing.id == pricing_id).first()
-        if not db_pricing:
-            return None
-            
-        update_data = pricing_in.model_dump(exclude_unset=True)
-        for field, value in update_data.items():
-            setattr(db_pricing, field, value)
-            
-        db.add(db_pricing)
-        db.commit()
-        db.refresh(db_pricing)
-        return db_pricing
-        
-    def list_active_pricings(self, db: Session) -> List[ModelPricing]:
-        return db.query(ModelPricing).filter(ModelPricing.is_active == True).all()
 
 class APIKeyUsageService:
     def log_usage(self, db: Session, usage_in: APIKeyUsageCreate) -> APIKeyUsage:
@@ -43,8 +30,13 @@ class APIKeyUsageService:
         db.refresh(db_usage)
         return db_usage
 
-    def get_usage_by_project(self, db: Session, project_id: uuid.UUID) -> List[APIKeyUsage]:
-        return db.query(APIKeyUsage).filter(APIKeyUsage.project_id == project_id).all()
-
-    def get_usage_by_user(self, db: Session, user_id: int) -> List[APIKeyUsage]:
-        return db.query(APIKeyUsage).filter(APIKeyUsage.user_id == user_id).all()
+class CreditTransactionService:
+    def record_transaction(self, db: Session, transaction_in: CreditTransactionCreate) -> CreditTransaction:
+        db_transaction = CreditTransaction(**transaction_in.model_dump())
+        db.add(db_transaction)
+        db.commit()
+        db.refresh(db_transaction)
+        return db_transaction
+    
+    def get_transactions_for_user(self, db: Session, user_id: int) -> List[CreditTransaction]:
+        return db.query(CreditTransaction).filter(CreditTransaction.user_id == user_id).order_by(CreditTransaction.created_at.desc()).all()
