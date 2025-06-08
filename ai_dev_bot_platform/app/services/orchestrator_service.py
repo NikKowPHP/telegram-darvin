@@ -118,7 +118,7 @@ class ModelOrchestrator:
             
             # Store generated file
             if implementation["filename"] and implementation["code"]:
-                self.project_file_service.create_file(
+                self.project_file_service.create_project_file(
                     self.db,
                     project_id=project.id,
                     file_path=implementation["filename"],

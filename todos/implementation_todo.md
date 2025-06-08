@@ -230,7 +230,7 @@ This should consolidate everything correctly into `ai_dev_bot_platform/app/`. Af
 
 **Goal:** Ensure service layers are implemented and used consistently.
 
-*   `[ ]` **RF3.1: Refactor `ProjectService` to be Class-Based**
+*   `[x]` **RF3.1: Refactor `ProjectService` to be Class-Based**
     *   Action: Modify `ai_dev_bot_platform/app/services/project_service.py`.
     *   Refactor the existing standalone functions (`create_project`, `get_project`, `get_projects_by_user`, `update_project`) into methods of a class named `ProjectService`.
     *   The class methods will take `self` and `db: Session` as primary arguments, followed by other necessary parameters.
@@ -263,7 +263,7 @@ This should consolidate everything correctly into `ai_dev_bot_platform/app/`. Af
         ```
     *   Verification: `project_service.py` contains a `ProjectService` class with the specified methods.
 
-*   `[ ]` **RF3.2: Update `ModelOrchestrator` to use Class-Based `ProjectService`**
+*   `[x]` **RF3.2: Update `ModelOrchestrator` to use Class-Based `ProjectService`**
     *   Action: Modify `ai_dev_bot_platform/app/services/orchestrator_service.py`.
     *   In `ModelOrchestrator.__init__`:
         *   Change `self.project_service = ProjectService()` to instantiate the class.
@@ -271,13 +271,13 @@ This should consolidate everything correctly into `ai_dev_bot_platform/app/`. Af
         *   Ensure calls are made like `self.project_service.create_project(self.db, project_in=project_data, user_id=user.id)`.
     *   Verification: Orchestrator correctly instantiates and calls methods on `ProjectService` instance.
 
-*   `[ ]` **RF3.3: Refactor `ProjectFileService` to be Class-Based (if not already)**
+*   `[x]` **RF3.3: Refactor `ProjectFileService` to be Class-Based (if not already)**
     *   Action: Review `ai_dev_bot_platform/app/services/project_file_service.py`.
     *   If it contains standalone functions, refactor them into methods of a class `ProjectFileService` similar to RF3.1.
     *   Standardize method names: e.g., ensure `create_project_file` is used if that's the intended name (orchestrator was calling `create_file`). Decide and make consistent. Recommendation: `create_project_file`.
     *   Verification: `project_file_service.py` uses a class structure if chosen, and method names are consistent with orchestrator calls.
 
-*   `[ ]` **RF3.4: Update `ModelOrchestrator` for `ProjectFileService`**
+*   `[x]` **RF3.4: Update `ModelOrchestrator` for `ProjectFileService`**
     *   Action: Modify `ai_dev_bot_platform/app/services/orchestrator_service.py`.
     *   In `ModelOrchestrator.__init__`:
         *   Ensure `self.project_file_service = ProjectFileService()` (or similar) correctly instantiates it.
