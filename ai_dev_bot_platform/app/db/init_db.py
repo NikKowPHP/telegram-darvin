@@ -3,7 +3,8 @@ from app.models.user import User
 from app.models.project import Project
 from app.models.project_file import ProjectFile
 # Import other models as they are created
-# from app.models.api_key_models import APIKey, ModelPricing, APIKeyUsage
+from app.models.api_key_models import ModelPricing, APIKeyUsage
+# from app.models.api_key_models import APIKey
 # from app.models.transaction import CreditTransaction
 # from app.models.conversation import Conversation
 

@@ -182,7 +182,7 @@ This `implementation_todo.md` will assume:
                 ```
     *   Verification: Orchestrator calls `index_file_content` after a file is created/updated by implementer.
 
-*   `[ ]` **P3.8: Implement Verification Loop in `ModelOrchestrator`**
+*   `[x]` **P3.8: Implement Verification Loop in `ModelOrchestrator`**
     *   File: `app/services/orchestrator_service.py`
     *   Action: Modify `_handle_implement_task` further:
         *   After indexing the file (from P3.7), add the verification call:
@@ -247,7 +247,7 @@ This `implementation_todo.md` will assume:
     *   Modify the end of `_handle_implement_task` to remove the old success message if verification logic is added before it. The return should now come from within the verification conditional blocks.
     *   Verification: Orchestrator calls `verify_implementation_step`, updates project status and TODO based on "APPROVED"/"REJECTED".
 
-*   `[ ]` **P3.9: Pass Code Context from Index to `ImplementerAgent`**
+*   `[x]` **P3.9: Pass Code Context from Index to `ImplementerAgent`**
     *   File: `app/agents/implementer_agent.py`
     *   Action: Modify `implement_todo_item` method signature and logic:
         1.  Add `project_id: str` and `codebase_indexer: CodebaseIndexingService` to parameters.
@@ -269,7 +269,7 @@ This `implementation_todo.md` will assume:
         1.  When calling `self.implementer_agent.implement_todo_item`, pass `project_id=str(project.id)` and `codebase_indexer=self.codebase_indexing_service`.
     *   Verification: Implementer agent uses `query_codebase` to fetch context. Orchestrator passes necessary arguments.
 
-*   `[ ]` **P3.10: Basic Aider Integration Stub (Conceptual)**
+*   `[x]` **P3.10: Basic Aider Integration Stub (Conceptual)**
     *   File: `app/agents/implementer_agent.py`
     *   Action: Add a new method stub:
         ```python
@@ -321,7 +321,7 @@ This `implementation_todo.md` will assume:
 
 **Goal:** Implement database models and services for tracking costs and credits, integrate credit deduction into the orchestrator, and add basic user-facing credit commands.
 
-*   `[ ]` **P4.1: Define `model_pricing` SQLAlchemy Model & Pydantic Schema**
+*   `[x]` **P4.1: Define `model_pricing` SQLAlchemy Model & Pydantic Schema**
     *   File: `app/models/api_key_models.py` (Consider creating this new file for all API/Billing related models or add to `project.py` or a new `billing.py`)
         *   Action: Create the file or add to an existing one.
         *   Content (for `ModelPricing` from `high_level_documentation.md`):
@@ -386,7 +386,7 @@ This `implementation_todo.md` will assume:
     *   Action: Add `from app.models.api_key_models import ModelPricing` (or appropriate path) to `app/db/init_db.py` and have human re-run `init_db.py`.
     *   Verification: Model and schema files created. Table `model_pricing` exists in DB.
 
-*   `[ ]` **P4.2: Define `api_key_usage` SQLAlchemy Model & Pydantic Schema**
+*   `[x]` **P4.2: Define `api_key_usage` SQLAlchemy Model & Pydantic Schema**
     *   File: `app/models/api_key_models.py` (or appropriate model file)
     *   Content (for `APIKeyUsage` from `high_level_documentation.md`):
         ```python
@@ -448,7 +448,7 @@ This `implementation_todo.md` will assume:
     *   Action: Add to `init_db.py` and have human re-run.
     *   Verification: Model and schema files created. Table `api_key_usage` exists.
 
-*   `[ ]` **P4.3: Define `credit_transactions` SQLAlchemy Model & Pydantic Schema**
+*   `[x]` **P4.3: Define `credit_transactions` SQLAlchemy Model & Pydantic Schema**
     *   File: `app/models/transaction.py` (new file) or add to `billing.py` or `user.py`
     *   Content (for `CreditTransaction` from `high_level_documentation.md`):
         ```python

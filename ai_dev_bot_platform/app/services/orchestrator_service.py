@@ -110,7 +110,9 @@ class ModelOrchestrator:
             implementation = await self.implementer_agent.implement_todo_item(
                 todo_item=todo_item,
                 project_context=project.description,
-                tech_stack=project.tech_stack or {}
+                tech_stack=project.tech_stack or {},
+                project_id=str(project.id),
+                codebase_indexer=self.codebase_indexing_service
             )
             
             if implementation.get("error"):
@@ -132,21 +134,61 @@ class ModelOrchestrator:
                     content=implementation["code"]
                 )
             
-            # Update TODO list to mark item as complete
-            new_todo = project.current_todo_markdown.replace(
-                f"[ ] {todo_item}", 
-                f"[x] {todo_item}"
-            )
-            self.project_service.update_project(self.db, project.id, ProjectUpdate(
-                current_todo_markdown=new_todo,
-                status="implementing"
-            ))
+            logger.info(f"Requesting verification for task: {todo_item} of project {project.id}")
             
-            return (
-                f"Task {task_index} implemented!\n"
-                f"File created: {implementation.get('filename', 'N/A')}\n"
-                f"Next: Use 'implement task {task_index+1} of project {project.id}'"
+            # Prepare relevant docs for verification (simplified for now)
+            # In future, this could be specific design docs or related code.
+            relevant_docs_for_verification = project.description # Or architect_agent's generated docs
+            if project.current_todo_markdown: # Use the plan itself as part of context
+                 relevant_docs_for_verification += "\n\n## Current TODO Plan:\n" + project.current_todo_markdown
+
+            verification_result = await self.architect_agent.verify_implementation_step(
+                project=project, # Pass the whole project object
+                code_snippet=implementation["code"],
+                relevant_docs=relevant_docs_for_verification,
+                todo_item=todo_item
             )
+
+            verification_status = verification_result.get("status", "ERROR")
+            verification_feedback = verification_result.get("feedback", "No feedback provided.")
+
+            if verification_status == "APPROVED":
+                # Mark TODO item as [x]
+                new_todo_markdown = project.current_todo_markdown.replace(f"[ ] {todo_item}", f"[x] {todo_item}", 1)
+                updated_project_status = "implementing" # Or "verifying_next_task"
+                
+                # Check if all tasks are done
+                if "[ ]" not in new_todo_markdown:
+                    updated_project_status = "verification_complete" # A new status before final README
+                    logger.info(f"All tasks completed for project {project.id}")
+                
+                self.project_service.update_project(self.db, project.id, ProjectUpdate(
+                    current_todo_markdown=new_todo_markdown,
+                    status=updated_project_status
+                ))
+                
+                return (
+                    f"Task '{todo_item}' implemented AND VERIFIED!\n"
+                    f"File: {implementation.get('filename', 'N/A')}\n"
+                    f"Architect Feedback: {verification_feedback}\n"
+                    f"Project status: {updated_project_status}. Next steps..."
+                )
+            elif verification_status == "REJECTED":
+                # Do not mark TODO as complete.
+                # Potentially add architect's feedback as a new sub-task or comment in TODO
+                # For now, just inform user.
+                self.project_service.update_project(self.db, project.id, ProjectUpdate(status="awaiting_refinement"))
+                return (
+                    f"Task '{todo_item}' implemented but REJECTED by Architect.\n"
+                    f"File: {implementation.get('filename', 'N/A')}\n"
+                    f"Architect Feedback: {verification_feedback}\n"
+                    f"Please review the feedback and consider refining the task or providing more details."
+                )
+            else: # ERROR case
+                return (
+                    f"Error during verification of task '{todo_item}'.\n"
+                    f"Feedback: {verification_feedback}"
+                )
         except Exception as e:
             logger.error(f"Error implementing task: {e}", exc_info=True)
             return "Failed to implement task. Please try again."
