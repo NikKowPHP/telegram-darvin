@@ -1,7 +1,7 @@
 import logging
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from app.core.config import settings
-from app.telegram_bot.handlers import start_command, help_command, message_handler
+from app.telegram_bot.handlers import start_command, help_command, credits_command, message_handler
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +12,7 @@ def run_bot():
     # Register command handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("credits", credits_command))
     # Add more command handlers here
 
     # Register message handler for non-command messages
