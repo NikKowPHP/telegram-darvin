@@ -573,7 +573,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: Service class and methods created.
 
-*   `[ ]` **P4.7: Enhance `LLMClient` to Return Token Counts and Model Info**
+*   `[x]` **P4.7: Enhance `LLMClient` to Return Token Counts and Model Info**
     *   File: `app/utils/llm_client.py`
     *   Action: Modify `call_gemini` and `call_openrouter` to return a dictionary including `text_response`, `input_tokens`, `output_tokens`, `model_name_used`.
         *   For Gemini: Parse `response.usage_metadata` if available (e.g., `response.usage_metadata.prompt_token_count`, `response.usage_metadata.candidates_token_count`).
