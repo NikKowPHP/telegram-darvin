@@ -402,58 +402,58 @@ Let's begin.
 
 **Goal:** Get the Telegram bot responding, setup basic user model, and lay groundwork for orchestration.
 
-*   `[ ]` **P1.1: Define User SQLAlchemy Model & Pydantic Schema**
-    *   File: `app/models/user.py`
-        *   Content (referencing `high_level_documentation.md` schema):
-            ```python
-            from sqlalchemy import Column, Integer, String, BigInteger, DateTime, DECIMAL
-            from sqlalchemy.sql import func
-            from app.db.session import Base
+*   `[x]` **P1.1: Define User SQLAlchemy Model & Pydantic Schema**
+     *   File: `app/models/user.py`
+         *   Content (referencing `high_level_documentation.md` schema):
+             ```python
+             from sqlalchemy import Column, Integer, String, BigInteger, DateTime, DECIMAL
+             from sqlalchemy.sql import func
+             from app.db.session import Base
 
-            class User(Base):
-                __tablename__ = "users"
-                id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-                telegram_user_id = Column(BigInteger, unique=True, nullable=False, index=True)
-                username = Column(String(255), nullable=True)
-                email = Column(String(255), nullable=True)
-                credit_balance = Column(DECIMAL(10, 2), nullable=False, default=0.00)
-                created_at = Column(DateTime, default=func.now())
-                updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-            ```
-    *   File: `app/schemas/user.py`
-        *   Content:
-            ```python
-            from pydantic import BaseModel, EmailStr
-            from typing import Optional
-            from decimal import Decimal
-            import datetime
+             class User(Base):
+                 __tablename__ = "users"
+                 id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+                 telegram_user_id = Column(BigInteger, unique=True, nullable=False, index=True)
+                 username = Column(String(255), nullable=True)
+                 email = Column(String(255), nullable=True)
+                 credit_balance = Column(DECIMAL(10, 2), nullable=False, default=0.00)
+                 created_at = Column(DateTime, default=func.now())
+                 updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+             ```
+     *   File: `app/schemas/user.py`
+         *   Content:
+             ```python
+             from pydantic import BaseModel, EmailStr
+             from typing import Optional
+             from decimal import Decimal
+             import datetime
 
-            class UserBase(BaseModel):
-                telegram_user_id: int
-                username: Optional[str] = None
-                email: Optional[EmailStr] = None
+             class UserBase(BaseModel):
+                 telegram_user_id: int
+                 username: Optional[str] = None
+                 email: Optional[EmailStr] = None
 
-            class UserCreate(UserBase):
-                pass
+             class UserCreate(UserBase):
+                 pass
 
-            class UserUpdate(BaseModel):
-                username: Optional[str] = None
-                email: Optional[EmailStr] = None
-                credit_balance: Optional[Decimal] = None
+             class UserUpdate(BaseModel):
+                 username: Optional[str] = None
+                 email: Optional[EmailStr] = None
+                 credit_balance: Optional[Decimal] = None
 
-            class UserInDBBase(UserBase):
-                id: int
-                credit_balance: Decimal
-                created_at: datetime.datetime
-                updated_at: datetime.datetime
+             class UserInDBBase(UserBase):
+                 id: int
+                 credit_balance: Decimal
+                 created_at: datetime.datetime
+                 updated_at: datetime.datetime
 
-                class Config:
-                    from_attributes = True # Pydantic V2 (formerly orm_mode)
+                 class Config:
+                     from_attributes = True # Pydantic V2 (formerly orm_mode)
 
-            class User(UserInDBBase):
-                pass
-            ```
-    *   Verification: Files created.
+             class User(UserInDBBase):
+                 pass
+             ```
+     *   Verification: Files created.
 
 *   `[ ]` **P1.2: Create Database Tables**
     *   Action: In `app/db/init_db.py` (create this file):
