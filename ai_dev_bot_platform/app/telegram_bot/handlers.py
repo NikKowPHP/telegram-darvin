@@ -42,6 +42,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/help - Show this help message\n"
         "/credits - Check your credit balance\n"
         "/status - Check your project status and credits (TODO)\n"
+        "/buy_credits - Purchase additional credits\n"
         # Add more commands as they are implemented
     )
 
@@ -97,4 +98,23 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     finally:
         db.close()
 
-# Add more handlers here (e.g., for project descriptions, other commands)
+async def buy_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_tg = update.effective_user
+    logger.info(f"User {user_tg.id} requesting to buy credits")
+    
+    db: Session = SessionLocal()
+    try:
+        user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
+        if not user_db:
+            await update.message.reply_text("Please use /start first to initialize your account.")
+            return
+            
+        await update.message.reply_text(
+            "Credit purchase functionality is coming soon!\n\n"
+            "For now, please contact support to add credits to your account."
+        )
+    except Exception as e:
+        logger.error(f"Error in buy_credits_command for user {user_tg.id}: {e}", exc_info=True)
+        await update.message.reply_text("Sorry, couldn't process your credit purchase request.")
+    finally:
+        db.close()

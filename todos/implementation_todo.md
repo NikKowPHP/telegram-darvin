@@ -56,11 +56,11 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: Method uses `self.embedding_model.encode`.
 
-*   `[x]` **P3.4: Implement `CodebaseIndexingService._get_or_create_project_index`**
+*   `[x]` **P极3.4: Implement `CodebaseIndexingService._get_or_create_project_index`**
     *   File: `app/services/codebase_indexing_service.py`
     *   Action: Add a new private helper method:
         ```python
-        def _get_or_create_project_index(self, project_id: str, embedding_dim: int = 384) -> faiss.Index: # all-MiniLM-L6-v2 is 384-dim
+        def _get_or_create_project_index(self, project_id:极 str, embedding_dim: int = 384) -> faiss.Index: # all-MiniLM-L6-v2 is 384-dim
             if project_id not in self.project_indexes:
                 logger.info(f"Creating new FAISS index for project {project_id} with dim {embedding_dim}")
                 # Using IndexFlatL2, a simple L2 distance index.
@@ -117,7 +117,7 @@ This `implementation_todo.md` will assume:
                 return []
 
             query_embedding = await self.generate_embedding(query)
-            distances, indices = index.search(np.array([query_embedding]), k=min(top_k, index.ntotal))
+            distances, indices = index.search(np.array([query_embedding]), k=min(top极_k, index.ntotal))
             
             results = []
             project_meta = self.project_metadata[project_id]
@@ -130,7 +130,7 @@ This `implementation_todo.md` will assume:
                 # Or, ensure metadata is appended in sync with faiss index additions.
                 # Let's assume project_meta[faiss_idx] is the correct metadata. (Requires careful management)
                 
-                # Simplified assumption: iterate through metadata to find the matching faiss_index
+                # Simplified assumption: iterate through metadata to find the matching faiss_idx
                 # This is inefficient for large metadata lists.
                 # A better approach would be `metadata_item = project_meta[faiss_idx]` if `project_meta`
                 # was structured as a list that directly maps to FAISS indices.
@@ -204,7 +204,7 @@ This `implementation_todo.md` will assume:
             )
 
             verification_status = verification_result.get("status", "ERROR")
-            verification_feedback = verification_result.get("feedback", "No feedback provided.")
+            verification_feedback = verification_result.get("feedback", "极No feedback provided.")
 
             if verification_status == "APPROVED":
                 # Mark TODO item as [x]
@@ -336,7 +336,7 @@ This `implementation_todo.md` will assume:
                 model_provider = Column(String(100), nullable=False) # 'google', 'openrouter'
                 model_name = Column(String(255), nullable=False, unique=True) # 'gemini-1.5-pro-latest', 'openrouter/anthropic/claude-3-opus'
                 input_cost_per_million_tokens = Column(DECIMAL(12, 6), nullable=False)
-                output_cost_per_million_tokens = Column(DECIMAL(12, 6), nullable=False)
+                output_cost_per_million_tokens = Column(DECIMAL(12极, 6), nullable=False)
                 image_input_cost_per_image = Column(DECIMAL(12, 6), nullable=True)
                 image_output_cost_per_image = Column(DECIMAL(12, 6), nullable=True)
                 currency = Column(String(10), nullable=False, default='USD')
@@ -428,8 +428,8 @@ This `implementation_todo.md` will assume:
             user_id: Optional[int] = None
             api_key_identifier: Optional[str] = None
             model_provider: str
-            model_name: str
-            task_type: Optional[str] = None
+            model_name:极 str
+            task_type: Optional[str] =极 None
             input_tokens_used: int = 0
             output_tokens_used: int = 0
             images_processed: int = 0
@@ -585,7 +585,7 @@ This `implementation_todo.md` will assume:
 *   `[x]` **P4.8: Implement Credit Deduction in `ModelOrchestrator`**
     *   File: `app/services/orchestrator_service.py`
     *   Action:
-        1.  In `__init__`, instantiate `ModelPricingService`, `APIKeyUsageService`, `CreditTransactionService`.
+        1.  In `__极init__`, instantiate `ModelPricingService`, `APIKeyUsageService`, `CreditTransactionService`.
             ```python
             # In ModelOrchestrator.__init__
             from app.services.billing_service import ModelPricingService, APIKeyUsageService, CreditTransactionService # Adjust path if needed
@@ -742,473 +742,7 @@ This `implementation_todo.md` will assume:
     *   Action: Create `credits_command` handler:
         ```python
         async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-            user_tg = update.effective_user
+            user_t极g = update.effective_user
             db: Session = SessionLocal()
             try:
-                user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
-                if not user_db:
-                    await update.message.reply_text("Please use /start first.")
-                    return
-                await update.message.reply_text(
-                    f"Your current credit balance is: {user_db.credit_balance:.2f}.\n"
-                    "Purchase options will be available soon!"
-                )
-            finally:
-                db.close()
-        ```
-    *   Action: Add `application.add_handler(CommandHandler("credits", credits_command))` to `bot_main.py`.
-    *   Verification: `/credits` command shows balance and placeholder message.
-
----
-
-## Phase 5: Polish, `README.md` Generation (for User Projects) & Pre-Production Testing
-
-**Goal:** Enhance user experience with project READMEs, refine overall system stability, and prepare for testing.
-
-*   `[ ]` **P5.1: Add `generate_project_readme` to `ArchitectAgent`**
-    *   File: `app/agents/architect_agent.py`
-    *   Action: Add a new method:
-        ```python
-        from app.services.project_file_service import ProjectFileService # Assuming class based service
-        # ...
-        async def generate_project_readme(self, project: Project, project_files_content: List[Dict[str,str]]) -> str: # project_files_content: [{"file_path": "...", "content": "..."}]
-            logger.info(f"Architect Agent: Generating README.md for project {project.id} - {project.title}")
-            
-            all_files_summary = "\n\n".join([f"File: {f['file_path']}\n```\n{f['content'][:500]}...\n```" for f in project_files_content]) # Summarize file contents
-
-            prompt = f"""
-            You are an expert technical writer. For the software project titled '{project.title}', with the description:
-            '{project.description}'
-            And the following technology stack: {str(project.tech_stack)}
-            And the following codebase structure and file snippets:
-            {all_files_summary}
-
-            Generate a comprehensive README.md file for this project. It should include:
-            1. Project Title
-            2. Brief Overview/Description
-            3. Prerequisites (languages, frameworks, tools based on tech stack and code)
-            4. Installation Steps (general steps like clone, install dependencies)
-            5. Configuration Guide (if any environment variables or settings seem apparent from code/context)
-            6. How to Run the Application (e.g., main script, server command)
-            7. Key Features (derived from description and code)
-            8. Basic Usage Examples (if applicable)
-            
-            The README should be well-formatted in Markdown.
-            """
-            # Use a capable model like Gemini Pro or a good OpenRouter model
-            readme_content = await self.llm_client.call_gemini(prompt, model_name="gemini-1.5-pro-latest") # Or OpenRouter
-
-            if readme_content.startswith("Error:"):
-                logger.error(f"Error generating README for project {project.id}: {readme_content}")
-                return f"Error: Could not generate README.md. LLM Error: {readme_content}"
-            return readme_content
-        ```
-    *   Verification: Method exists.
-
-*   `[ ]` **P5.2: Orchestrator Triggers `generate_project_readme`**
-    *   File: `app/services/orchestrator_service.py`
-    *   Action:
-        1.  In `_handle_implement_task`, when `updated_project_status` becomes `"verification_complete"` (or a new "readme_generation" status):
-            ```python
-            # ... inside if verification_status == "APPROVED":
-            # ... inside if "[ ]" not in new_todo_markdown:
-            # current status is "verification_complete"
-            
-            logger.info(f"Project {project.id} tasks complete. Generating README.md...")
-            self.project_service.update_project(self.db, project.id, ProjectUpdate(status="readme_generation")) # New status
-
-            # Fetch all project files
-            db_project_files = self.project_file_service.get_project_files_by_project(self.db, project_id=project.id)
-            project_files_for_readme = [{"file_path": pf.file_path, "content": pf.content} for pf in db_project_files]
-
-            readme_content = await self.architect_agent.generate_project_readme(project, project_files_for_readme)
-
-            if readme_content.startswith("Error:"):
-                # Handle error, maybe set project status to 'readme_failed'
-                self.project_service.update_project(self.db, project.id, ProjectUpdate(status="readme_failed"))
-                # Return error message to user
-                return f"All tasks implemented and verified, but failed to generate README.md: {readme_content}"
-            else:
-                # Save README.md as a project file
-                self.project_file_service.create_project_file(
-                    db=self.db,
-                    project_id=project.id, # project_id needs to be uuid.UUID
-                    file_path="README.md",
-                    content=readme_content,
-                    file_type="markdown"
-                ) # Assuming create_project_file takes these args
-                self.project_service.update_project(self.db, project.id, ProjectUpdate(status="completed"))
-                logger.info(f"README.md generated and project {project.id} marked as completed.")
-                # TODO: Implement project packaging and delivery (Phase 5/6)
-                return (
-                    f"Project '{project.title}' is complete! All tasks implemented and verified.\n"
-                    f"README.md has been generated. Project is ready for delivery (packaging TODO)."
-                )
-            ```
-    *   Note: `ProjectFileService.create_project_file` needs to be called with a `ProjectFileCreate` schema object. Orchestrator needs to construct this.
-    *   Verification: Orchestrator calls `generate_project_readme` and saves the output.
-
-*   `[ ]` **P5.3: Refine Error Handling in Services & Agents**
-    *   Action: Review all `*.py` files in `app/services/` and `app/agents/`.
-        *   Wrap external calls (DB, LLM APIs) in more specific `try-except` blocks (e.g., `sqlalchemy.exc.SQLAlchemyError`, `httpx.HTTPStatusError`, specific Gemini/OpenRouter exceptions if their SDKs provide them).
-        *   Log errors with detailed context (user_id, project_id, method name, parameters).
-        *   Ensure functions/methods return clear error indicators or raise custom exceptions that can be caught by the orchestrator or handlers.
-    *   Verification: At least 3 key services/agents have improved `try-except` blocks and contextual logging for errors.
-
-*   `[ ]` **P5.4: Improve User-Facing Error Messages in Telegram Handlers**
-    *   File: `app/telegram_bot/handlers.py`
-    *   Action: Review `except Exception as e:` blocks.
-        *   Instead of generic "Sorry, something went wrong", provide slightly more specific but still user-friendly messages.
-        *   Example: "Sorry, I couldn't process your request due to a problem with our AI services. Please try again later." or "An issue occurred with your project data. Our team has been notified."
-        *   Avoid exposing raw exception details to the user.
-    *   Verification: At least 2 error messages in handlers are more user-friendly.
-
-*   `[ ]` **P5.5: Document Key Manual Test Scenarios (in `documentation/test_plan.md`)**
-    *   File: `documentation/test_plan.md`
-    *   Action: Add a new section "6. High-Level Test Scenarios" (or similar).
-    *   List 5-7 end-to-end scenarios. Examples:
-        *   `TS-001: New User - Full Project Cycle (Simple Python App)`: /start -> describe project -> architect plan -> implement 2 tasks -> verification pass -> implement 1 task -> verification reject -> (manual refinement if UI allows, or assume new prompt) -> implement final task -> verification pass -> README generation -> project completion.
-        *   `TS-002: User Runs Out of Credits During Project`: /start -> describe -> plan -> start implement -> credit deduction leads to insufficient -> bot pauses, informs user -> user (conceptually) adds credits -> bot resumes.
-        *   `TS-003: LLM API Failure (Gemini)`: During planning, simulate Gemini API error -> Orchestrator handles, informs user.
-        *   `TS-004: LLM API Failure (OpenRouter)`: During implementation, simulate OpenRouter API error -> Orchestrator handles, informs user.
-        *   `TS-005: Invalid User Input`: User sends non-command text that doesn't fit project flow -> bot responds gracefully.
-    *   Verification: Section and scenarios added to `test_plan.md`.
-
----
-
-## Phase 6: Dockerization, Basic K8s Manifests & Deployment Prep
-
-**Goal:** Containerize the application, create basic deployment configurations for local (Docker Compose) and Kubernetes, and prepare for initial deployment.
-
-*   `[ ]` **P6.1: Finalize `Dockerfile`**
-    *   File: `Dockerfile` (should be at `ai_dev_bot_platform/Dockerfile` if structure was fixed)
-    *   Action: Review the existing `deploy/docker/Dockerfile` (or the one at the project root).
-        1.  Ensure `WORKDIR` is set appropriately (e.g., `/app` or `/app/ai_dev_bot_platform` if `ai_dev_bot_platform` is copied into `/app`).
-        2.  Ensure `COPY . .` (or more specific COPY commands) correctly copies `main.py`, `requirements.txt`, and the `app/` directory into the image's `WORKDIR`.
-        3.  The `CMD` should reliably start the primary process.
-            *   If the Telegram bot is the main long-running process: `CMD ["python", "app/telegram_bot/bot_main.py"]` (adjust path if `main.py` starts the bot).
-            *   If FastAPI is also to be served (e.g., for health checks or future API), the CMD needs to handle both. For simplicity with a 4B LLM, assume the bot is primary, or a simple FastAPI `CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]` is okay, and the bot runs separately/is not part of this image's primary CMD for now. **Decision for this TODO: CMD focuses on FastAPI, assuming bot might be run as a separate process or integrated differently in K8s if needed.** Let's update CMD for FastAPI.
-                ```dockerfile
-                # Base image
-                FROM python:3.11-slim
-
-                ENV PYTHONDONTWRITEBYTECODE 1
-                ENV PYTHONUNBUFFERED 1
-
-                WORKDIR /app
-
-                COPY requirements.txt /app/requirements.txt
-                RUN pip install --no-cache-dir -r requirements.txt
-
-                COPY . /app 
-                # This copies the entire project content from build context (ai_dev_bot_platform) into /app in image.
-                # Ensure your main.py and app/ folder are correctly referenced from /app.
-                # If main.py and app/ are inside an ai_dev_bot_platform folder in your build context, 
-                # you might need: WORKDIR /app/ai_dev_bot_platform or adjust COPY and CMD.
-                # For simplicity, assuming main.py and app/ are at the root of the Docker build context.
-
-                EXPOSE 8000
-
-                # CMD to run FastAPI app (main.py should be at /app/main.py)
-                CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"] # --reload for dev
-                # For production CMD might be: CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-                ```
-    *   Verification: `Dockerfile` reviewed and `CMD` is set for FastAPI. `COPY` instructions are logical.
-
-*   `[ ]` **P6.2: Create/Update `docker-compose.yml`**
-    *   File: `deploy/docker/docker-compose.yml` (or `ai_dev_bot_platform/docker-compose.yml`)
-    *   Action: Create or ensure it has services for `app` (your application), `postgres`, `redis`.
-        ```yaml
-        version: '3.8'
-
-        services:
-          app:
-            build:
-              context: ../.. # Assuming docker-compose.yml is in deploy/docker, context is project root ai_dev_bot_platform
-              dockerfile: Dockerfile # Path to Dockerfile relative to context
-            ports:
-              - "8000:8000" # FastAPI port
-            volumes:
-              - ../../:/app # Mount local code for development; adjust if project root differs
-            env_file:
-              - ../../.env # Assuming .env is at project root (ai_dev_bot_platform)
-            depends_on:
-              - postgres
-              - redis
-            command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload # For dev, FastAPI
-
-          # If Telegram bot runs separately from FastAPI:
-          # telegram_bot:
-          #   build:
-          #     context: ../..
-          #     dockerfile: Dockerfile # Or a different Dockerfile if needed
-          #   volumes:
-          #     - ../../:/app
-          #   env_file:
-          #     - ../../.env
-          #   depends_on:
-          #     - postgres
-          #     - redis
-          #   command: python app/telegram_bot/bot_main.py
-
-
-          postgres:
-            image: postgres:15
-            volumes:
-              - postgres_data:/var/lib/postgresql/data
-            environment:
-              POSTGRES_USER: ${POSTGRES_USER}
-              POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-              POSTGRES_DB: ${POSTGRES_DB}
-            ports:
-              - "5432:5432"
-
-          redis:
-            image: redis:7
-            volumes:
-              - redis_data:/data
-            ports:
-              - "6379:6379"
-
-        volumes:
-          postgres_data:
-          redis_data:
-        ```
-    *   Note: The `app` service runs FastAPI. If the Telegram bot needs to run as a separate main process, it would need its own service definition in `docker-compose.yml` or be integrated into the FastAPI startup (e.g., as a background task). For simplicity, we'll assume for now the bot logic is invoked through FastAPI calls or runs as a background thread started by FastAPI (less ideal for production). The `telegram_bot` service example is commented out. **Decision: The `app` service will run FastAPI. The Telegram bot process (`python app/telegram_bot/bot_main.py`) will need to be run separately or integrated.** For now, focus on FastAPI in Docker.
-    *   Verification: `docker-compose.yml` defines `app`, `postgres`, `redis`. `app` builds from Dockerfile and uses `.env`. Volumes are defined.
-
-*   `[ ]` **P6.3: Create Kubernetes Manifest Stubs - `postgres-k8s.yaml`**
-    *   File: `deploy/kubernetes/postgres-k8s.yaml`
-    *   Action: Generate basic YAML for PostgreSQL:
-        ```yaml
-        apiVersion: v1
-        kind: PersistentVolumeClaim
-        metadata:
-          name: postgres-pvc
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 5Gi # Adjust size as needed
-        ---
-        apiVersion: apps/v1
-        kind: StatefulSet # Or Deployment if persistence isn't strictly via k8s PVC in some setups
-        metadata:
-          name: postgres
-        spec:
-          serviceName: "postgres"
-          replicas: 1
-          selector:
-            matchLabels:
-              app: postgres
-          template:
-            metadata:
-              labels:
-                app: postgres
-            spec:
-              containers:
-              - name: postgres
-                image: postgres:15
-                ports:
-                - containerPort: 5432
-                env:
-                - name: POSTGRES_USER
-                  valueFrom:
-                    secretKeyRef:
-                      name: postgres-secret # To be created
-                      key: user
-                - name: POSTGRES_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: postgres-secret
-                      key: password
-                - name: POSTGRES_DB
-                  valueFrom:
-                    configMapKeyRef:
-                      name: app-config   # To be created
-                      key: postgres_db
-                volumeMounts:
-                - name: postgres-storage
-                  mountPath: /var/lib/postgresql/data
-          volumeClaimTemplates: # If using StatefulSet and want dynamic PVC provisioning
-            - metadata:
-                name: postgres-storage
-              spec:
-                accessModes: [ "ReadWriteOnce" ]
-                resources:
-                  requests:
-                    storage: 5Gi
-        ---
-        apiVersion: v1
-        kind: Service
-        metadata:
-          name: postgres
-        spec:
-          ports:
-          - port: 5432
-          selector:
-            app: postgres
-          clusterIP: None # For Headless Service if using StatefulSet directly
-        ```
-    *   Verification: YAML file created with basic structure for PVC, StatefulSet/Deployment, and Service.
-
-*   `[ ]` **P6.4: Create Kubernetes Manifest Stubs - `redis-k8s.yaml`**
-    *   File: `deploy/kubernetes/redis-k8s.yaml`
-    *   Action: Generate basic YAML for Redis:
-        ```yaml
-        apiVersion: apps/v1
-        kind: Deployment
-        metadata:
-          name: redis
-        spec:
-          replicas: 1
-          selector:
-            matchLabels:
-              app: redis
-          template:
-            metadata:
-              labels:
-                app: redis
-            spec:
-              containers:
-              - name: redis
-                image: redis:7
-                ports:
-                - containerPort: 6379
-        ---
-        apiVersion: v1
-        kind: Service
-        metadata:
-          name: redis
-        spec:
-          ports:
-          - port: 6379
-            targetPort: 6379
-          selector:
-            app: redis
-        ```
-    *   Verification: YAML file created with Deployment and Service for Redis.
-
-*   `[ ]` **P6.5: Create Kubernetes Manifest Stubs - `app-k8s.yaml` (FastAPI part)**
-    *   File: `deploy/kubernetes/app-k8s.yaml`
-    *   Action: Generate basic YAML for the application (focusing on FastAPI component):
-        ```yaml
-        apiVersion: apps/v1
-        kind: Deployment
-        metadata:
-          name: ai-dev-bot-app
-        spec:
-          replicas: 1 # Start with 1, can be scaled
-          selector:
-            matchLabels:
-              app: ai-dev-bot-app
-          template:
-            metadata:
-              labels:
-                app: ai-dev-bot-app
-            spec:
-              containers:
-              - name: ai-dev-bot-app
-                image: your-repo/ai-dev-bot-app:latest # Replace with actual image built and pushed
-                ports:
-                - containerPort: 8000 # FastAPI port
-                envFrom: # Load all keys from ConfigMap and Secret
-                  - configMapRef:
-                      name: app-config # To be created
-                  - secretRef:
-                      name: app-secrets # To be created
-                # Add readiness and liveness probes later
-                # resources:
-                #   limits:
-                #     cpu: "1"
-                #     memory: "2Gi"
-                #   requests:
-                #     cpu: "0.5"
-                #     memory: "1Gi"
-        ---
-        apiVersion: v1
-        kind: Service
-        metadata:
-          name: ai-dev-bot-app-service
-        spec:
-          type: LoadBalancer # Or ClusterIP/NodePort depending on ingress strategy
-          ports:
-          - port: 80 # External port
-            targetPort: 8000 # FastAPI port
-          selector:
-            app: ai-dev-bot-app
-        ```
-    *   Verification: YAML file created for App Deployment and Service. Image name is a placeholder.
-    *   Note: This only deploys the FastAPI part. The Telegram bot (`bot_main.py`) would need its own Deployment if it's a separate long-running process, or integration into the app's startup. **For now, this `app-k8s.yaml` focuses on the FastAPI server.**
-
-*   `[ ]` **P6.6: Document K8s `ConfigMap` and `Secret` Structure (Example)**
-    *   File: `deploy/kubernetes/config-secrets-example.md` (new file)
-    *   Action: Create a markdown file outlining example structures.
-        ```markdown
-        # Kubernetes ConfigMap and Secret Structure Examples
-
-        ## app-config (ConfigMap)
-        This ConfigMap would hold non-sensitive configuration.
-        ```yaml
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: app-config
-        data:
-          APP_ENV: "production"
-          LOG_LEVEL: "INFO"
-          POSTGRES_SERVER: "postgres" # Service name of PostgreSQL in K8s
-          POSTGRES_PORT: "5432"
-          POSTGRES_DB: "ai_dev_bot" # From .env.example
-          REDIS_HOST: "redis"       # Service name of Redis in K8s
-          REDIS_PORT: "6379"
-          REDIS_DB: "0"
-          PLATFORM_CREDIT_VALUE_USD: "0.01"
-          MARKUP_FACTOR: "1.5"
-          # Add other non-sensitive vars from .env.example
-        ```
-
-        ## app-secrets (Secret)
-        This Secret would hold sensitive data. Values should be base64 encoded when applied.
-        ```yaml
-        apiVersion: v1
-        kind: Secret
-        metadata:
-          name: app-secrets
-        type: Opaque
-        data:
-          # Values here are base64 encoded strings of the actual secrets
-          # Example: echo -n "YOUR_TOKEN" | base64
-          TELEGRAM_BOT_TOKEN: "BASE64_ENCODED_TELEGRAM_TOKEN"
-          GOOGLE_API_KEY: "BASE64_ENCODED_GOOGLE_API_KEY"
-          OPENROUTER_API_KEY: "BASE64_ENCODED_OPENROUTER_API_KEY"
-          API_KEY_ENCRYPTION_KEY: "BASE64_ENCODED_ENCRYPTION_KEY"
-          # POSTGRES_USER and POSTGRES_PASSWORD are in postgres-secret
-          # DATABASE_URL will be constructed by the app using these parts.
-        ```
-
-        ## postgres-secret (Secret)
-        ```yaml
-        apiVersion: v1
-        kind: Secret
-        metadata:
-          name: postgres-secret
-        type: Opaque
-        data:
-          user: "BASE64_ENCODED_POSTGRES_USER"
-          password: "BASE64_ENCODED_POSTGRES_PASSWORD"
-        ```
-        ```
-    *   Verification: Markdown file created with example structures.
-
----
-
-**Final Note for Roo/Human Supervisor:**
-This completes the detailed breakdown for Phases 3-6. Each `[ ]` item is a specific, actionable task. Remember that successful completion of these tasks by a 4B LLM will heavily depend on:
-1.  The quality of the prompts given for each step.
-2.  The LLM's ability to maintain context across related file modifications.
-3.  Human review at each step or at the end of each sub-phase.
-4.  The human supervisor handling actual environment setup, dependency installation, database migrations (Alembic would be ideal for production but is not in this TODO for simplicity), Docker image building/pushing, and Kubernetes deployments.
-
-Good luck with the implementation!
+                user_db = user_service.get_user_by_telegram_id(db,
