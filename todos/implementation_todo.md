@@ -28,7 +28,7 @@ Let's begin.
 
 **Goal:** Establish `ai_dev_bot_platform/` as the definitive project root and consolidate all application code and primary files within it.
 
-*   `[ ]` **RF0.1: Consolidate `main.py`**
+*   `[x]` **RF0.1: Consolidate `main.py`**
     *   Action:
         1.  Locate the `main.py` file currently at the repository root.
         2.  Move this `main.py` file into the `ai_dev_bot_platform/` directory.
@@ -38,7 +38,7 @@ Let's begin.
         2.  The content of `ai_dev_bot_platform/main.py` includes `from fastapi import FastAPI`, `from app.core.logging_config import setup_logging`, `app = FastAPI(...)`, and `setup_logging()`.
         3.  The repository root directory no longer contains a `main.py` file.
 
-*   `[ ]` **RF0.2: Consolidate `requirements.txt`**
+*   `[x]` **RF0.2: Consolidate `requirements.txt`**
     *   Action:
         1.  Locate the `requirements.txt` file currently at the repository root.
         2.  Move this `requirements.txt` file into the `ai_dev_bot_platform/` directory.
@@ -46,7 +46,7 @@ Let's begin.
         1.  The file `ai_dev_bot_platform/requirements.txt` exists and contains the list of project dependencies.
         2.  The repository root directory no longer contains a `requirements.txt` file.
 
-*   `[ ]` **RF0.3: Consolidate `.env.example`**
+*   `[x]` **RF0.3: Consolidate `.env.example`**
     *   Action:
         1.  Locate the `.env.example` file currently at the repository root.
         2.  Move this `.env.example` file into the `ai_dev_bot_platform/` directory.
