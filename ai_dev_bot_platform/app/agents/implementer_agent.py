@@ -17,14 +17,15 @@ Project Context:
 {project_context}
 
 Instructions:
-1. Generate only the code required for the task.
-2. Do not include any explanations, markdown, or extra text.
-3. If the task requires multiple files, generate them in the format: 
-   ```filename.ext
-   // code
-   ```
-4. If the task is unclear, make a best-effort implementation.
-5. Use the tech stack exactly as specified.
+1. Generate ONLY the code for the task.
+2. The output should be for a SINGLE file.
+3. Start your response with the filename on the VERY FIRST line (e.g., `my_new_file.py`).
+4. On the NEXT line, begin the code content for that file.
+5. Do NOT include any other explanations, markdown, or extra text. Just the filename and then the code.
+Example:
+src/utils/helper.py
+def my_helper_function():
+    pass
 """
         model_name = "openrouter/auto"
         code_response = await self.llm_client.call_openrouter(
