@@ -193,7 +193,7 @@ This should consolidate everything correctly into `ai_dev_bot_platform/app/`. Af
         ```
     *   Verification: `init_db.py` imports `engine` and `Base` from `app.db.session`.
 
-*   `[ ]` **RF1.3: Update `ai_dev_bot_platform/app/telegram_bot/handlers.py`**
+*   `[x]` **RF1.3: Update `ai_dev_bot_platform/app/telegram_bot/handlers.py`**
     *   Action: Modify `ai_dev_bot_platform/app/telegram_bot/handlers.py`.
     *   Ensure it imports `SessionLocal` from `app.db.session` (e.g., `from app.db.session import SessionLocal`).
     *   Ensure `db: Session = SessionLocal()` is used correctly within the handlers.
