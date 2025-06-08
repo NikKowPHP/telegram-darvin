@@ -25,7 +25,7 @@ This TODO list breaks tasks down into extremely small, explicit steps.
         2.  Create an empty file named `ai_dev_bot_platform/app/api/__init__.py`.
     *   Verification: The directory `ai_dev_bot_platform/app/api/` exists and contains an empty `__init__.py` file.
 
-*   `[ ]` **FIX1.2: Create `app/background_tasks/` directory and `__init__.py`**
+*   `[x]` **FIX1.2: Create `app/background_tasks/` directory and `__init__.py`**
     *   Action:
         1.  Create the directory `ai_dev_bot_platform/app/background_tasks/`.
         2.  Create an empty file named `ai_dev_bot_platform/app/background_tasks/__init__.py`.
