@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary # For PostgreSQL
+redis
+celery[redis]
+python-telegram-bot
+pydantic
+pydantic-settings
+httpx # For making API calls to LLMs
+google-generativeai # For Gemini
+# openrouter-client (if a specific client library is chosen, or use httpx)
+python-dotenv # For local .env file loading
+# Add other common utilities like 'requests' if needed later
+# For Codebase Indexing (add later when implementing that service)
+# sentence-transformers
+# faiss-cpu or other vector DB client
