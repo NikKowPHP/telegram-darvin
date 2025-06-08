@@ -20,7 +20,7 @@ This `implementation_todo.md` will assume:
 
 **Goal:** Enable context-aware operations by indexing generated code, implement a verification cycle for implemented tasks, and lay groundwork for Aider tool integration.
 
-*   `[ ]` **P3.1: Add Dependencies for Codebase Indexing**
+*   `[x]` **P3.1: Add Dependencies for Codebase Indexing**
     *   Action: Modify `requirements.txt`.
     *   Add the following lines:
         ```

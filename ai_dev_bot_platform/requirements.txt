@@ -12,6 +12,7 @@ google-generativeai # For Gemini
 # openrouter-client (if a specific client library is chosen, or use httpx)
 python-dotenv # For local .env file loading
 # Add other common utilities like 'requests' if needed later
-# For Codebase Indexing (add later when implementing that service)
-# sentence-transformers
-# faiss-cpu or other vector DB client
+# For Codebase Indexing
+sentence-transformers
+faiss-cpu
+numpy
