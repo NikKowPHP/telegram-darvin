@@ -1123,7 +1123,7 @@ Let's begin.
             ```
     *   Verification: File created.
 
-*   `[ ]` **P2.6: Update Model Orchestrator to use Agents & Projects**
+*   `[x]` **P2.6: Update Model Orchestrator to use Agents & Projects**
     *   File: `app/services/orchestrator_service.py`
         *   Action: Refactor significantly.
         *   Key Logic:
