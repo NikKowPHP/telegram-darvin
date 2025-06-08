@@ -31,7 +31,7 @@ This `implementation_todo.md` will assume:
     *   Verification: `requirements.txt` includes `sentence-transformers` and `faiss-cpu`.
     *   Note: Human supervisor should re-install requirements in the virtual environment.
 
-*   `[ ]` **P3.2: Enhance `CodebaseIndexingService.__init__`**
+*   `[x]` **P3.2: Enhance `CodebaseIndexingService.__init__`**
     *   File: `app/services/codebase_indexing_service.py`
     *   Action:
         1.  Add import: `from sentence_transformers import SentenceTransformer`.

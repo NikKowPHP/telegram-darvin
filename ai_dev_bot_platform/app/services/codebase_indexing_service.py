@@ -2,18 +2,19 @@ import os
 import logging
 from typing import Dict, List, Optional
 from app.core.config import settings
-from app.utils.llm_client import LLMClient
 from app.services.api_key_manager import APIKeyManager
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
 class CodebaseIndexingService:
     def __init__(self, api_key_manager: APIKeyManager):
         self.api_key_manager = api_key_manager
-        self.llm_client = LLMClient(api_key_manager)
-        # Placeholder for vector database connection
-        self.vector_db = None
-        self.index_initialized = False
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.project_indexes: Dict[str, Optional[faiss.Index]] = {}
+        self.project_metadata: Dict[str, List[Dict[str, str]]] = {}
 
     async def initialize_index(self, project_id: str):
         """Initialize the vector database index for a project"""
