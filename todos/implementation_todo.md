@@ -1145,7 +1145,7 @@ Let's begin.
              *   Update `project.status` accordingly (e.g., 'planning', 'implementing', 'awaiting_verification').
      *   Verification: Orchestrator can create a project, generate a plan via Architect, and (conceptually) delegate a TODO item to Implementer.
 
-*   `[ ]` **P2.7: Define `project_files` SQLAlchemy Model & Pydantic Schema**
+*   `[x]` **P2.7: Define `project_files` SQLAlchemy Model & Pydantic Schema**
      *   File: `app/models/project_file.py`
          *   Content:
              ```python

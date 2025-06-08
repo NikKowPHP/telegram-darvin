@@ -9,11 +9,11 @@ class ProjectFileBase(BaseModel):
     file_type: Optional[str] = None
 
 class ProjectFileCreate(ProjectFileBase):
-    project_id: uuid.UUID
+    project_id: uuid.UUID  # System provided
 
 class ProjectFileUpdate(BaseModel):
     content: Optional[str] = None
-    file_path: Optional[str] = None
+    file_path: Optional[str] = None  # Should path be updatable? Usually not.
 
 class ProjectFileInDBBase(ProjectFileBase):
     id: uuid.UUID
