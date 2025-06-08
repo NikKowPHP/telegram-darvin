@@ -697,7 +697,7 @@ This `implementation_todo.md` will assume:
     *   **CRITICAL REFACTOR:** `ArchitectAgent` and `ImplementerAgent` methods that call `LLMClient` *must* now return the full dictionary from `LLMClient` (or at least the `text_response` AND the token/model info separately) so the Orchestrator can use it for credit deduction. The Orchestrator should not be parsing raw text to get this.
     *   Verification: Orchestrator attempts to deduct credits. Logs created in `api_key_usage` and `credit_transactions`. User credit balance updated.
 
-*   `[ ]` **P4.9: Implement `/status` Command**
+*   `[x]` **P4.9: Implement `/status` Command**
     *   File: `app/telegram_bot/handlers.py`
     *   Action: Create `status_command` handler:
         ```python

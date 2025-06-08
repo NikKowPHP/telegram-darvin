@@ -40,9 +40,31 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "Available commands:\n"
         "/start - Start or restart the bot\n"
         "/help - Show this help message\n"
+        "/credits - Check your credit balance\n"
         "/status - Check your project status and credits (TODO)\n"
         # Add more commands as they are implemented
     )
+
+async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_tg = update.effective_user
+    logger.info(f"User {user_tg.id} checking credit balance")
+    
+    db: Session = SessionLocal()
+    try:
+        user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
+        if not user_db:
+            await update.message.reply_text("Please use /start first to initialize your account.")
+            return
+            
+        await update.message.reply_text(
+            f"Your current credit balance is: {user_db.credit_balance:.2f}\n"
+            f"Each credit is worth ${settings.PLATFORM_CREDIT_VALUE_USD:.4f}"
+        )
+    except Exception as e:
+        logger.error(f"Error in credits_command for user {user_tg.id}: {e}", exc_info=True)
+        await update.message.reply_text("Sorry, couldn't retrieve your credit balance.")
+    finally:
+        db.close()
 
 # Updated message handler with orchestrator integration
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
