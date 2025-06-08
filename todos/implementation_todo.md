@@ -168,7 +168,7 @@ This should consolidate everything correctly into `ai_dev_bot_platform/app/`. Af
         1.  File `ai_dev_bot_platform/app/db/session.py` exists with the specified content.
         2.  The import `from app.core.config import settings` is correct based on the new structure.
 
-*   `[ ]` **RF1.2: Update `ai_dev_bot_platform/app/db/init_db.py`**
+*   `[x]` **RF1.2: Update `ai_dev_bot_platform/app/db/init_db.py`**
     *   Action: Modify `ai_dev_bot_platform/app/db/init_db.py`.
     *   Modify imports: Change `from app.db.session import engine, Base` (if it was already attempted) to correctly point to the newly created `session.py`. It should already be correct if it was `from app.db.session import ...`
     *   Ensure `Base.metadata.create_all(bind=engine)` uses `engine` and `Base` imported from `app.db.session`.
