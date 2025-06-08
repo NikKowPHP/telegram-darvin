@@ -4,106 +4,58 @@
 [Existing content remains unchanged]
 
 ## 2. Module-Level Design
-### 2.1 Orchestrator Service
-[Existing content remains unchanged]
-
-### 2.2 Implementer Agent
-#### Components:
-- **Code Generator**: Uses LLM to produce Python code
-- **Linter**: Validates generated code against flake8
-- **Test Generator**: Creates basic pytest cases
-- **Docstring Injector**: Adds Google-style docstrings
-
+### 2.1 Implementer Agent
 #### Key Algorithms:
-- Prompt chaining for multi-file generation
-- Code validation using AST parsing
-- Complexity scoring for task estimation
+- Code generation using OpenAI API with temperature=0.7
+- Validation via AST parsing and flake8
+- Complexity scoring using cyclomatic metrics
 
-### 2.3 Codebase Indexing Service
-#### Components:
-- **File Parser**: Extracts code definitions
-- **Vectorizer**: Creates embeddings using SentenceBERT
-- **Query Engine**: Handles semantic searches
-
+### 2.2 Codebase Indexing Service
 #### Key Algorithms:
-- Chunking strategy for large files
-- Hybrid search (semantic + keyword)
-- Cache invalidation policy
+- Vectorization using SentenceBERT via Hugging Face Transformers
+- Hybrid search combining semantic and keyword matching
 
-### 2.4 Billing System
-#### Components:
-- **Credit Manager**: Tracks balances
-- **Transaction Logger**: Records all deductions
-- **Report Generator**: Creates usage reports
-
-#### Key Algorithms:
-- Atomic credit operations
-- Fraud detection heuristics
-- Prorated refund calculations
-
-## 3. Sequence Diagrams
-### 3.1 Project Generation
+## 3. Enhanced Sequence Diagrams
+### 3.1 Iterative Implementation-Verification
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant B as Bot
     participant O as Orchestrator
-    participant A as Architect
     participant I as Implementer
+    participant A as Architect
+    participant C as Code Index
     
-    U->>B: /start project
-    B->>O: New task
-    O->>A: Generate plan
-    A->>O: Return architecture
-    O->>I: Implement features
-    I->>O: Return code
-    O->>B: Package results
-    B->>U: Deliver project
+    O->>I: Implement feature X
+    I->>C: Store generated code
+    C->>A: Notify update
+    A->>C: Query context
+    C->>A: Return relevant code
+    A->>O: Validation result
+    O->>I: Request refinements
 ```
 
-### 3.2 Credit Deduction
-```mermaid
-sequenceDiagram
-    participant O as Orchestrator
-    participant B as Billing
-    participant D as Database
-    
-    O->>B: Deduct 5 credits
-    B->>D: Lock account
-    D->>B: Current balance
-    B->>D: Update balance
-    D->>B: Confirm
-    B->>O: Success
-```
-
-## 4. Database Design
-### 4.1 Data Dictionary
-#### Table: users
-- **user_id** (PK, UUID): Unique user identifier
-- **credits** (DECIMAL(9,3)): Available balance
-- **last_active** (TIMESTAMP): Final interaction time
-
-#### Table: transactions
-- **tx_id** (PK, UUID): Transaction ID  
+## 4. Complete Data Dictionary
+### 4.1 Table: api_keys
+- **key_id** (PK, UUID): Unique identifier
 - **user_id** (FK): Associated user
-- **amount** (DECIMAL(9,3)): Credit delta
+- **key_value** (TEXT): Encrypted API key
+- **is_active** (BOOLEAN): Key status
+
+### 4.2 Table: credit_transactions
+- **tx_id** (PK, UUID): Transaction ID
+- **user_id** (FK): Associated user
+- **amount** (DECIMAL): Credit change
 - **description** (TEXT): Operation reason
 
-## 5. API Specifications
-### 5.1 Orchestrator -> Implementer
+## 5. API Contracts
+### 5.1 Orchestrator -> Architect
 ```typescript
-interface CodeTask {
+interface DesignTask {
   requirements: string;
   context: Record<string, any>;
-  creditsAvailable: number;
 }
 
-interface CodeResponse {
-  files: Array<{
-    path: string;
-    content: string;
-    checksum: string;
-  }>;
-  warnings: string[];
+interface DesignResponse {
+  architecture: string;
+  components: string[];
   creditsUsed: number;
 }
