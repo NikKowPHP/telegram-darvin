@@ -124,6 +124,13 @@ class ModelOrchestrator:
                     file_path=implementation["filename"],
                     content=implementation["code"]
                 )
+                
+                # Index the newly created/updated file
+                await self.codebase_indexing_service.index_file_content(
+                    project_id=str(project.id), # Ensure project_id is string
+                    file_path=implementation["filename"],
+                    content=implementation["code"]
+                )
             
             # Update TODO list to mark item as complete
             new_todo = project.current_todo_markdown.replace(

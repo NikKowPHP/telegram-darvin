@@ -166,7 +166,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: Method uses `generate_embedding`, `index.search`, and retrieves metadata to form results.
 
-*   `[ ]` **P3.7: Integrate Indexing in `ModelOrchestrator`**
+*   `[x]` **P3.7: Integrate Indexing in `ModelOrchestrator`**
     *   File: `app/services/orchestrator_service.py`
     *   Action:
         1.  In `__init__`, ensure `self.codebase_indexing_service = CodebaseIndexingService(self.api_key_manager)` is initialized. (Already there from `refactor_and_fix_todo.md` if applied).
