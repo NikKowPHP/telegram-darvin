@@ -220,7 +220,7 @@ This should consolidate everything correctly into `ai_dev_bot_platform/app/`. Af
     *   Action: Create an empty `__init__.py` file inside `ai_dev_bot_platform/tests/` (optional for tests, but good practice).
     *   Verification: Directory exists.
 
-*   `[ ]` **RF2.3: Create `ai_dev_bot_platform/scripts/` Directory**
+*   `[x]` **RF2.3: Create `ai_dev_bot_platform/scripts/` Directory**
     *   Action: Create the directory `scripts` inside `ai_dev_bot_platform/`.
     *   Verification: Directory exists.
 
