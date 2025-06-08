@@ -25,373 +25,376 @@ Let's begin.
 
 **Goal:** Establish the basic project structure, virtual environment, core dependencies, and initial configurations.
 
-*   `[ ]` **P0.1: Create Project Root Directory**
-    *   Action: Create a root directory named `ai_dev_bot_platform`.
-    *   Verification: Directory exists.
+*   `[x]` **P0.1: Create Project Root Directory**
+     *   Action: Create a root directory named `ai_dev_bot_platform`.
+     *   Verification: Directory exists.
 
-*   `[ ]` **P0.2: Initialize Git Repository**
-    *   Action: Inside `ai_dev_bot_platform`, run `git init`.
-    *   Verification: `.git` directory created.
+*   `[x]` **P0.2: Initialize Git Repository**
+     *   Action: Inside `ai_dev_bot_platform`, run `git init`.
+     *   Verification: `.git` directory created.
 
-*   `[ ]` **P0.3: Create Basic Directory Structure**
-    *   Action: Inside `ai_dev_bot_platform`, create the following directories:
-        *   `app/` (for all application code)
-        *   `app/core/`
-        *   `app/models/` (for SQLAlchemy models)
-        *   `app/schemas/` (for Pydantic schemas)
-        *   `app/services/`
-        *   `app/api/` (for FastAPI endpoints)
-        *   `app/telegram_bot/`
-        *   `app/agents/`
-        *   `app/utils/`
-        *   `app/db/`
-        *   `app/background_tasks/` (for Celery tasks)
-        *   `config/` (for configuration files, though we'll primarily use env vars)
-        *   `tests/`
-        *   `scripts/` (for utility scripts)
-        *   `deploy/` (for Dockerfiles, docker-compose, k8s manifests)
-        *   `deploy/docker/`
-        *   `deploy/kubernetes/`
-    *   Verification: All directories exist.
+*   `[x]` **P0.3: Create Basic Directory Structure**
+     *   Action: Inside `ai_dev_bot_platform`, create the following directories:
+         *   `app/` (for all application code)
+         *   `app/core/`
+         *   `app/models/` (for SQLAlchemy models)
+         *   `app/schemas/` (for Pydantic schemas)
+         *   `app/services/`
+         *   `app/api/` (for FastAPI endpoints)
+         *   `app/telegram_bot/`
+         *   `app/agents/`
+         *   `app/utils/`
+         *   `app/db/`
+         *   `app/background_tasks/` (for Celery tasks)
+         *   `config/` (for configuration files, though we'll primarily use env vars)
+         *   `tests/`
+         *   `scripts/` (for utility scripts)
+         *   `deploy/` (for Dockerfiles, docker-compose, k8s manifests)
+         *   `deploy/docker/`
+         *   `deploy/kubernetes/`
+     *   Verification: All directories exist.
 
-*   `[ ]` **P0.4: Create Initial Python Files**
-    *   Action: Create `__init__.py` (can be empty) in:
-        *   `app/`
-        *   `app/core/`
-        *   `app/models/`
-        *   `app/schemas/`
-        *   `app/services/`
-        *   `app/api/`
-        *   `app/telegram_bot/`
-        *   `app/agents/`
-        *   `app/utils/`
-        *   `app/db/`
-        *   `app/background_tasks/`
-    *   File: `ai_dev_bot_platform/main.py` (entry point for FastAPI)
-        *   Content:
-            ```python
-            from fastapi import FastAPI
+*   `[x]` **P0.4: Create Initial Python Files**
+     *   Action: Create `__init__.py` (can be empty) in:
+         *   `app/`
+         *   `app/core/`
+         *   `app/models/`
+         *   `app/schemas/`
+         *   `app/services/`
+         *   `app/api/`
+         *   `app/telegram_bot/`
+         *   `app/agents/`
+         *   `app/utils/`
+         *   `app/db/`
+         *   `app/background_tasks/`
+     *   File: `ai_dev_bot_platform/main.py` (entry point for FastAPI)
+         *   Content:
+             ```python
+             from fastapi import FastAPI
+             from app.core.logging_config import setup_logging
 
-            app = FastAPI(title="AI Development Assistant API")
+             app = FastAPI(title="AI Development Assistant API")
 
-            @app.get("/")
-            async def root():
-                return {"message": "AI Development Assistant API is running!"}
+             setup_logging()
 
-            # Placeholder for future app setup
-            # def create_application() -> FastAPI:
-            #     application = FastAPI()
-            #     # ... add routers, middleware, etc.
-            #     return application
-            #
-            # app = create_application()
-            ```
-    *   Verification: Files created.
+             @app.get("/")
+             async def root():
+                 return {"message": "AI Development Assistant API is running!"}
 
-*   `[ ]` **P0.5: Setup `requirements.txt`**
-    *   File: `ai_dev_bot_platform/requirements.txt`
-    *   Content:
-        ```
-        fastapi
-        uvicorn[standard]
-        sqlalchemy
-        psycopg2-binary # For PostgreSQL
-        redis
-        celery[redis]
-        python-telegram-bot
-        pydantic
-        pydantic-settings
-        httpx # For making API calls to LLMs
-        google-generativeai # For Gemini
-        # openrouter-client (if a specific client library is chosen, or use httpx)
-        python-dotenv # For local .env file loading
-        # Add other common utilities like 'requests' if needed later
-        # For Codebase Indexing (add later when implementing that service)
-        # sentence-transformers
-        # faiss-cpu or other vector DB client
-        ```
-    *   Verification: File created.
-    *   Note: Advise human to create a virtual environment (`python -m venv venv`) and install (`pip install -r requirements.txt`).
+             # Placeholder for future app setup
+             # def create_application() -> FastAPI:
+             #     application = FastAPI()
+             #     # ... add routers, middleware, etc.
+             #     return application
+             #
+             # app = create_application()
+             ```
+     *   Verification: Files created.
 
-*   `[ ]` **P0.6: Setup `.env.example` and Basic Configuration Loading**
-    *   File: `ai_dev_bot_platform/.env.example`
-        *   Content:
-            ```env
-            # Application
-            APP_ENV="development" # development, staging, production
-            LOG_LEVEL="INFO"
+*   `[x]` **P0.5: Setup `requirements.txt`**
+     *   File: `ai_dev_bot_platform/requirements.txt`
+     *   Content:
+         ```
+         fastapi
+         uvicorn[standard]
+         sqlalchemy
+         psycopg2-binary # For PostgreSQL
+         redis
+         celery[redis]
+         python-telegram-bot
+         pydantic
+         pydantic-settings
+         httpx # For making API calls to LLMs
+         google-generativeai # For Gemini
+         # openrouter-client (if a specific client library is chosen, or use httpx)
+         python-dotenv # For local .env file loading
+         # Add other common utilities like 'requests' if needed later
+         # For Codebase Indexing (add later when implementing that service)
+         # sentence-transformers
+         # faiss-cpu or other vector DB client
+         ```
+     *   Verification: File created.
+     *   Note: Advise human to create a virtual environment (`python -m venv venv`) and install (`pip install -r requirements.txt`).
 
-            # Database (PostgreSQL)
-            POSTGRES_USER="your_db_user"
-            POSTGRES_PASSWORD="your_db_password"
-            POSTGRES_SERVER="localhost"
-            POSTGRES_PORT="5432"
-            POSTGRES_DB="ai_dev_bot"
-            DATABASE_URL="postgresql://your_db_user:your_db_password@localhost:5432/ai_dev_bot"
+*   `[x]` **P0.6: Setup `.env.example` and Basic Configuration Loading**
+     *   File: `ai_dev_bot_platform/.env.example`
+         *   Content:
+             ```env
+             # Application
+             APP_ENV="development" # development, staging, production
+             LOG_LEVEL="INFO"
 
-            # Redis
-            REDIS_HOST="localhost"
-            REDIS_PORT="6379"
-            REDIS_DB="0" # For Celery broker/backend and caching
+             # Database (PostgreSQL)
+             POSTGRES_USER="your_db_user"
+             POSTGRES_PASSWORD="your_db_password"
+             POSTGRES_SERVER="localhost"
+             POSTGRES_PORT="5432"
+             POSTGRES_DB="ai_dev_bot"
+             DATABASE_URL="postgresql://your_db_user:your_db_password@localhost:5432/ai_dev_bot"
 
-            # Telegram
-            TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
+             # Redis
+             REDIS_HOST="localhost"
+             REDIS_PORT="6379"
+             REDIS_DB="0" # For Celery broker/backend and caching
 
-            # LLM API Keys
-            ## Google Gemini
-            GOOGLE_API_KEY="YOUR_GOOGLE_GEMINI_API_KEY" # Or path to service account json
-            # GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/google_service_account.json"
+             # Telegram
+             TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
 
-            ## OpenRouter
-            OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY"
+             # LLM API Keys
+             ## Google Gemini
+             GOOGLE_API_KEY="YOUR_GOOGLE_GEMINI_API_KEY" # Or path to service account json
+             # GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/google_service_account.json"
 
-            # API Key Manager (Encryption for stored keys if any)
-            API_KEY_ENCRYPTION_KEY="a_very_strong_random_secret_key_32_bytes"
+             ## OpenRouter
+             OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY"
 
-            # Cost Management
-            PLATFORM_CREDIT_VALUE_USD="0.01" # 1 credit = $0.01
-            MARKUP_FACTOR="1.5" # 50% markup
-            ```
-    *   File: `ai_dev_bot_platform/app/core/config.py`
-        *   Content:
-            ```python
-            from pydantic_settings import BaseSettings, SettingsConfigDict
-            from typing import List, Dict, Any, Optional
+             # API Key Manager (Encryption for stored keys if any)
+             API_KEY_ENCRYPTION_KEY="a_very_strong_random_secret_key_32_bytes"
 
-            class Settings(BaseSettings):
-                APP_ENV: str = "development"
-                LOG_LEVEL: str = "INFO"
+             # Cost Management
+             PLATFORM_CREDIT_VALUE_USD="0.01" # 1 credit = $0.01
+             MARKUP_FACTOR="1.5" # 50% markup
+             ```
+     *   File: `ai_dev_bot_platform/app/core/config.py`
+         *   Content:
+             ```python
+             from pydantic_settings import BaseSettings, SettingsConfigDict
+             from typing import List, Dict, Any, Optional
 
-                POSTGRES_USER: str
-                POSTGRES_PASSWORD: str
-                POSTGRES_SERVER: str
-                POSTGRES_PORT: str
-                POSTGRES_DB: str
-                DATABASE_URL: Optional[str] = None # Will be constructed if not provided
+             class Settings(BaseSettings):
+                 APP_ENV: str = "development"
+                 LOG_LEVEL: str = "INFO"
 
-                REDIS_HOST: str = "localhost"
-                REDIS_PORT: int = 6379
-                REDIS_DB: int = 0
+                 POSTGRES_USER: str
+                 POSTGRES_PASSWORD: str
+                 POSTGRES_SERVER: str
+                 POSTGRES_PORT: str
+                 POSTGRES_DB: str
+                 DATABASE_URL: Optional[str] = None # Will be constructed if not provided
 
-                TELEGRAM_BOT_TOKEN: str
+                 REDIS_HOST: str = "localhost"
+                 REDIS_PORT: int = 6379
+                 REDIS_DB: int = 0
 
-                GOOGLE_API_KEY: Optional[str] = None
-                GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
-                OPENROUTER_API_KEY: Optional[str] = None
-                
-                API_KEY_ENCRYPTION_KEY: str # For encrypting any keys stored in DB (not external provider keys)
+                 TELEGRAM_BOT_TOKEN: str
 
-                PLATFORM_CREDIT_VALUE_USD: float = 0.01
-                MARKUP_FACTOR: float = 1.5
+                 GOOGLE_API_KEY: Optional[str] = None
+                 GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
+                 OPENROUTER_API_KEY: Optional[str] = None
 
-                # API Key Pools for round-robin (loaded from env or defaults)
-                # Example: GOOGLE_API_KEY_POOL='key1,key2'
-                # Example: OPENROUTER_API_KEY_POOL='keyA,keyB'
-                # These will be parsed into lists by the APIKeyManager
-                # For simplicity, we'll start with single keys from above first.
+                 API_KEY_ENCRYPTION_KEY: str # For encrypting any keys stored in DB (not external provider keys)
 
-                model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+                 PLATFORM_CREDIT_VALUE_USD: float = 0.01
+                 MARKUP_FACTOR: float = 1.5
 
-                def get_database_url(self) -> str:
-                    if self.DATABASE_URL:
-                        return self.DATABASE_URL
-                    return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+                 # API Key Pools for round-robin (loaded from env or defaults)
+                 # Example: GOOGLE_API_KEY_POOL='key1,key2'
+                 # Example: OPENROUTER_API_KEY_POOL='keyA,keyB'
+                 # These will be parsed into lists by the APIKeyManager
+                 # For simplicity, we'll start with single keys from above first.
 
-            settings = Settings()
-            ```
-    *   Verification: Files created. Human creates `.env` from `.env.example` and fills it.
+                 model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-*   `[ ]` **P0.7: Setup Basic Logging**
-    *   File: `ai_dev_bot_platform/app/core/logging_config.py`
-        *   Content:
-            ```python
-            import logging
-            import sys
-            from app.core.config import settings
+                 def get_database_url(self) -> str:
+                     if self.DATABASE_URL:
+                         return self.DATABASE_URL
+                     return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
-            def setup_logging():
-                logging.basicConfig(
-                    level=settings.LOG_LEVEL.upper(),
-                    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-                    handlers=[
-                        logging.StreamHandler(sys.stdout)
-                        # Add FileHandler if needed later
-                    ]
-                )
-                # You can set specific log levels for libraries here if needed
-                # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-            ```
-    *   Action: In `ai_dev_bot_platform/main.py`, add:
-        ```python
-        from app.core.logging_config import setup_logging
-        # ... other imports ...
+             settings = Settings()
+             ```
+     *   Verification: Files created. Human creates `.env` from `.env.example` and fills it.
 
-        setup_logging() # Call at the beginning
-        # ... rest of main.py ...
-        ```
-    *   Verification: Basic logging setup is present.
+*   `[x]` **P0.7: Setup Basic Logging**
+     *   File: `ai_dev_bot_platform/app/core/logging_config.py`
+         *   Content:
+             ```python
+             import logging
+             import sys
+             from app.core.config import settings
 
-*   `[ ]` **P0.8: Setup Database Connection (SQLAlchemy)**
-    *   File: `ai_dev_bot_platform/app/db/session.py`
-        *   Content:
-            ```python
-            from sqlalchemy import create_engine
-            from sqlalchemy.orm import sessionmaker, declarative_base
-            from app.core.config import settings
+             def setup_logging():
+                 logging.basicConfig(
+                     level=settings.LOG_LEVEL.upper(),
+                     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                     handlers=[
+                         logging.StreamHandler(sys.stdout)
+                         # Add FileHandler if needed later
+                     ]
+                 )
+                 # You can set specific log levels for libraries here if needed
+                 # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+             ```
+     *   Action: In `ai_dev_bot_platform/main.py`, add:
+         ```python
+         from app.core.logging_config import setup_logging
+         # ... other imports ...
 
-            SQLALCHEMY_DATABASE_URL = settings.get_database_url()
+         setup_logging() # Call at the beginning
+         # ... rest of main.py ...
+         ```
+     *   Verification: Basic logging setup is present.
 
-            engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
-            SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-            Base = declarative_base()
+*   `[x]` **P0.8: Setup Database Connection (SQLAlchemy)**
+     *   File: `ai_dev_bot_platform/app/db/session.py`
+         *   Content:
+             ```python
+             from sqlalchemy import create_engine
+             from sqlalchemy.orm import sessionmaker, declarative_base
+             from app.core.config import settings
 
-            # Dependency to get DB session
-            def get_db():
-                db = SessionLocal()
-                try:
-                    yield db
-                finally:
-                    db.close()
-            ```
-    *   Verification: File created.
+             SQLALCHEMY_DATABASE_URL = settings.get_database_url()
 
-*   `[ ]` **P0.9: Create Initial `.gitignore`**
-    *   File: `ai_dev_bot_platform/.gitignore`
-        *   Content:
-            ```
-            # Byte-compiled / optimized / DLL files
-            __pycache__/
-            *.py[cod]
-            *$py.class
+             engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
+             SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+             Base = declarative_base()
 
-            # C extensions
-            *.so
+             # Dependency to get DB session
+             def get_db():
+                 db = SessionLocal()
+                 try:
+                     yield db
+                 finally:
+                     db.close()
+             ```
+     *   Verification: File created.
 
-            # Distribution / packaging
-            .Python
-            build/
-            develop-eggs/
-            dist/
-            downloads/
-            eggs/
-            .eggs/
-            lib/
-            lib64/
-            parts/
-            sdist/
-            var/
-            wheels/
-            *.egg-info/
-            .installed.cfg
-            *.egg
-            MANIFEST
+*   `[x]` **P0.9: Create Initial `.gitignore`**
+     *   File: `ai_dev_bot_platform/.gitignore`
+         *   Content:
+             ```
+             # Byte-compiled / optimized / DLL files
+             __pycache__/
+             *.py[cod]
+             *$py.class
 
-            # PyInstaller
-            # Usually these files are created by PyInstaller
-            # *.spec
-            # *.pyzw
-            # *.pyz
+             # C extensions
+             *.so
 
-            # Installer logs
-            pip-log.txt
-            pip-delete-this-directory.txt
+             # Distribution / packaging
+             .Python
+             build/
+             develop-eggs/
+             dist/
+             downloads/
+             eggs/
+             .eggs/
+             lib/
+             lib64/
+             parts/
+             sdist/
+             var/
+             wheels/
+             *.egg-info/
+             .installed.cfg
+             *.egg
+             MANIFEST
 
-            # Unit test / coverage reports
-            htmlcov/
-            .tox/
-            .nox/
-            .coverage
-            .coverage.*
-            .cache
-            nosetests.xml
-            coverage.xml
-            *.cover
-            *.py,cover
-            .hypothesis/
-            .pytest_cache/
+             # PyInstaller
+             # Usually these files are created by PyInstaller
+             # *.spec
+             # *.pyzw
+             # *.pyz
 
-            # Translations
-            *.mo
-            *.pot
-            *.po
+             # Installer logs
+             pip-log.txt
+             pip-delete-this-directory.txt
 
-            # Django stuff:
-            *.log
-            local_settings.py
-            db.sqlite3
-            db.sqlite3-journal
+             # Unit test / coverage reports
+             htmlcov/
+             .tox/
+             .nox/
+             .coverage
+             .coverage.*
+             .cache
+             nosetests.xml
+             coverage.xml
+             *.cover
+             *.py,cover
+             .hypothesis/
+             .pytest_cache/
 
-            # Flask stuff:
-            instance/
-            .webassets-cache
+             # Translations
+             *.mo
+             *.pot
+             *.po
 
-            # Scrapy stuff:
-            .scrapy
+             # Django stuff:
+             *.log
+             local_settings.py
+             db.sqlite3
+             db.sqlite3-journal
 
-            # Sphinx documentation
-            docs/_build/
+             # Flask stuff:
+             instance/
+             .webassets-cache
 
-            # PyBuilder
-            target/
+             # Scrapy stuff:
+             .scrapy
 
-            # Jupyter Notebook
-            .ipynb_checkpoints
+             # Sphinx documentation
+             docs/_build/
 
-            # IPython
-            profile_default/
-            ipython_config.py
+             # PyBuilder
+             target/
 
-            # PEP 582; __pypackages__
-            __pypackages__/
+             # Jupyter Notebook
+             .ipynb_checkpoints
 
-            # Celery stuff
-            celerybeat-schedule
-            celerybeat.pid
+             # IPython
+             profile_default/
+             ipython_config.py
 
-            # SageMath parsed files
-            *.sage.py
+             # PEP 582; __pypackages__
+             __pypackages__/
 
-            # Environments
-            .env
-            .venv
-            env/
-            venv/
-            ENV/
-            env.bak
-            venv.bak
+             # Celery stuff
+             celerybeat-schedule
+             celerybeat.pid
 
-            # Spyder project settings
-            .spyderproject
-            .spyproject
+             # SageMath parsed files
+             *.sage.py
 
-            # Rope project settings
-            .ropeproject
+             # Environments
+             .env
+             .venv
+             env/
+             venv/
+             ENV/
+             env.bak
+             venv.bak
 
-            # mkdocs documentation
-            /site
+             # Spyder project settings
+             .spyderproject
+             .spyproject
 
-            # mypy
-            .mypy_cache/
-            .dmypy.json
-            dmypy.json
+             # Rope project settings
+             .ropeproject
 
-            # Pyre type checker
-            .pyre/
+             # mkdocs documentation
+             /site
 
-            # IDEs
-            .idea/
-            .vscode/
-            *.sublime-project
-            *.sublime-workspace
+             # mypy
+             .mypy_cache/
+             .dmypy.json
+             dmypy.json
 
-            # OS generated files
-            .DS_Store
-            Thumbs.db
+             # Pyre type checker
+             .pyre/
 
-            # Repomix output
-            repomix-output.xml
-            ```
-    *   Verification: File created.
+             # IDEs
+             .idea/
+             .vscode/
+             *.sublime-project
+             *.sublime-workspace
+
+             # OS generated files
+             .DS_Store
+             Thumbs.db
+
+             # Repomix output
+             repomix-output.xml
+             ```
+     *   Verification: File created.
 
 ---
 
