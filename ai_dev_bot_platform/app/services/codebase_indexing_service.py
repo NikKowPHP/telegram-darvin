@@ -24,20 +24,26 @@ class CodebaseIndexingService:
         self.index_initialized = True
         return {"status": "initialized", "project_id": project_id}
 
-    async def index_file(self, project_id: str, file_path: str, content: str):
-        """Index a single file in the codebase"""
-        if not self.index_initialized:
-            await self.initialize_index(project_id)
+    async def index_file_content(self, project_id: str, file_path: str, content: str):
+        """Index content for a file in the codebase"""
+        logger.info(f"Indexing content for file: {file_path} for project {project_id}")
+        # Simple chunking strategy (can be improved, e.g., by lines, by function/class)
+        # For now, let's assume content is small enough to be one chunk
+        text_chunk = content
+        embedding_dim = self.embedding_model.get_sentence_embedding_dimension()
+        index = self._get_or_create_project_index(project_id, embedding_dim)
+
+        embedding = await self.generate_embedding(text_chunk)
+        index.add(np.array([embedding])) # FAISS expects a 2D array
         
-        logger.info(f"Indexing file: {file_path} for project {project_id}")
-        # Generate embeddings for the file content
-        # In a real implementation, we'd split the file into chunks
-        # and generate embeddings for each chunk
-        embedding = await self.generate_embedding(content)
-        
-        # Store embedding in vector DB with metadata
-        # self.vector_db.add_embedding(embedding, metadata={"file_path": file_path})
-        return {"status": "indexed", "file_path": file_path}
+        # Store metadata associated with this vector's index in FAISS
+        self.project_metadata[project_id].append({
+            "file_path": file_path,
+            "text_chunk": text_chunk,
+            "faiss_index": index.ntotal - 1
+        })
+        logger.info(f"Indexed chunk for {file_path} into project {project_id}. Index size: {index.ntotal}")
+        return {"status": "indexed", "file_path": file_path, "chunks": 1}
 
     async def index_directory(self, project_id: str, directory_path: str):
         """Index all files in a directory recursively"""

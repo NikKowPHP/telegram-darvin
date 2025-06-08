@@ -72,7 +72,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: Helper method created.
 
-*   `[ ]` **P3.5: Implement `CodebaseIndexingService.index_file_content` (Actual)**
+*   `[x]` **P3.5: Implement `CodebaseIndexingService.index_file_content` (Actual)**
     *   File: `app/services/codebase_indexing_service.py`
     *   Action: Remove old `index_file` method. Create a new `index_file_content` method:
         ```python
