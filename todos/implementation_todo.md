@@ -41,7 +41,7 @@ This TODO list breaks tasks down into extremely small, explicit steps.
 
 **Goal:** Ensure other essential project-level directories are present.
 
-*   `[ ]` **FIX2.1: Create `tests/` directory (project root level)**
+*   `[x]` **FIX2.1: Create `tests/` directory (project root level)**
     *   Action: Create the directory `ai_dev_bot_platform/tests/`.
     *   Verification: The directory `ai_dev_bot_platform/tests/` exists. (This addresses part of RF2.2)
 
