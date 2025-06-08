@@ -1,4 +1,5 @@
 import logging
+from typing import Dict, Any
 from app.utils.llm_client import LLMClient
 from app.schemas.project import Project
 
