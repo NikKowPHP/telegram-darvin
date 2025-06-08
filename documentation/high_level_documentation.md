@@ -3,17 +3,19 @@
 
 ## Project Overview
 
-This Telegram bot serves as an autonomous software development assistant that takes user requirements and delivers complete, production-ready applications. The bot leverages a **sophisticated model orchestrator** that coordinates between a **large "Architect" Language Model (LLM)** for planning and documentation, and **smaller "Implementer" LLMs (e.g., 4B parameter models)** for code execution. This system uses automated code generation tools and project management methodologies to create full-stack applications from natural language descriptions.
+This Telegram bot serves as an autonomous software development assistant that takes user requirements and delivers complete, production-ready applications. The bot leverages a **sophisticated Model Orchestrator** that intelligently routes tasks to either a **large "Architect" Language Model (LLM)** for planning, documentation, and verification, or **smaller "Implementer" LLMs (e.g., 4B parameter models)** for code execution. A key component enhancing this process is **codebase indexing**, which provides deep contextual understanding of the generated code for more accurate implementation and verification. This system uses automated code generation tools and project management methodologies to create full-stack applications from natural language descriptions.
 
 ## Core Functionality
 
 The bot transforms user ideas into complete software projects by:
 - Gathering detailed requirements through conversational interfaces.
-- **Utilizing an Architect LLM to generate comprehensive technical documentation based on software development best practices.**
-- Selecting optimal technology stacks.
+- **Utilizing the Model Orchestrator to decide which specialized agent (Architect or Implementer) to engage.**
+- **Employing an Architect LLM to generate comprehensive technical documentation based on software development best practices.**
+- Selecting optimal technology stacks (Architect LLM).
 - **Having the Architect LLM create detailed, actionable TODO markdown list plans for Implementer LLMs.**
-- **Employing Implementer LLMs to systematically execute tasks from the TODO list, marking items as complete (`[x]`) upon implementation.**
-- **Incorporating verification cycles where the Architect LLM reviews the work done by Implementer LLMs against the plan and quality standards.**
+- **Leveraging a codebase indexing service to maintain an up-to-date, searchable representation of the project's code, enabling context-aware operations for both Architect and Implementer LLMs.**
+- **Employing Implementer LLMs to systematically execute tasks from the TODO list, referencing the codebase index for context and marking items as complete (`[x]`) upon implementation.**
+- **Incorporating verification cycles where the Architect LLM meticulously reviews the work done by Implementer LLMs. This verification cross-references the `TODO list`, `project requirements`, `technical documentation`, and the actual `codebase (via the index)` to ensure alignment and quality.**
 - Automatically implementing the entire codebase through this iterative process.
 - Delivering packaged applications via Telegram.
 
@@ -22,7 +24,7 @@ The bot transforms user ideas into complete software projects by:
 ### **Phase 1: Requirement Gathering**
 1.  **Initial Contact**: User starts bot with `/start` command.
 2.  **Project Description**: User provides initial app description.
-3.  **Intelligent Questioning**: Bot asks targeted follow-up questions about:
+3.  **Intelligent Questioning**: Bot (Orchestrator leveraging an appropriate LLM) asks targeted follow-up questions about:
     *   Target audience and use cases
     *   Preferred platforms (web, mobile, desktop)
     *   Specific features and functionality
@@ -30,29 +32,34 @@ The bot transforms user ideas into complete software projects by:
     *   Integration needs
     *   Budget and timeline constraints
 
-### **Phase 2: Analysis and Planning (Architect LLM Driven)**
-4.  **Requirement Analysis**: Bot (Orchestrator + Architect LLM) processes all gathered information.
-5.  **Technology Stack Selection**: Architect LLM selects optimal tech stack based on requirements.
+### **Phase 2: Analysis and Planning (Architect LLM Driven, Orchestrated)**
+4.  **Requirement Analysis**: The Orchestrator engages the **Architect LLM** to process all gathered information.
+5.  **Technology Stack Selection**: Architect LLM selects optimal tech stack.
 6.  **Project Architecture**: Architect LLM creates high-level system design.
 7.  **Documentation & Plan Generation**:
     *   The **Architect LLM** generates comprehensive project documentation (requirements, architecture, etc.) adhering to best practices.
-    *   The **Architect LLM** then creates a detailed **TODO markdown list** (e.g., `TODO.md`) outlining the implementation steps for the Implementer LLMs.
+    *   The **Architect LLM** then creates a detailed **TODO markdown list** (`TODO.md`) outlining the implementation steps.
 
-### **Phase 3: Iterative Implementation & Verification (Orchestrator, Implementer LLMs & Architect LLM)**
+### **Phase 3: Iterative Implementation & Verification (Orchestrator, Implementer LLMs, Architect LLM, Codebase Indexing)**
 8.  **Development Kickoff**: Bot notifies user that development has started.
-9.  **Repository Creation**: Creates new Git repository for the project.
+9.  **Repository Creation**: Creates new Git repository. **The codebase indexing service begins monitoring this repository.**
 10. **Iterative Code Generation & Task Completion**:
-    *   The **Model Orchestrator** assigns tasks from the `TODO.md` to **Implementer LLMs (e.g., 4B models)**.
-    *   Implementer LLMs use tools like Aider to implement the code for each task step-by-step.
-    *   Upon completing a task, the Implementer LLM updates the `TODO.md` by marking the item as complete (e.g., `[ ] Task 1` becomes `[x] Task 1`).
+    *   The **Model Orchestrator** assigns tasks from `TODO.md` to **Implementer LLMs**.
+    *   Implementer LLMs use tools like Aider to implement code for each task, potentially querying the **codebase index** for relevant existing code context.
+    *   Upon completing a task, the Implementer LLM updates `TODO.md` (e.g., `[ ] Task 1` becomes `[x] Task 1`) and commits changes.
+    *   **The codebase indexing service updates its index with the new changes.**
 11. **Verification Cycles**:
-    *   After a predefined phase or a set of TODO items are completed, the **Architect LLM** is invoked by the Orchestrator to verify the work done by the Implementer LLMs.
-    *   The Architect LLM checks for correctness, adherence to the plan, and quality.
-    *   If issues are found, they are communicated (potentially by adding new or revised TODOs) for the Implementer LLMs to address. If all is correct, the process continues to the next set of tasks.
-12. **Progress Updates**: Periodic notifications to user about development progress, reflecting completed TODO items and verification status.
+    *   After a predefined phase or set of TODO items are completed, the **Orchestrator** triggers a verification step, engaging the **Architect LLM**.
+    *   The **Architect LLM** verifies the implemented work by analyzing:
+        *   The completed items in the `TODO.md`.
+        *   The original `project requirements`.
+        *   The `technical documentation` (including architecture design).
+        *   The current state of the **`codebase` (accessed via the codebase index)**.
+    *   If issues are found, the Architect LLM provides feedback (potentially by adding new or revised TODOs) for the Implementer LLMs. If all is correct, the Orchestrator allows the process to continue.
+12. **Progress Updates**: Periodic notifications to user, reflecting completed TODO items and verification status.
 
 ### **Phase 4: Delivery**
-13. **Final Quality Assurance**: Includes automated testing, code review, and a final verification pass by the **Architect LLM**.
+13. **Final Quality Assurance**: Includes automated testing, a final code review, and a conclusive verification pass by the **Architect LLM** (using the codebase index and all documentation).
 14. **Package Creation**: Generates downloadable project package.
 15. **Delivery**: Sends ZIP file to user via Telegram.
 
@@ -61,73 +68,89 @@ The bot transforms user ideas into complete software projects by:
 ### **Core Components**
 
 **Telegram Bot Interface**
-- Built using `python-telegram-bot` library
-- Handles user interactions and file delivery
-- Implements conversation flow management using `ConversationHandler`
-- Supports inline keyboards for enhanced user experience
+- Built using `python-telegram-bot` library.
+- Handles user interactions and file delivery.
 
-**AI Model Orchestrator**
-- **Central nervous system of the AI operations.**
-- Manages the interaction between different types of LLMs.
-- **Planning & Verification Role (Architect LLM)**: Utilizes powerful models (e.g., GPT-4o, Claude 3 Opus) for:
+**Model Orchestrator**
+- **The central decision-making unit for AI agent deployment.**
+- **Primary Role: Task Router.** Based on the current project phase and task type, it decides whether to engage the "Architect" agent/LLM or an "Implementer" agent/LLM.
+- Manages the overall workflow, including the iterative implementation-verification loop.
+- Integrates with the `APIKeyManager` and the `Codebase Indexing Service`.
+
+**Architect Agent/LLM**
+- Utilizes powerful models (e.g., GPT-4o, Claude 3 Opus).
+- **Responsibilities (when invoked by Orchestrator):**
     - High-level planning and architectural decisions.
-    - Generating comprehensive documentation according to best practices.
+    - Generating comprehensive documentation (requirements, architecture, best practices).
     - Creating detailed **markdown TODO lists** for implementation.
-    - Verifying the work completed by Implementer LLMs.
-- **Implementation Role (Implementer LLMs)**: Employs smaller, efficient coding models (e.g., DeepSeek Coder V2 Lite, other 4B-parameter models) for:
+    - **Verifying implemented code:** Critically analyzes the work of Implementer LLMs by comparing the `TODO list`, `project requirements`, and `technical documentation` against the actual `codebase` (accessed via the `Codebase Indexing Service`).
+
+**Implementer Agent/LLMs**
+- Employs smaller, efficient coding models (e.g., DeepSeek Coder V2 Lite, other 4B-parameter models).
+- **Responsibilities (when invoked by Orchestrator):**
     - Executing specific coding tasks from the TODO list.
-    - Marking TODO items with `[x]` upon completion.
-- **Task Delegation**: Intelligently routes tasks to the appropriate LLM (Architect or Implementer) based on the current phase and requirements.
-- Integrates with the `APIKeyManager` for resilient model access.
+    - Interacting with tools like Aider for code generation and modification.
+    - **Potentially leveraging the `Codebase Indexing Service` to understand existing code context relevant to the current task.**
+    - Marking TODO items with `[x]` upon completion and committing code.
+
+**Codebase Indexing Service**
+- **Maintains a searchable, semantic index of the project's entire codebase.**
+- **Mechanism:**
+    - Continuously (or on-commit) parses the codebase into meaningful chunks (e.g., files, classes, functions).
+    - Generates vector embeddings for these code chunks using specialized code embedding models.
+    - Stores these embeddings in a vector database (e.g., FAISS, Pinecone, Weaviate).
+- **Benefits:**
+    - Provides **Architect LLM** with accurate, up-to-date context for verification against the actual code.
+    - Allows **Implementer LLMs** to retrieve relevant code snippets, improving consistency and reducing redundancy during development.
+    - Enhances overall system robustness and accuracy of AI operations.
 
 **Code Generation Engine**
 - **Aider Integration**: Primary tool used by **Implementer LLMs** for code implementation based on TODO tasks.
-- **Git Management**: Automated repository creation and version control for changes made by Implementer LLMs.
-- **Multi-language Support**: Supports 100+ programming languages.
-- **Incremental Development**: Builds projects step-by-step, reflecting the TODO list, with proper commit history.
+- **Git Management**: Automated repository creation, version control. Code commits trigger updates to the `Codebase Indexing Service`.
+- **Multi-language Support**.
+- **Incremental Development**: Reflecting the TODO list, with commit history.
 
 **Documentation Generator**
 - **Primarily driven by the Architect LLM.**
-- **Requirements Documentation**: User stories, functional specifications.
-- **Technical Documentation**: API docs, database schemas, deployment guides.
-- **Architecture Documentation**: System design, component diagrams.
-- **Implementation Plans**: Detailed **Markdown TODO lists** generated by the Architect LLM, tracked and updated throughout the implementation phase.
+- Outputs include requirements, architecture, API docs, and the crucial `TODO.md` plan.
 
 ### **API Key Management System**
-*(This section remains largely the same but is crucial for the Orchestrator's functioning)*
+*(This section remains vital for all LLM interactions orchestrated by the Model Orchestrator)*
 ... (content as in original, no change needed here based on the refinement request) ...
 
 ### **Technology Stack**
-*(Minor addition for clarity)*
+
 **Backend Infrastructure**
 ```python
 # Core Technologies
-- Python 3.12+ (Bot implementation, Model Orchestrator)
-- FastAPI (API endpoints for webhooks)
+- Python 3.12+ (Bot implementation, Model Orchestrator, Agents)
+- FastAPI (API endpoints)
 - SQLAlchemy (Database ORM)
-- Redis (Session management and caching)
-- Celery (Background task processing for LLM interactions)
+- Redis (Session management, caching, potentially task queueing)
+- Celery (Background task processing for LLM interactions and indexing)
+- Vector Database (e.g., Pinecone, Weaviate, Milvus, or self-hosted FAISS) for Codebase Indexing Service
 ```
+
 **AI Integration**
 ```python
-# AI Model APIs with Multi-Key Support, managed by Orchestrator
-- Architect LLMs (e.g., OpenAI GPT-4/GPT-4o, Anthropic Claude 3 Opus/Sonnet, Google Gemini Advanced)
-- Implementer LLMs (e.g., DeepSeek Coder series, other ~4B parameter fine-tuned models)
-- OpenRouter (Unified API access to multiple models, potentially for specific sub-tasks or model routing flexibility)
+# AI Model APIs managed by Orchestrator & APIKeyManager
+- Architect LLMs (e.g., OpenAI GPT-4/GPT-4o, Anthropic Claude 3 Opus/Sonnet)
+- Implementer LLMs (e.g., DeepSeek Coder series, other ~4B parameter models)
+- Code Embedding Models (e.g., text-embedding-ada-002, Jina Embeddings, Sentence Transformers for code) for the Codebase Indexing Service
+- OpenRouter (Optional, for flexible model access)
 ```
-... (Development Tools remain the same) ...
+
+**Development Tools**
+```bash
+# Code Generation & Version Control
+- Aider (AI pair programming by Implementer LLMs)
+- Git (Version control, triggers codebase indexing)
+- Docker (Containerization)
+```
 
 ## Database Schema
-*(Consider adding a field to store the current TODO list for a project)*
+*(Added `current_todo_markdown` and potentially fields related to indexing status if managed per project centrally)*
 ```sql
--- Enhanced schema with API key management
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    telegram_user_id BIGINT UNIQUE NOT NULL,
-    username VARCHAR(255),
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
 CREATE TABLE projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id INTEGER REFERENCES users(id),
@@ -135,11 +158,12 @@ CREATE TABLE projects (
     description TEXT,
     status VARCHAR(50) DEFAULT 'gathering_requirements',
     tech_stack JSONB,
-    current_todo_markdown TEXT, -- Stores the active TODO list for the project
+    current_todo_markdown TEXT, -- Stores the active TODO list
+    codebase_index_status VARCHAR(50) DEFAULT 'not_indexed', -- e.g., not_indexed, indexing, indexed, error
     created_at TIMESTAMP DEFAULT NOW(),
     completed_at TIMESTAMP
 );
--- ... (rest of the schema: api_keys, api_key_usage, conversations, project_files remains largely the same) ...
+-- ... (users, api_keys, api_key_usage, conversations, project_files tables remain largely the same) ...
 ```
 
 ## Implementation Architecture
@@ -148,92 +172,70 @@ CREATE TABLE projects (
 ... (remains the same) ...
 
 ### **Conversation State Management**
-... (remains the same, but states like 'PROCESSING' will now internally involve the Orchestrator's iterative loop) ...
+... (remains the same) ...
 
-### **AI Model Selection Logic (handled by Model Orchestrator)**
+### **AI Model Orchestration Logic**
 ```python
-# Simplified conceptual mapping within the Model Orchestrator
-ORCHESTRATOR_LOGIC = {
-    'initial_planning_and_doc_generation': {
-        'llm_type': 'architect', # e.g., GPT-4o, Claude 3 Opus
-        'task_description': 'Analyze requirements, design architecture, generate initial docs & TODO list.'
-    },
-    'architecture_design': { # Potentially a sub-task for Architect
-        'llm_type': 'architect',
-        'task_description': 'Refine system architecture based on detailed requirements.'
-    },
-    'todo_list_generation': { # Explicit step for Architect
-        'llm_type': 'architect',
-        'task_description': 'Create/update markdown TODO list for implementation phase.'
-    },
-    'code_implementation_step': {
-        'llm_type': 'implementer', # e.g., DeepSeek Coder 4B, Phind CodeLlama
-        'task_description': 'Implement a specific task from the TODO list using Aider.'
-    },
-    'verification_and_feedback': {
-        'llm_type': 'architect',
-        'task_description': 'Review implemented code against TODO list and quality standards. Provide feedback or update TODOs.'
-    },
-    'documentation_update': { # e.g., API docs from code
-        'llm_type': 'architect', # Or a specialized documentation model
-        'task_description': 'Update technical documentation based on implemented code.'
-    }
-}
+# Conceptual flow within the Model Orchestrator:
+# Orchestrator receives a task or project state update.
+# It then decides:
+
+# IF (task == 'initial_planning' OR task == 'doc_generation' OR task == 'todo_list_creation'):
+#     ROUTE_TO = Architect_LLM
+#     INPUTS = project_requirements
+# ELIF (task == 'code_implementation_request'):
+#     ROUTE_TO = Implementer_LLM
+#     INPUTS = specific_todo_item, codebase_index_access (optional), aider_tool
+# ELIF (task == 'verification_needed'):
+#     ROUTE_TO = Architect_LLM
+#     INPUTS = todo_list_state, project_requirements, documentation, codebase_index_access
+# ELSE:
+#     # Handle other states or error
+
+# The Orchestrator manages passing the correct context and tools to the chosen LLM.
 ```
-The **Model Orchestrator** dynamically selects the appropriate LLM (Architect or Implementer) and provides it with the necessary context (e.g., project requirements, current `TODO.md`, existing code).
 
 ## Key Features and Capabilities
 
 ### **Intelligent Requirement Gathering**
-- Context-aware follow-up questions
-- Requirement completeness validation
-- Ambiguity resolution through clarification
-- User preference learning and adaptation
+- Context-aware follow-up questions.
 
-### **Hierarchical AI Collaboration (Architect & Implementer LLMs)**
-- **Architect LLM** for strategic planning, documentation, TODO list generation, and verification.
-- **Implementer LLMs** for focused, step-by-step code execution based on the Architect's plan.
-- **Iterative Development Loop:** Implement -> Verify -> Refine.
+### **Hierarchical AI Collaboration (Orchestrator, Architect, Implementer)**
+- **Model Orchestrator** as the central task router.
+- **Architect LLM** for strategic planning, documentation, TODO generation, and comprehensive verification.
+- **Implementer LLMs** for focused, step-by-step code execution.
 
-### **Technology Stack Optimization**
-- Requirements-based stack selection by Architect LLM
-- Performance and scalability considerations
-- Cost-effectiveness analysis
-- Industry best practices integration
+### **Context-Aware Codebase Understanding**
+- **Dedicated Codebase Indexing Service** provides semantic search capabilities over the evolving codebase.
+- Enables more accurate and contextually relevant actions from both Architect (during verification) and Implementer LLMs.
+
+### **Technology Stack Optimization (Architect LLM)**
+- Requirements-based stack selection.
 
 ### **Comprehensive Documentation (Architect LLM Driven)**
-- Project requirements and specifications
-- Technical architecture documentation
-- API documentation and schemas
-- Deployment and maintenance guides
-- User manuals and tutorials
-- **Versioned `TODO.md` tracking implementation progress.**
+- Includes requirements, architecture, API docs, and a versioned `TODO.md`.
 
-### **Rigorous Quality Assurance**
-- Automated code review and optimization suggestions (potentially by Architect LLM or specialized tools).
-- **Verification of implemented tasks by the Architect LLM against the plan.**
-- Security vulnerability scanning.
-- Performance testing and optimization.
-- Cross-platform compatibility verification.
+### **Rigorous Quality Assurance & Verification**
+- **Architect LLM performs verification by comparing `TODOs`, `requirements`, and `documentation` against the actual `codebase` (via its index).**
+- Automated code review suggestions and security scanning can be integrated.
 
 ## File Management and Delivery
 
 ### **Project Structure Generation**
 ```
 generated_project/
+├── .code_index/  <-- (Conceptual, managed by Codebase Indexing Service, may not be user-visible)
 ├── docs/
 │   ├── requirements.md
 │   ├── architecture.md
 │   ├── api_documentation.md
 │   └── deployment_guide.md
 ├── src/
-│   ├── frontend/
-│   ├── backend/
-│   └── database/
+│   ├── ... (code files)
 ├── tests/
 ├── docker-compose.yml
 ├── README.md
-├── TODO.md  <-- The central plan for Implementer LLMs
+├── TODO.md       <-- Central plan, updated by Implementers, verified by Architect
 └── .gitignore
 ```
 ### **Delivery Mechanism**
@@ -243,52 +245,42 @@ generated_project/
 ... (remains the same) ...
 
 ## Monitoring and Analytics
-... (remains the same, but metrics could be expanded to track Architect vs Implementer LLM usage, verification pass/fail rates, etc.) ...
+- Metrics can be expanded to include codebase indexing performance, verification success rates, and context retrieval effectiveness.
 
 ## Deployment Architecture
-*(Addition: The Model Orchestrator is a key service)*
+
+### **Infrastructure Requirements**
 ```yaml
-# Docker Compose configuration with API key management
+# Docker Compose example
 services:
   telegram_bot:
-    image: ai-dev-bot:latest
+    # ...
+  model_orchestrator:
+    image: ai-dev-bot-orchestrator:latest
+    # ...
+  architect_agent_service: # Potentially if Architect LLM tasks are long-running
+    image: ai-dev-bot-architect:latest
+    # ...
+  implementer_agent_worker: # Celery worker for Implementer LLMs
+    image: ai-dev-bot-implementer-worker:latest
+    # ...
+  codebase_indexing_service:
+    image: ai-dev-bot-code-indexer:latest
     environment:
-      # ...
-  
-  model_orchestrator: # New or enhanced service
-    image: ai-dev-bot-orchestrator:latest # Potentially a separate image/service
-    command: python -m orchestrator_service
-    # ... environment variables for LLM access, task queue, etc.
-
-  worker: # For Implementer LLM tasks, managed by Orchestrator via Celery/RQ
-    image: ai-dev-bot-worker:latest # Could be specialized for coding tasks
-    command: celery worker -Q implementation_tasks
-    # ... 
-  
+      - VECTOR_DB_URL=${VECTOR_DB_URL}
+    volumes: # If index is stored locally or needs access to code
+      - ./project_repositories:/mnt/repos 
+  vector_database: # e.g., Weaviate, Milvus
+    image: semitechnologies/weaviate:latest # Example
+    # ...
   # ... (key_manager, postgres, redis remain similar) ...
 ```
-### **Scalability Considerations**
-- Horizontal scaling for **Model Orchestrator** and **Implementer LLM worker** processes.
-- Load balancing for multiple bot instances.
-- Database optimization for concurrent projects.
-- CDN integration for file delivery.
-- API key pool scaling based on demand, managed by `APIKeyManager`.
 
-This comprehensive system, with its **Model Orchestrator guiding Architect and Implementer LLMs**, transforms the traditional software development process into a highly structured, automated, and AI-driven workflow. It democratizes application development while maintaining professional quality standards through systematic planning, iterative implementation, and rigorous verification, all underpinned by robust API key management for optimal performance and security.
+### **Scalability Considerations**
+- Horizontal scaling for **Model Orchestrator**, **Agent services/workers**, and the **Codebase Indexing Service**.
+- The Vector Database for indexing needs to be scalable and performant.
+- Efficient embedding generation pipelines.
+
+This refined system, featuring a clear **Model Orchestrator**, distinct **Architect and Implementer LLM roles**, and a crucial **Codebase Indexing Service**, represents a highly advanced AI-driven software development workflow. The verification loop, empowered by comprehensive context (TODOs, requirements, docs, and indexed code), ensures high-quality output and adherence to the initial plan.
 
 ---
-
-**Key Changes and Why:**
-
-1.  **Project Overview/Core Functionality:** Immediately introduce the orchestrator and the two-tier LLM system (Architect/Implementer) and their primary roles (planning/docs vs. coding, TODO list).
-2.  **User Journey Flow:** Clearly delineate which LLM type is responsible for which part of Phase 2 (Architect) and Phase 3 (Implementer for coding, Architect for verification). The TODO list and its `[x]` marking are now central to Phase 3.
-3.  **Technical Architecture > AI Model Orchestra:** Renamed to "AI Model Orchestrator" and detailed its new responsibilities, including managing Architect and Implementer LLMs and the TODO-driven workflow.
-4.  **Technical Architecture > Documentation Generator:** Clarified it's Architect LLM-driven and produces the TODO list.
-5.  **Technical Architecture > Code Generation Engine:** Clarified it's used by Implementer LLMs based on the TODO list.
-6.  **Database Schema:** Suggested adding `current_todo_markdown TEXT` to the `projects` table to persist the state of the plan.
-7.  **Implementation Architecture > AI Model Selection Logic:** Reframed this to be the logic within the Model Orchestrator, highlighting task assignment to Architect or Implementer roles.
-8.  **Key Features:** Added "Hierarchical AI Collaboration" and emphasized the Architect LLM's role in documentation and QA, plus the `TODO.md`.
-9.  **File Management:** Added `TODO.md` to the project structure.
-10. **Deployment Architecture:** Suggested the `model_orchestrator` as a distinct or enhanced service.
-
-This refinement provides a much clearer picture of the sophisticated AI collaboration you're building!
