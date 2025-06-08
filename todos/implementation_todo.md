@@ -44,7 +44,7 @@ This `implementation_todo.md` will assume:
             *   Remove `self.index_initialized` and `self.llm_client` if not directly used for embeddings here (using SentenceTransformer directly).
     *   Verification: `__init__` method updated with `SentenceTransformer` and FAISS-related attributes.
 
-*   `[ ]` **P3.3: Implement `CodebaseIndexingService.generate_embedding` (Actual)**
+*   `[x]` **P3.3: Implement `CodebaseIndexingService.generate_embedding` (Actual)**
     *   File: `app/services/codebase_indexing_service.py`
     *   Action: Modify `generate_embedding` method:
         ```python

@@ -62,12 +62,12 @@ class CodebaseIndexingService:
         ]
         return results
 
-    async def generate_embedding(self, text: str) -> List[float]:
+    async def generate_embedding(self, text: str) -> np.ndarray: # Return numpy array
         """Generate embedding for text using an embedding model"""
-        # Use the LLM client to get embeddings
-        # In a real implementation, we'd use a dedicated embedding model
-        # For now, return a placeholder
-        return [0.1] * 768  # 768-dimensional placeholder embedding
+        logger.debug(f"Generating embedding for text chunk starting with: {text[:50]}...")
+        # SentenceTransformer works synchronously, wrap if true async needed elsewhere
+        embedding = self.embedding_model.encode(text, convert_to_tensor=False) # Get numpy array
+        return embedding.astype('float32') # FAISS typically wants float32
 
 # Singleton instance for the service
 # codebase_indexing_service = CodebaseIndexingService(APIKeyManager())
