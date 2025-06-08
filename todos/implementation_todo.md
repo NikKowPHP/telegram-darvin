@@ -45,7 +45,7 @@ This TODO list breaks tasks down into extremely small, explicit steps.
     *   Action: Create the directory `ai_dev_bot_platform/tests/`.
     *   Verification: The directory `ai_dev_bot_platform/tests/` exists. (This addresses part of RF2.2)
 
-*   `[ ]` **FIX2.2: Create `scripts/` directory (project root level)**
+*   `[x]` **FIX2.2: Create `scripts/` directory (project root level)**
     *   Action: Create the directory `ai_dev_bot_platform/scripts/`.
     *   Verification: The directory `ai_dev_bot_platform/scripts/` exists. (This addresses part of RF2.3)
 
