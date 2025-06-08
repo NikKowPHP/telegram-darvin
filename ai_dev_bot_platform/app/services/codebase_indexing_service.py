@@ -51,21 +51,36 @@ class CodebaseIndexingService:
         # For now, return a success message
         return {"status": "directory_indexed", "directory": directory_path}
 
-    async def query_codebase(self, project_id: str, query: str, top_k: int = 5) -> List[Dict]:
+    async def query_codebase(self, project_id: str, query: str, top_k: int = 3) -> List[Dict]:
         """Query the codebase index for relevant code snippets"""
-        if not self.index_initialized:
-            await self.initialize_index(project_id)
-        
-        # Generate embedding for the query
+        logger.info(f"Querying codebase for project {project_id} with query: {query[:50]}...")
+        if project_id not in self.project_indexes:
+            logger.warning(f"No index found for project {project_id}. Returning empty results.")
+            return []
+
+        index = self.project_indexes[project_id]
+        if index.ntotal == 0:
+            logger.info(f"Index for project {project_id} is empty.")
+            return []
+
         query_embedding = await self.generate_embedding(query)
+        distances, indices = index.search(np.array([query_embedding]), k=min(top_k, index.ntotal))
         
-        # Query the vector DB for similar embeddings
-        # results = self.vector_db.query(query_embedding, top_k=top_k)
-        # Placeholder results
-        results = [
-            {"file_path": "app/main.py", "similarity": 0.92, "content": "from fastapi import FastAPI..."},
-            {"file_path": "app/services/user_service.py", "similarity": 0.87, "content": "def get_user_by_telegram_id(...)"}
-        ]
+        results = []
+        project_meta = self.project_metadata[project_id]
+        for i in range(len(indices[0])):
+            faiss_idx = indices[0][i]
+            if faiss_idx < len(project_meta):
+                meta_item = project_meta[faiss_idx]
+                results.append({
+                    "file_path": meta_item["file_path"],
+                    "content_chunk": meta_item["text_chunk"],
+                    "similarity_score": 1 - distances[0][i]
+                })
+            else:
+                logger.warning(f"FAISS index {faiss_idx} out of bounds for project_meta with length {len(project_meta)}")
+
+        logger.info(f"Query returned {len(results)} results.")
         return results
 
     async def generate_embedding(self, text: str) -> np.ndarray: # Return numpy array

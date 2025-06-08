@@ -101,7 +101,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: Method uses `generate_embedding`, `_get_or_create_project_index`, `index.add`, and updates `project_metadata`.
 
-*   `[ ]` **P3.6: Implement `CodebaseIndexingService.query_codebase` (Actual)**
+*   `[x]` **P3.6: Implement `CodebaseIndexingService.query_codebase` (Actual)**
     *   File: `app/services/codebase_indexing_service.py`
     *   Action: Modify `query_codebase` (previously `query_index`):
         ```python
