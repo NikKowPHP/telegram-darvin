@@ -49,7 +49,7 @@ This TODO list breaks tasks down into extremely small, explicit steps.
     *   Action: Create the directory `ai_dev_bot_platform/scripts/`.
     *   Verification: The directory `ai_dev_bot_platform/scripts/` exists. (This addresses part of RF2.3)
 
-*   `[ ]` **FIX2.3: Create `deploy/kubernetes/` directory**
+*   `[x]` **FIX2.3: Create `deploy/kubernetes/` directory**
     *   Action: Create the directory `ai_dev_bot_platform/deploy/kubernetes/`.
     *   Verification: The directory `ai_dev_bot_platform/deploy/kubernetes/` exists.
 
