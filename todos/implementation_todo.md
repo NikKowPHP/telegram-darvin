@@ -56,7 +56,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: Method uses `self.embedding_model.encode`.
 
-*   `[ ]` **P3.4: Implement `CodebaseIndexingService._get_or_create_project_index`**
+*   `[x]` **P3.4: Implement `CodebaseIndexingService._get_or_create_project_index`**
     *   File: `app/services/codebase_indexing_service.py`
     *   Action: Add a new private helper method:
         ```python

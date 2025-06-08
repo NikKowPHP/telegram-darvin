@@ -69,5 +69,15 @@ class CodebaseIndexingService:
         embedding = self.embedding_model.encode(text, convert_to_tensor=False) # Get numpy array
         return embedding.astype('float32') # FAISS typically wants float32
 
+    def _get_or_create_project_index(self, project_id: str, embedding_dim: int = 384) -> faiss.Index: # all-MiniLM-L6-v2 is 384-dim
+        if project_id not in self.project_indexes:
+            logger.info(f"Creating new FAISS index for project {project_id} with dim {embedding_dim}")
+            # Using IndexFlatL2, a simple L2 distance index.
+            # For larger datasets, more complex indexes like IndexIVFFlat might be better.
+            index = faiss.IndexFlatL2(embedding_dim)
+            self.project_indexes[project_id] = index
+            self.project_metadata[project_id] = []
+        return self.project_indexes[project_id]
+
 # Singleton instance for the service
 # codebase_indexing_service = CodebaseIndexingService(APIKeyManager())
