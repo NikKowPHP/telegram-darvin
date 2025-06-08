@@ -127,7 +127,7 @@ Let's begin.
 
 This should consolidate everything correctly into `ai_dev_bot_platform/app/`. After these steps, proceed to task RF0.5 (Update Import Paths), though many imports should already be correct due to this careful consolidation.
 
-*   `[ ]` **RF0.5: Update Import Paths (System-Wide)**
+*   `[x]` **RF0.5: Update Import Paths (System-Wide)**
     *   Action: Roo needs to simulate or be instructed that the **working directory for Python execution will now be `ai_dev_bot_platform/`**. This means all absolute imports within the `app` subdirectories should still start with `app.module...`.
         1.  Review all Python files within `ai_dev_bot_platform/app/` (e.g., `main.py` which is now `ai_dev_bot_platform/main.py`, all files in `services/`, `agents/`, `telegram_bot/`, `db/`, etc.).
         2.  Ensure all internal project imports are correct relative to the `ai_dev_bot_platform/` directory being the top-level for execution context.
@@ -142,7 +142,7 @@ This should consolidate everything correctly into `ai_dev_bot_platform/app/`. Af
 
 **Goal:** Implement the missing `app/db/session.py` and correctly integrate it.
 
-*   `[ ]` **RF1.1: Create `ai_dev_bot_platform/app/db/session.py`**
+*   `[x]` **RF1.1: Create `ai_dev_bot_platform/app/db/session.py`**
     *   Action: Create the file `ai_dev_bot_platform/app/db/session.py`.
     *   File Content (as per P0.8 of `implementation_todo.md`):
         ```python
