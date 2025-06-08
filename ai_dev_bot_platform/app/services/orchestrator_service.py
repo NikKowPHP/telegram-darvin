@@ -10,7 +10,10 @@ from app.agents.implementer_agent import ImplementerAgent
 from app.services.project_service import ProjectService
 from app.services.project_file_service import ProjectFileService
 from app.services.codebase_indexing_service import CodebaseIndexingService
+from app.services.billing_service import ModelPricingService, APIKeyUsageService, CreditTransactionService
 from app.schemas.project import ProjectCreate, ProjectUpdate
+from app.core.config import settings
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +27,9 @@ class ModelOrchestrator:
         self.project_service = ProjectService()
         self.project_file_service = ProjectFileService()
         self.codebase_indexing_service = CodebaseIndexingService(self.api_key_manager)
+        self.model_pricing_service = ModelPricingService()
+        self.api_key_usage_service = APIKeyUsageService()
+        self.credit_transaction_service = CreditTransactionService()
 
     async def process_user_request(self, user: User, user_input: str) -> str:
         logger.info(f"Orchestrator processing request for user {user.telegram_user_id}: '{user_input}'")
@@ -71,6 +77,15 @@ class ModelOrchestrator:
             if "error" in plan_result:
                 return f"Error generating project plan: {plan_result['error']}"
             
+            # Deduct credits for LLM call if successful
+            if "llm_call_details" in plan_result:
+                await self._deduct_credits_for_llm_call(
+                    user=user,
+                    llm_response_data=plan_result["llm_call_details"],
+                    task_type="planning",
+                    project_id=project.id
+                )
+            
             # Update project with generated artifacts
             update_data = ProjectUpdate(
                 status="planning",
@@ -117,6 +132,15 @@ class ModelOrchestrator:
             
             if implementation.get("error"):
                 return f"Error implementing task: {implementation['error']}"
+            
+            # Deduct credits for LLM call if successful
+            if "llm_call_details" in implementation:
+                await self._deduct_credits_for_llm_call(
+                    user=user,
+                    llm_response_data=implementation["llm_call_details"],
+                    task_type="implementation",
+                    project_id=project.id
+                )
             
             # Store generated file
             if implementation["filename"] and implementation["code"]:
@@ -226,6 +250,76 @@ class ModelOrchestrator:
         except Exception as e:
             logger.error(f"Error in implementer request: {e}", exc_info=True)
             return "Error processing implementer request."
+
+    async def _deduct_credits_for_llm_call(
+        self,
+        user: User,
+        llm_response_data: dict,
+        task_type: str,
+        project_id: Optional[uuid.UUID] = None
+    ):
+        """Deduct credits based on LLM usage and log transaction"""
+        model_provider = "google" if "gemini" in llm_response_data.get("model_name_used", "").lower() else "openrouter"
+        model_name_used = llm_response_data.get("model_name_used")
+        input_tokens = llm_response_data.get("input_tokens", 0)
+        output_tokens = llm_response_data.get("output_tokens", 0)
+
+        if not model_name_used:
+            logger.error(f"Cannot deduct credits: model_name_used not found in LLM response data for user {user.id}")
+            return
+
+        pricing = self.model_pricing_service.get_pricing(self.db, model_provider, model_name_used)
+        if not pricing:
+            logger.error(f"No pricing found for model {model_provider}/{model_name_used}. Cannot deduct credits for user {user.id}.")
+            return
+
+        actual_cost_usd = (
+            (Decimal(input_tokens) / Decimal(1000000)) * pricing.input_cost_per_million_tokens +
+            (Decimal(output_tokens) / Decimal(1000000)) * pricing.output_cost_per_million_tokens
+        )
+        
+        # Log API usage
+        usage_log = {
+            "user_id": user.id,
+            "project_id": project_id,
+            "model_provider": model_provider,
+            "model_name": model_name_used,
+            "task_type": task_type,
+            "input_tokens_used": input_tokens,
+            "output_tokens_used": output_tokens,
+            "actual_cost_usd": actual_cost_usd
+        }
+        api_usage_record = self.api_key_usage_service.log_usage(self.db, usage_log)
+
+        # Calculate credits to deduct
+        credits_to_deduct = (actual_cost_usd / Decimal(str(settings.PLATFORM_CREDIT_VALUE_USD))) * Decimal(str(settings.MARKUP_FACTOR))
+        credits_to_deduct = credits_to_deduct.quantize(Decimal("0.01")) # Round to 2 decimal places
+
+        if credits_to_deduct <= 0: # No cost or negligible
+            logger.info(f"Calculated credits to deduct is {credits_to_deduct} for user {user.id}. No deduction.")
+            return
+
+        # Deduct credits from user
+        updated_user = update_user_credits(self.db, user.telegram_user_id, credits_to_deduct, is_deduction=True)
+        
+        if not updated_user:
+            logger.warning(f"Failed to deduct {credits_to_deduct} credits for user {user.id} (insufficient balance or error).")
+            # Handle this scenario - maybe pause project, notify user
+            # For now, log and proceed. This needs robust handling.
+            return
+        
+        # Record credit transaction
+        transaction = {
+            "user_id": user.id,
+            "project_id": project_id,
+            "api_key_usage_id": api_usage_record.id,
+            "transaction_type": "usage_deduction",
+            "credits_amount": -credits_to_deduct, # Negative for deduction
+            "real_cost_associated_usd": actual_cost_usd,
+            "description": f"Usage for {task_type} with {model_name_used}"
+        }
+        self.credit_transaction_service.record_transaction(self.db, transaction)
+        logger.info(f"Deducted {credits_to_deduct} credits from user {user.id}. New balance: {updated_user.credit_balance}")
 
 # Function to get orchestrator instance
 def get_orchestrator(db: Session) -> ModelOrchestrator:

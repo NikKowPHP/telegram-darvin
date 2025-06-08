@@ -582,7 +582,7 @@ This `implementation_todo.md` will assume:
         *   Return structure example: `{"text_response": "...", "input_tokens": X, "output_tokens": Y, "model_name_used": "model/id"}`
     *   Verification: Methods return the enhanced dictionary.
 
-*   `[ ]` **P4.8: Implement Credit Deduction in `ModelOrchestrator`**
+*   `[x]` **P4.8: Implement Credit Deduction in `ModelOrchestrator`**
     *   File: `app/services/orchestrator_service.py`
     *   Action:
         1.  In `__init__`, instantiate `ModelPricingService`, `APIKeyUsageService`, `CreditTransactionService`.
