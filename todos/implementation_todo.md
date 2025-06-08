@@ -455,29 +455,29 @@ Let's begin.
              ```
      *   Verification: Files created.
 
-*   `[ ]` **P1.2: Create Database Tables**
-    *   Action: In `app/db/init_db.py` (create this file):
-        ```python
-        from app.db.session import engine, Base
-        from app.models.user import User # Import all models here
-        # Import other models as they are created
-        # from app.models.project import Project
-        # from app.models.api_key_models import APIKey, ModelPricing, APIKeyUsage
-        # from app.models.transaction import CreditTransaction
-        # from app.models.conversation import Conversation
-        # from app.models.project_file import ProjectFile
+*   `[x]` **P1.2: Create Database Tables**
+     *   Action: In `app/db/init_db.py` (create this file):
+         ```python
+         from app.db.session import engine, Base
+         from app.models.user import User # Import all models here
+         # Import other models as they are created
+         # from app.models.project import Project
+         # from app.models.api_key_models import APIKey, ModelPricing, APIKeyUsage
+         # from app.models.transaction import CreditTransaction
+         # from app.models.conversation import Conversation
+         # from app.models.project_file import ProjectFile
 
-        def init_db():
-            # This will create tables if they don't exist.
-            # For production, use Alembic migrations.
-            Base.metadata.create_all(bind=engine)
-            print("Database tables initialized/checked.")
+         def init_db():
+             # This will create tables if they don't exist.
+             # For production, use Alembic migrations.
+             Base.metadata.create_all(bind=engine)
+             print("Database tables initialized/checked.")
 
-        if __name__ == "__main__":
-            init_db()
-        ```
-    *   Action: Run this script once manually (`python app/db/init_db.py`) after setting up DB.
-    *   Verification: `users` table created in PostgreSQL.
+         if __name__ == "__main__":
+             init_db()
+         ```
+     *   Action: Run this script once manually (`python app/db/init_db.py`) after setting up DB.
+     *   Verification: `users` table created in PostgreSQL.
 
 *   `[ ]` **P1.3: User CRUD Operations (Service Layer)**
     *   File: `app/services/user_service.py`
