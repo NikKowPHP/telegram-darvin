@@ -199,7 +199,7 @@ This should consolidate everything correctly into `ai_dev_bot_platform/app/`. Af
     *   Ensure `db: Session = SessionLocal()` is used correctly within the handlers.
     *   Verification: `handlers.py` uses `SessionLocal` from the correct `app.db.session`.
 
-*   `[ ]` **RF1.4: Update SQLAlchemy Model Files (`user.py`, `project.py`, `project_file.py`)**
+*   `[x]` **RF1.4: Update SQLAlchemy Model Files (`user.py`, `project.py`, `project_file.py`)**
     *   Action: For each model file in `ai_dev_bot_platform/app/models/`:
         1.  Ensure they import `Base` from `app.db.session` (e.g., `from app.db.session import Base`).
     *   Verification: All model files correctly import `Base`.
