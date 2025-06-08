@@ -22,10 +22,13 @@
 
 ## 3. API Key Security
 ### 3.1 Storage
+- Secure storage of Google Cloud service account credentials and OpenRouter API keys
 - HSMs for master keys
 - Encrypted database storage
 
 ### 3.2 Rotation
+- Regular rotation of OpenRouter API keys as per OpenRouter best practices
+- For Google Cloud service account keys, follow Google's recommendations for key rotation and credential management
 - Automatic every 90 days
 - Emergency revocation capability
 

@@ -3,7 +3,7 @@
 
 ## Project Overview
 
-This Telegram bot serves as an autonomous software development assistant that takes user requirements and delivers complete, production-ready applications. The bot leverages a sophisticated **Model Orchestrator** that intelligently routes tasks to either a **large "Architect" Language Model (LLM)** for planning, documentation, and verification, or **smaller "Implementer" LLMs (e.g., 4B parameter models)** for code execution. A key component enhancing this process is **codebase indexing**, which provides deep contextual understanding of the generated code for more accurate implementation and verification. Upon project completion, a detailed `README.md` with setup and usage instructions is automatically generated. The system incorporates a **credit-based monetization model**, providing initial free credits and requiring users to purchase additional credits for continued use, all managed through a diligent cost-tracking mechanism.
+This Telegram bot serves as an autonomous software development assistant that takes user requirements and delivers complete, production-ready applications. The bot leverages a sophisticated **Model Orchestrator** that intelligently routes tasks to either a **large "Architect" Language Model (LLM)** for planning, documentation, and verification, or **smaller "Implementer" LLMs** for code execution, utilizing models accessed directly from **Google Gemini** and a diverse range via **OpenRouter**. A key component enhancing this process is **codebase indexing**, which provides deep contextual understanding of the generated code for more accurate implementation and verification. Upon project completion, a detailed `README.md` with setup and usage instructions is automatically generated. The system incorporates a **credit-based monetization model**, providing initial free credits and requiring users to purchase additional credits for continued use, all managed through a diligent cost-tracking mechanism.
 
 ## Core Functionality
 
@@ -89,7 +89,7 @@ The bot transforms user ideas into complete software projects by:
 - Integrates with the `APIKeyManager` and the `Codebase Indexing Service`.
 
 **Architect Agent/LLM**
-- Utilizes powerful models (e.g., GPT-4o, Claude 3 Opus).
+- Utilizes powerful models (e.g., Gemini 1.5 Pro accessed directly, or high-capability models like Claude 3 Opus via OpenRouter).
 - **Responsibilities (when invoked by Orchestrator):**
     - High-level planning and architectural decisions.
     - Generating comprehensive documentation (requirements, architecture, best practices).
@@ -98,7 +98,7 @@ The bot transforms user ideas into complete software projects by:
     - **Generating the final `README.md` file for the project.**
 
 **Implementer Agent/LLMs**
-- Employs smaller, efficient coding models (e.g., DeepSeek Coder V2 Lite, other 4B-parameter models).
+- Employs smaller, efficient coding models (e.g., code-specific Gemini models, or models like DeepSeek Coder, Phind CodeLlama accessed via OpenRouter).
 - **Responsibilities (when invoked by Orchestrator):**
     - Executing specific coding tasks from the TODO list.
     - Interacting with tools like Aider for code generation and modification.
@@ -130,8 +130,16 @@ The bot transforms user ideas into complete software projects by:
 - **Reporting**: Generates reports on API expenditures, revenue from credit sales, and user consumption patterns.
 
 ### **API Key Management System**
-- **Round-Robin Distribution Strategy**: Distributes requests across multiple keys to optimize performance and reduce rate limiting.
-- **Provider-Specific Key Pools**: Separate key pools for each AI provider.
+- **Round-Robin Distribution Strategy**: Distributes requests across multiple keys for Google Cloud (for Gemini models) and OpenRouter to optimize performance and reduce rate limiting.
+- **Provider-Specific Key Pools**:
+  ```python
+  # Separate key pools for each AI provider
+  API_KEY_POOLS = {
+      'google': ['gemini_key1', 'gemini_key2', 'gemini_key3'], # For direct Gemini access
+      'openrouter': ['or_key1', 'or_key2', 'or_key3']       # For OpenRouter access
+      # Potentially other direct providers if added in the future
+  }
+  ```
 - **Key Rotation and Security**: Automated rotation, usage monitoring, rate limit management, and failover mechanisms.
 
 ### **Technology Stack**
@@ -151,10 +159,13 @@ The bot transforms user ideas into complete software projects by:
 **AI Integration**
 ```python
 # AI Model APIs managed by Orchestrator & APIKeyManager
-- Architect LLMs (e.g., OpenAI GPT-4/GPT-4o, Anthropic Claude 3 Opus/Sonnet)
-- Implementer LLMs (e.g., DeepSeek Coder series, other ~4B parameter models)
-- Code Embedding Models (e.g., text-embedding-ada-002, Jina Embeddings) for Codebase Indexing Service
-# Model usage details are stored for cost calculation (see model_pricing table)
+# Direct Provider Access:
+- Google Gemini (e.g., Gemini 1.5 Pro, Gemini 1.0 Ultra, code-specific Gemini models) for planning, architecture, verification, and specialized tasks.
+# Aggregator Access:
+- OpenRouter (Unified API access to a variety of models including those from Anthropic, OpenAI, Mistral AI, etc., for flexible task execution, implementation, or specialized documentation tasks).
+# Code Embedding Models (can be sourced via OpenRouter or dedicated providers)
+- e.g., Google's gecko-embeddings, or models like Jina Embeddings, Sentence Transformers available through OpenRouter or hosted.
+# Model usage details for Google and OpenRouter are stored for cost calculation.
 ```
 
 **Development Tools**
@@ -208,8 +219,8 @@ CREATE TABLE api_keys (
 
 CREATE TABLE model_pricing (
     id SERIAL PRIMARY KEY,
-    model_provider VARCHAR(100) NOT NULL, -- e.g., 'openai', 'anthropic', 'google'
-    model_name VARCHAR(255) NOT NULL UNIQUE, -- e.g., 'gpt-4o', 'claude-3-opus-20240229'
+    model_provider VARCHAR(100) NOT NULL, -- e.g., 'google', 'openrouter'
+    model_name VARCHAR(255) NOT NULL UNIQUE, -- e.g., 'gemini-1.5-pro-latest', 'openrouter/anthropic/claude-3-opus'
     input_cost_per_million_tokens DECIMAL(12, 6) NOT NULL,
     output_cost_per_million_tokens DECIMAL(12, 6) NOT NULL,
     image_input_cost_per_image DECIMAL(12, 6) NULL, -- For multimodal
@@ -226,7 +237,7 @@ CREATE TABLE api_key_usage (
     project_id UUID REFERENCES projects(id) NULL,
     user_id INTEGER REFERENCES users(id) NULL, -- For easier querying of user-specific costs
     api_key_id INTEGER REFERENCES api_keys(id),
-    model_name VARCHAR(255) NOT NULL, -- Matches model_pricing.model_name
+    model_name VARCHAR(255) NOT NULL, -- Specific model used, e.g., 'gemini-1.5-pro-latest', or 'openrouter/path/to/model'
     task_type VARCHAR(100), -- e.g., 'planning', 'coding', 'verification', 'readme_generation', 'code_embedding'
     input_tokens_used INTEGER DEFAULT 0,
     output_tokens_used INTEGER DEFAULT 0,
@@ -442,9 +453,10 @@ services:
   billing_service: # Optional dedicated service for complex billing logic, payment gateway interactions
     image: ai-dev-bot-billing:latest
     environment:
-      - PAYMENT_GATEWAY_API_KEY=${STRIPE_SECRET_KEY} # Example for Stripe
-      - PLATFORM_CREDIT_VALUE_USD=0.01 # Example: 1 credit = $0.01
-      - MARKUP_FACTOR=1.5 # Example: 50% markup on API costs
+      # ...
+      - GOOGLE_API_KEYS_JSON='[{"key": "gemini_key1_val", "active": true}, ...]' # Or path to secrets
+      - OPENROUTER_API_KEYS_JSON='[{"key": "or_key1_val", "active": true}, ...]' # Or path to secrets
+    # ...
     # ...
   postgres:
     image: postgres:15

@@ -22,7 +22,7 @@ kubectl scale deployment orchestrator --replicas=0
 ## 3. Monitoring
 ### 3.1 Key Metrics
 - **Orchestrator**: Task queue length, error rate
-- **Agents**: LLM API latency, token usage
+- **Agents**: LLM API latency and error rates specifically for Google Gemini calls and OpenRouter calls. Token usage breakdown by provider.
 - **Database**: Connection pool usage, query latency
 
 ### 3.2 Alert Thresholds
@@ -42,6 +42,14 @@ curl -X POST http://vector-db:8080/snapshot
 ```
 
 ## 5. Troubleshooting
+### 5.X New Troubleshooting Item: Provider-Specific API Issues
+**Symptoms**: Errors related to "Google API" or "OpenRouter API," specific HTTP error codes (e.g., 429 from a specific provider, authentication errors).
+**Check**:
+1. Validity and permissions of Google Cloud credentials or relevant OpenRouter API keys.
+2. Quotas on the Google Cloud project or OpenRouter account.
+3. Status pages for Google Cloud AI services and OpenRouter.
+4. Network connectivity to `*.googleapis.com` and `openrouter.ai`.
+
 ### 5.1 Bot Unresponsive
 **Symptoms**: No response to commands  
 **Check**: 
