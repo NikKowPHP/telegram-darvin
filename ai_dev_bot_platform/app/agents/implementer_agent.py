@@ -33,4 +33,26 @@ def my_helper_function():
             prompt=todo_item,
             system_prompt=system_prompt
         )
-        return {"raw_code_response": code_response}
+        filename = None
+        code_content = ""
+        if code_response and "\n" in code_response:
+            try:
+                lines = code_response.split("\n", 1)
+                filename = lines[0].strip()
+                if len(lines) > 1:
+                    code_content = lines[1]
+                else: # Only filename was provided
+                    code_content = ""
+            except Exception as e:
+                logger.error(f"ImplementerAgent: Error parsing filename and code: {e}")
+                # Fallback if parsing fails, or return an error structure
+                filename = "error_parsing_filename.txt"
+                code_content = code_response # return raw response as code
+        elif code_response: # No newline, assume it's all code or a filename only
+            # This simple logic assumes if no newline, it might be a filename or just code.
+            # For simplicity for 4B model, let's assume it's code without a clear filename.
+            # A more robust solution would handle this better.
+            filename = "unknown_file.txt" # Default filename if only one line.
+            code_content = code_response
+
+        return {"filename": filename, "code": code_content.strip()}
