@@ -615,7 +615,7 @@ Let's begin.
              ```
      *   Verification: Bot responds to `/start` and `/help`. User record created in DB.
 
-*   `[ ]` **P1.5: Model Orchestrator - Basic Structure & Task Routing Stub**
+*   `[x]` **P1.5: Model Orchestrator - Basic Structure & Task Routing Stub**
     *   File: `app/services/orchestrator_service.py`
         *   Content (very basic):
             ```python
