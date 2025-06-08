@@ -9,6 +9,7 @@ from app.agents.architect_agent import ArchitectAgent
 from app.agents.implementer_agent import ImplementerAgent
 from app.services.project_service import ProjectService
 from app.services.project_file_service import ProjectFileService
+from app.services.codebase_indexing_service import CodebaseIndexingService
 from app.schemas.project import ProjectCreate, ProjectUpdate
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ class ModelOrchestrator:
         self.implementer_agent = ImplementerAgent(self.llm_client)
         self.project_service = ProjectService()
         self.project_file_service = ProjectFileService()
+        self.codebase_indexing_service = CodebaseIndexingService(self.api_key_manager)
 
     async def process_user_request(self, user: User, user_input: str) -> str:
         logger.info(f"Orchestrator processing request for user {user.telegram_user_id}: '{user_input}'")
@@ -143,14 +145,38 @@ class ModelOrchestrator:
             return "Failed to implement task. Please try again."
 
     async def _handle_architect_request(self, user_input: str) -> str:
-        """Handle architect-specific requests"""
-        # Placeholder - will be implemented in Phase 3
-        return "Architect Agent would handle this request"
+        """Handle architect-specific requests with codebase context"""
+        try:
+            # Get relevant context from codebase index
+            # For now, we'll use a placeholder project ID since we don't have a real project context
+            project_id = "placeholder_project_id"
+            context_results = await self.codebase_indexing_service.query_codebase(project_id, user_input)
+            context = "\n".join([f"{res['file_path']}:\n{res['content']}" for res in context_results])
+            
+            return (
+                f"Architect Agent would handle: '{user_input}'\n"
+                f"Code context:\n{context}"
+            )
+        except Exception as e:
+            logger.error(f"Error in architect request: {e}", exc_info=True)
+            return "Error processing architect request."
 
     async def _handle_implementer_request(self, user_input: str) -> str:
-        """Handle implementer-specific requests"""
-        # Placeholder - will be implemented in Phase 3
-        return "Implementer Agent would handle this request"
+        """Handle implementer-specific requests with codebase context"""
+        try:
+            # Get relevant context from codebase index
+            # For now, we'll use a placeholder project ID since we don't have a real project context
+            project_id = "placeholder_project_id"
+            context_results = await self.codebase_indexing_service.query_codebase(project_id, user_input)
+            context = "\n".join([f"{res['file_path']}:\n{res['content']}" for res in context_results])
+            
+            return (
+                f"Implementer Agent would handle: '{user_input}'\n"
+                f"Code context:\n{context}"
+            )
+        except Exception as e:
+            logger.error(f"Error in implementer request: {e}", exc_info=True)
+            return "Error processing implementer request."
 
 # Function to get orchestrator instance
 def get_orchestrator(db: Session) -> ModelOrchestrator:
