@@ -31,7 +31,7 @@ This TODO list breaks tasks down into extremely small, explicit steps.
         2.  Create an empty file named `ai_dev_bot_platform/app/background_tasks/__init__.py`.
     *   Verification: The directory `ai_dev_bot_platform/app/background_tasks/` exists and contains an empty `__init__.py` file. (This addresses part of RF2.1)
 
-*   `[ ]` **FIX1.3: Create `config/` directory (project root level for platform config)**
+*   `[x]` **FIX1.3: Create `config/` directory (project root level for platform config)**
     *   Action: Create the directory `ai_dev_bot_platform/config/`.
     *   Verification: The directory `ai_dev_bot_platform/config/` exists.
 
