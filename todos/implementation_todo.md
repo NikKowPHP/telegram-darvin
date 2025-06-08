@@ -739,7 +739,7 @@ Let's begin.
 
 **Goal:** Implement basic Architect and Implementer agent logic using LLMs, and introduce the concept of a Project with a TODO list.
 
-*   `[ ]` **P2.1: Define Project SQLAlchemy Model & Pydantic Schema**
+*   `[x]` **P2.1: Define Project SQLAlchemy Model & Pydantic Schema**
     *   File: `app/models/project.py`
         *   Content (referencing `high_level_documentation.md`):
             ```python
@@ -807,7 +807,7 @@ Let's begin.
     *   Action: Add `from app.models.project import Project` to `app/db/init_db.py` and re-run to create the table.
     *   Verification: `projects` table created.
 
-*   `[ ]` **P2.2: Project CRUD Operations (Service Layer)**
+*   `[x]` **P2.2: Project CRUD Operations (Service Layer)**
     *   File: `app/services/project_service.py`
         *   Content:
             ```python
@@ -848,7 +848,7 @@ Let's begin.
             ```
     *   Verification: File created.
 
-*   `[ ]` **P2.3: LLM Client Utility**
+*   `[x]` **P2.3: LLM Client Utility**
     *   File: `app/utils/llm_client.py`
         *   Content (basic Gemini and OpenRouter call stubs):
             ```python
@@ -936,7 +936,7 @@ Let's begin.
             ```
     *   Verification: File created.
 
-*   `[ ]` **P2.4: Architect Agent Service - Basic Planning**
+*   `[x]` **P2.4: Architect Agent Service - Basic Planning**
     *   File: `app/agents/architect_agent.py`
         *   Content:
             ```python
@@ -1040,7 +1040,7 @@ Let's begin.
             ```
     *   Verification: File created.
 
-*   `[ ]` **P2.5: Implementer Agent Service - Basic Code Generation**
+*   `[x]` **P2.5: Implementer Agent Service - Basic Code Generation**
     *   File: `app/agents/implementer_agent.py`
         *   Content:
             ```python
@@ -1124,89 +1124,89 @@ Let's begin.
     *   Verification: File created.
 
 *   `[x]` **P2.6: Update Model Orchestrator to use Agents & Projects**
-    *   File: `app/services/orchestrator_service.py`
-        *   Action: Refactor significantly.
-        *   Key Logic:
-            *   Initialize `APIKeyManager` and `LLMClient`.
-            *   Initialize `ArchitectAgent` and `ImplementerAgent` with the `LLMClient`.
-            *   `process_user_request`:
-                *   If it's a new project description:
-                    *   Call `project_service.create_project`.
-                    *   Call `architect_agent.generate_initial_plan_and_docs`.
-                    *   Store documentation and TODO list in the `Project` model using `project_service.update_project`.
-                    *   Return a summary and part of the TODO list to the user.
-                *   If it's a command to proceed with a TODO item (e.g., user says "implement task 1 of project XYZ"):
-                    *   Retrieve project and its `current_todo_markdown`.
-                    *   Identify the next `[ ]` task.
-                    *   Call `implementer_agent.implement_todo_item` with task, project context, tech stack.
-                    *   Store generated code (how/where to store this is a big step - for now, maybe just log it or add to a temporary `project_files` structure).
-                    *   Update the TODO item to `[x]` in `current_todo_markdown` (simple string replace for now).
-                    *   (Verification step will be added in Phase 3).
-                *   Update `project.status` accordingly (e.g., 'planning', 'implementing', 'awaiting_verification').
-    *   Verification: Orchestrator can create a project, generate a plan via Architect, and (conceptually) delegate a TODO item to Implementer.
+     *   File: `app/services/orchestrator_service.py`
+     *   Action: Refactor significantly.
+     *   Key Logic:
+         *   Initialize `APIKeyManager` and `LLMClient`.
+         *   Initialize `ArchitectAgent` and `ImplementerAgent` with the `LLMClient`.
+         *   `process_user_request`:
+             *   If it's a new project description:
+                 *   Call `project_service.create_project`.
+                 *   Call `architect_agent.generate_initial_plan_and_docs`.
+                 *   Store documentation and TODO list in the `Project` model using `project_service.update_project`.
+                 *   Return a summary and part of the TODO list to the user.
+             *   If it's a command to proceed with a TODO item (e.g., user says "implement task 1 of project XYZ"):
+                 *   Retrieve project and its `current_todo_markdown`.
+                 *   Identify the next `[ ]` task.
+                 *   Call `implementer_agent.implement_todo_item` with task, project context, tech stack.
+                 *   Store generated code (how/where to store this is a big step - for now, maybe just log it or add to a temporary `project_files` structure).
+                 *   Update the TODO item to `[x]` in `current_todo_markdown` (simple string replace for now).
+                 *   (Verification step will be added in Phase 3).
+             *   Update `project.status` accordingly (e.g., 'planning', 'implementing', 'awaiting_verification').
+     *   Verification: Orchestrator can create a project, generate a plan via Architect, and (conceptually) delegate a TODO item to Implementer.
 
-*   `[x]` **P2.7: Define `project_files` SQLAlchemy Model & Pydantic Schema**
-    *   File: `app/models/project_file.py`
-        *   Content:
-            ```python
-            import uuid
-            from sqlalchemy import Column, TEXT, String, DateTime, ForeignKey
-            from sqlalchemy.dialects.postgresql import UUID
-            from sqlalchemy.sql import func
-            from sqlalchemy.orm import relationship
-            from app.db.session import Base
+*   `[ ]` **P2.7: Define `project_files` SQLAlchemy Model & Pydantic Schema**
+     *   File: `app/models/project_file.py`
+         *   Content:
+             ```python
+             import uuid
+             from sqlalchemy import Column, TEXT, String, DateTime, ForeignKey
+             from sqlalchemy.dialects.postgresql import UUID
+             from sqlalchemy.sql import func
+             from sqlalchemy.orm import relationship
+             from app.db.session import Base
 
-            class ProjectFile(Base):
-                __tablename__ = "project_files"
-                id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-                project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
-                file_path = Column(String(1000), nullable=False) # e.g., "src/main.py"
-                file_type = Column(String(100), nullable=True) # e.g., "python", "markdown"
-                content = Column(TEXT, nullable=True)
-                created_at = Column(DateTime, default=func.now())
-                updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+             class ProjectFile(Base):
+                 __tablename__ = "project_files"
+                 id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+                 project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+                 file_path = Column(String(1000), nullable=False) # e.g., "src/main.py"
+                 file_type = Column(String(100), nullable=True) # e.g., "python", "markdown"
+                 content = Column(TEXT, nullable=True)
+                 created_at = Column(DateTime, default=func.now())
+                 updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-                project = relationship("Project")
-            ```
-    *   File: `app/schemas/project_file.py`
-        *   Content:
-            ```python
-            from pydantic import BaseModel
-            from typing import Optional
-            import uuid
-            import datetime
+                 project = relationship("Project")
+             ```
+     *   File: `app/schemas/project_file.py`
+         *   Content:
+             ```python
+             from pydantic import BaseModel
+             from typing import Optional
+             import uuid
+             import datetime
 
-            class ProjectFileBase(BaseModel):
-                file_path: str
-                content: str
-                file_type: Optional[str] = None
+             class ProjectFileBase(BaseModel):
+                 file_path: str
+                 content: str
+                 file_type: Optional[str] = None
 
-            class ProjectFileCreate(ProjectFileBase):
-                project_id: uuid.UUID # System provided
+             class ProjectFileCreate(ProjectFileBase):
+                 project_id: uuid.UUID # System provided
 
-            class ProjectFileUpdate(BaseModel):
-                content: Optional[str] = None
-                file_path: Optional[str] = None # Should path be updatable? Usually not.
+             class ProjectFileUpdate(BaseModel):
+                 content: Optional[str] = None
+                 file_path: Optional[str] = None # Should path be updatable? Usually not.
 
-            class ProjectFileInDBBase(ProjectFileBase):
-                id: uuid.UUID
-                project_id: uuid.UUID
-                created_at: datetime.datetime
-                updated_at: datetime.datetime
+             class ProjectFileInDBBase(ProjectFileBase):
+                 id: uuid.UUID
+                 project_id: uuid.UUID
+                 created_at: datetime.datetime
+                 updated_at: datetime.datetime
 
-                class Config:
-                    from_attributes = True
-            
-            class ProjectFile(ProjectFileInDBBase):
-                pass
-            ```
-    *   Action: Add to `init_db.py` and run.
-    *   Verification: Table created.
+                 class Config:
+                     from_attributes = True
+             
+             class ProjectFile(ProjectFileInDBBase):
+                 pass
+             ```
+     *   Action: Add to `init_db.py` and run.
+     *   Verification: Table created.
 
-*   `[x]` **P2.8: `project_file_service.py` CRUD Operations**
-    *   File: `app/services/project_file_service.py`
-        *   Content: Basic CRUD (create, get by path, get all for project, update content).
-    *   Verification: Service file created.
+*   `[ ]` **P2.8: `project_file_service.py` CRUD Operations**
+     *   File: `app/services/project_file_service.py`
+         *   Content: Basic CRUD (create, get by path, get all for project, update content).
+     *   Verification: Service file created.
 
 ---
 
