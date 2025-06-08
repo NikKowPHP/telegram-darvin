@@ -522,98 +522,98 @@ Let's begin.
              ```
      *   Verification: File created.
 
-*   `[ ]` **P1.4: Basic Telegram Bot Setup & `/start` Command**
-    *   File: `app/telegram_bot/handlers.py`
-        *   Content:
-            ```python
-            import logging
-            from telegram import Update
-            from telegram.ext import ContextTypes, CommandHandler
-            from sqlalchemy.orm import Session
-            from app.db.session import SessionLocal # For direct session if not using DI from framework
-            from app.services import user_service
-            from app.schemas.user import UserCreate
+*   `[x]` **P1.4: Basic Telegram Bot Setup & `/start` Command**
+     *   File: `app/telegram_bot/handlers.py`
+         *   Content:
+             ```python
+             import logging
+             from telegram import Update
+             from telegram.ext import ContextTypes, CommandHandler
+             from sqlalchemy.orm import Session
+             from app.db.session import SessionLocal # For direct session if not using DI from framework
+             from app.services import user_service
+             from app.schemas.user import UserCreate
 
-            logger = logging.getLogger(__name__)
+             logger = logging.getLogger(__name__)
 
-            async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-                user_tg = update.effective_user
-                logger.info(f"User {user_tg.id} ({user_tg.username}) started the bot.")
+             async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+                 user_tg = update.effective_user
+                 logger.info(f"User {user_tg.id} ({user_tg.username}) started the bot.")
 
-                db: Session = SessionLocal() # Manual session management for handlers
-                try:
-                    user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
-                    if not user_db:
-                        user_in = UserCreate(telegram_user_id=user_tg.id, username=user_tg.username)
-                        user_db = user_service.create_user(db, user_in=user_in)
-                        await update.message.reply_text(
-                            f"Welcome, {user_tg.first_name}! Your account has been created with initial credits: {user_db.credit_balance:.2f}."
-                        )
-                    else:
-                        await update.message.reply_text(
-                            f"Welcome back, {user_tg.first_name}! Your credit balance is: {user_db.credit_balance:.2f}."
-                        )
-                except Exception as e:
-                    logger.error(f"Error in start_command for user {user_tg.id}: {e}", exc_info=True)
-                    await update.message.reply_text("Sorry, something went wrong while setting up your account.")
-                finally:
-                    db.close()
+                 db: Session = SessionLocal() # Manual session management for handlers
+                 try:
+                     user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
+                     if not user_db:
+                         user_in = UserCreate(telegram_user_id=user_tg.id, username=user_tg.username)
+                         user_db = user_service.create_user(db, user_in=user_in)
+                         await update.message.reply_text(
+                             f"Welcome, {user_tg.first_name}! Your account has been created with initial credits: {user_db.credit_balance:.2f}."
+                         )
+                     else:
+                         await update.message.reply_text(
+                             f"Welcome back, {user_tg.first_name}! Your credit balance is: {user_db.credit_balance:.2f}."
+                         )
+                 except Exception as e:
+                     logger.error(f"Error in start_command for user {user_tg.id}: {e}", exc_info=True)
+                     await update.message.reply_text("Sorry, something went wrong while setting up your account.")
+                 finally:
+                     db.close()
 
-                await update.message.reply_text(
-                    "I am your AI Development Assistant! Describe your project or use /help for commands."
-                )
+                 await update.message.reply_text(
+                     "I am your AI Development Assistant! Describe your project or use /help for commands."
+                 )
 
-            async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-                await update.message.reply_text(
-                    "Available commands:\n"
-                    "/start - Start or restart the bot\n"
-                    "/help - Show this help message\n"
-                    "/status - Check your project status and credits (TODO)\n"
-                    # Add more commands as they are implemented
-                )
+             async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+                 await update.message.reply_text(
+                     "Available commands:\n"
+                     "/start - Start or restart the bot\n"
+                     "/help - Show this help message\n"
+                     "/status - Check your project status and credits (TODO)\n"
+                     # Add more commands as they are implemented
+                 )
 
-            # Placeholder for message handler
-            async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-                text = update.message.text
-                logger.info(f"Received message from {update.effective_user.id}: {text}")
-                # TODO: Route to Model Orchestrator
-                await update.message.reply_text(f"Received: '{text}'. Orchestration logic coming soon!")
+             # Placeholder for message handler
+             async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+                 text = update.message.text
+                 logger.info(f"Received message from {update.effective_user.id}: {text}")
+                 # TODO: Route to Model Orchestrator
+                 await update.message.reply_text(f"Received: '{text}'. Orchestration logic coming soon!")
 
-            # Add more handlers here (e.g., for project descriptions, other commands)
-            ```
-    *   File: `app/telegram_bot/bot_main.py`
-        *   Content:
-            ```python
-            import logging
-            from telegram.ext import Application, CommandHandler, MessageHandler, filters
-            from app.core.config import settings
-            from app.telegram_bot.handlers import start_command, help_command, message_handler
+             # Add more handlers here (e.g., for project descriptions, other commands)
+             ```
+     *   File: `app/telegram_bot/bot_main.py`
+         *   Content:
+             ```python
+             import logging
+             from telegram.ext import Application, CommandHandler, MessageHandler, filters
+             from app.core.config import settings
+             from app.telegram_bot.handlers import start_command, help_command, message_handler
 
-            logger = logging.getLogger(__name__)
+             logger = logging.getLogger(__name__)
 
-            def run_bot():
-                logger.info("Starting Telegram bot...")
-                application = Application.builder().token(settings.TELEGRAM_BOT_TOKEN).build()
+             def run_bot():
+                 logger.info("Starting Telegram bot...")
+                 application = Application.builder().token(settings.TELEGRAM_BOT_TOKEN).build()
 
-                # Register command handlers
-                application.add_handler(CommandHandler("start", start_command))
-                application.add_handler(CommandHandler("help", help_command))
-                # Add more command handlers here
+                 # Register command handlers
+                 application.add_handler(CommandHandler("start", start_command))
+                 application.add_handler(CommandHandler("help", help_command))
+                 # Add more command handlers here
 
-                # Register message handler for non-command messages
-                application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+                 # Register message handler for non-command messages
+                 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
-                logger.info("Telegram bot polling...")
-                application.run_polling()
+                 logger.info("Telegram bot polling...")
+                 application.run_polling()
 
-            if __name__ == "__main__":
-                # This is for running the bot directly (e.g., for development)
-                # In production, this might be managed by a process manager or part of the FastAPI app startup.
-                from app.core.logging_config import setup_logging
-                setup_logging()
-                run_bot()
-            ```
-    *   Verification: Bot responds to `/start` and `/help`. User record created in DB.
+             if __name__ == "__main__":
+                 # This is for running the bot directly (e.g., for development)
+                 # In production, this might be managed by a process manager or part of the FastAPI app startup.
+                 from app.core.logging_config import setup_logging
+                 setup_logging()
+                 run_bot()
+             ```
+     *   Verification: Bot responds to `/start` and `/help`. User record created in DB.
 
 *   `[ ]` **P1.5: Model Orchestrator - Basic Structure & Task Routing Stub**
     *   File: `app/services/orchestrator_service.py`
