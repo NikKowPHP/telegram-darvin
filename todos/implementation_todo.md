@@ -209,7 +209,7 @@ Here is the content for the new file:
         5.  Update `user_service.create_user(...)` to `user_service.create_user(...)`.
     *   **Verification:** The handlers now import `UserService`, create an instance of it, and call its methods.
 
-*   `[ ]` **F3.3: Update Orchestrator to use the new UserService class**
+*   `[x]` **F3.3: Update Orchestrator to use the new UserService class**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:**
         1.  At the top, change the import `from app.services.user_service import update_user_credits` to `from app.services.user_service import UserService`.

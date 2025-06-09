@@ -11,6 +11,7 @@ from app.services.project_service import ProjectService
 from app.services.project_file_service import ProjectFileService
 from app.services.codebase_indexing_service import CodebaseIndexingService
 from app.services.billing_service import ModelPricingService, APIKeyUsageService, CreditTransactionService
+from app.services.user_service import UserService
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.core.config import settings
 from decimal import Decimal
@@ -30,6 +31,7 @@ class ModelOrchestrator:
         self.model_pricing_service = ModelPricingService()
         self.api_key_usage_service = APIKeyUsageService()
         self.credit_transaction_service = CreditTransactionService()
+        self.user_service = UserService()
 
     async def process_user_request(self, user: User, user_input: str) -> str:
         logger.info(f"Orchestrator processing request for user {user.telegram_user_id}: '{user_input}'")
@@ -351,7 +353,7 @@ class ModelOrchestrator:
             return
 
         # Deduct credits from user
-        updated_user = update_user_credits(self.db, user.telegram_user_id, credits_to_deduct, is_deduction=True)
+        updated_user = self.user_service.update_user_credits(self.db, user.telegram_user_id, credits_to_deduct, is_deduction=True)
         
         if not updated_user:
             logger.warning(f"Failed to deduct {credits_to_deduct} credits for user {user.id} (insufficient balance or error).")
