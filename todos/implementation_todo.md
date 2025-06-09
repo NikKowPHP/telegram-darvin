@@ -66,7 +66,7 @@ Here is the content for the new file:
         3.  Make sure `button_handler` is imported from `.handlers`.
     *   **Verification:** The `bot_main.py` now registers a `CallbackQueryHandler`. Clicking the "Buy Credits" buttons in Telegram now provides a response.
 
-*   `[ ]` **F1.4: Create a utility function to ZIP project files**
+*   `[x]` **F1.4: Create a utility function to ZIP project files**
     *   **File:** `ai_dev_bot_platform/app/utils/file_utils.py` (Create this new file)
     *   **Action:** Add the following content to the new file. This function will create a ZIP archive in memory.
         ```python
