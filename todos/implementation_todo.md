@@ -287,7 +287,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The `app/db/migrations/env.py` file exists and is populated.
 
-*   `[ ]` **F2.4: Remove old database initialization logic**
+*   `[x]` **F2.4: Remove old database initialization logic**
     *   **File:** `ai_dev_bot_platform/app/db/init_db.py`
     *   **Action:** Delete this file. It is no longer needed and should not be used.
     *   **Verification:** The file `app/db/init_db.py` has been deleted.
