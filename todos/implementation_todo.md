@@ -1053,7 +1053,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: YAML file created with basic structure for PVC, StatefulSet/Deployment, and Service.
 
-*   `[ ]` **P6.4: Create Kubernetes Manifest Stubs - `redis-k8s.yaml`**
+*   `[x]` **P6.4: Create Kubernetes Manifest Stubs - `redis-k8s.yaml`**
     *   File: `deploy/kubernetes/redis-k8s.yaml`
     *   Action: Generate basic YAML for Redis:
         ```yaml
