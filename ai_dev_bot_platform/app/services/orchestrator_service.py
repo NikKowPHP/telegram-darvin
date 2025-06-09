@@ -69,30 +69,42 @@ class ModelOrchestrator:
             project = self.project_service.create_project(self.db, project_in)
             
             # Generate plan with architect agent
-            plan_result = await self.architect_agent.generate_initial_plan_and_docs(
-                project_requirements=description,
-                project_title=project.title
-            )
+            try:
+                plan_result = await self.architect_agent.generate_initial_plan_and_docs(
+                    project_requirements=description,
+                    project_title=project.title
+                )
+            except Exception as e:
+                logger.error(f"LLM error generating project plan: {e}", exc_info=True)
+                return f"Error generating project plan: {str(e)}"
             
             if "error" in plan_result:
                 return f"Error generating project plan: {plan_result['error']}"
             
             # Deduct credits for LLM call if successful
             if "llm_call_details" in plan_result:
-                await self._deduct_credits_for_llm_call(
-                    user=user,
-                    llm_response_data=plan_result["llm_call_details"],
-                    task_type="planning",
-                    project_id=project.id
-                )
+                try:
+                    await self._deduct_credits_for_llm_call(
+                        user=user,
+                        llm_response_data=plan_result["llm_call_details"],
+                        task_type="planning",
+                        project_id=project.id
+                    )
+                except Exception as e:
+                    logger.error(f"Credit deduction failed: {e}", exc_info=True)
+                    # Continue despite credit deduction failure
             
             # Update project with generated artifacts
-            update_data = ProjectUpdate(
-                status="planning",
-                current_todo_markdown=plan_result.get("todo_list_markdown", ""),
-                tech_stack=plan_result.get("tech_stack_suggestion", {})
-            )
-            self.project_service.update_project(self.db, project.id, update_data)
+            try:
+                update_data = ProjectUpdate(
+                    status="planning",
+                    current_todo_markdown=plan_result.get("todo_list_markdown", ""),
+                    tech_stack=plan_result.get("tech_stack_suggestion", {})
+                )
+                self.project_service.update_project(self.db, project.id, update_data)
+            except Exception as e:
+                logger.error(f"Database update failed: {e}", exc_info=True)
+                return "Failed to save project details. Please contact support."
             
             # Return summary to user
             todo_preview = "\n".join(plan_result.get("todo_list_markdown", "").split("\n")[:3])
@@ -102,8 +114,8 @@ class ModelOrchestrator:
                 f"Use 'implement task 1 of project {project.id}' to start."
             )
         except Exception as e:
-            logger.error(f"Error creating project: {e}", exc_info=True)
-            return "Failed to create project. Please try again."
+            logger.error(f"Unexpected error creating project: {e}", exc_info=True)
+            return "Failed to create project due to an unexpected error. Please try again."
 
     async def _handle_implement_task(self, user: User, project_id: str, task_index: int) -> str:
         """Implement a specific TODO item from a project"""
@@ -185,6 +197,36 @@ class ModelOrchestrator:
                 if "[ ]" not in new_todo_markdown:
                     updated_project_status = "verification_complete" # A new status before final README
                     logger.info(f"All tasks completed for project {project.id}")
+                
+                    logger.info(f"Project {project.id} tasks complete. Generating README.md...")
+                    self.project_service.update_project(self.db, project.id, ProjectUpdate(status="readme_generation")) # New status
+
+                    # Fetch all project files
+                    db_project_files = self.project_file_service.get_project_files_by_project(self.db, project_id=project.id)
+                    project_files_for_readme = [{"file_path": pf.file_path, "content": pf.content} for pf in db_project_files]
+
+                    readme_content = await self.architect_agent.generate_project_readme(project, project_files_for_readme)
+
+                    if readme_content.startswith("Error:"):
+                        # Handle error, maybe set project status to 'readme_failed'
+                        self.project_service.update_project(self.db, project.id, ProjectUpdate(status="readme_failed"))
+                        # Return error message to user
+                        return f"All tasks implemented and verified, but failed to generate README.md: {readme_content}"
+                    else:
+                        # Save README.md as a project file
+                        self.project_file_service.create_project_file(
+                            db=self.db,
+                            project_id=project.id,
+                            file_path="README.md",
+                            content=readme_content,
+                            file_type="markdown"
+                        )
+                        self.project_service.update_project(self.db, project.id, ProjectUpdate(status="completed"))
+                        logger.info(f"README.md generated and project {project.id} marked as completed.")
+                        return (
+                            f"Project '{project.title}' is complete! All tasks implemented and verified.\n"
+                            f"README.md has been generated. Project is ready for delivery."
+                        )
                 
                 self.project_service.update_project(self.db, project.id, ProjectUpdate(
                     current_todo_markdown=new_todo_markdown,

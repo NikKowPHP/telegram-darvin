@@ -805,7 +805,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: Method exists.
 
-*   `[ ]` **P5.2: Orchestrator Triggers `generate_project_readme`**
+*   `[x]` **P5.2: Orchestrator Triggers `generate_project_readme`**
     *   File: `app/services/orchestrator_service.py`
     *   Action:
         1.  In `_handle_implement_task`, when `updated_project_status` becomes `"verification_complete"` (or a new "readme_generation" status):
@@ -848,7 +848,7 @@ This `implementation_todo.md` will assume:
     *   Note: `ProjectFileService.create_project_file` needs to be called with a `ProjectFileCreate` schema object. Orchestrator needs to construct this.
     *   Verification: Orchestrator calls `generate_project_readme` and saves the output.
 
-*   `[ ]` **P5.3: Refine Error Handling in Services & Agents**
+*   `[x]` **P5.3: Refine Error Handling in Services & Agents**
     *   Action: Review all `*.py` files in `app/services/` and `app/agents/`.
         *   Wrap external calls (DB, LLM APIs) in more specific `try-except` blocks (e.g., `sqlalchemy.exc.SQLAlchemyError`, `httpx.HTTPStatusError`, specific Gemini/OpenRouter exceptions if their SDKs provide them).
         *   Log errors with detailed context (user_id, project_id, method name, parameters).

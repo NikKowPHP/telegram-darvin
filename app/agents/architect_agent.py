@@ -34,9 +34,10 @@ class ArchitectAgent:
         The README should be well-formatted in Markdown.
         """
         
-        readme_content = await self.llm_client.call_gemini(prompt, model_name="gemini-1.5-pro-latest")
-        
-        if readme_content.startswith("Error:"):
-            logger.error(f"Error generating README for project {project.id}: {readme_content}")
-            return f"Error: Could not generate README.md. LLM Error: {readme_content}"
-        return readme_content
+        try:
+            readme_content = await self.llm_client.call_gemini(prompt, model_name="gemini-1.5-pro-latest")
+            return readme_content
+        except Exception as e:
+            error_msg = f"Error generating README for project {project.id}: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            return f"Error: Could not generate README.md. Reason: {str(e)}"
