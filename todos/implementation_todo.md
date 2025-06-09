@@ -737,7 +737,7 @@ This `implementation_todo.md` will assume:
     *   Action: Add `application.add_handler(CommandHandler("status", status_command))` to `bot_main.py`.
     *   Verification: `/status` command shows credit balance and basic project info.
 
-*   `[ ]` **P4.10: Implement `/credits` Command (Stub for Purchase)**
+*   `[x]` **P4.10: Implement `/credits` Command (Stub for Purchase)**
     *   File: `app/telegram_bot/handlers.py`
     *   Action: Create `credits_command` handler:
         ```python
