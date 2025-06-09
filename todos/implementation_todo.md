@@ -108,7 +108,7 @@ Here is the content for the new file:
 
 **Goal:** Ensure the Telegram bot polling process runs automatically when the application is started with Docker or Uvicorn.
 
-*   `[ ]` **F2.1: Make the bot's run function asynchronous**
+*   `[x]` **F2.1: Make the bot's run function asynchronous**
     *   **File:** `ai_dev_bot_platform/app/telegram_bot/bot_main.py`
     *   **Action:**
         1.  Change the function definition `def run_bot():` to `async def run_bot():`.
