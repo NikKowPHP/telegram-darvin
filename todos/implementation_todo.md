@@ -308,7 +308,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** When the app is running, navigating to `/health` returns `{"status": "ok"}`.
 
-*   `[ ]` **F3.2: Update Kubernetes manifest with health probes**
+*   `[x]` **F3.2: Update Kubernetes manifest with health probes**
     *   **File:** `deploy/kubernetes/app-k8s.yaml`
     *   **Action:** Find the `containers:` section for the `ai-dev-bot-app`. Add `livenessProbe` and `readinessProbe` to it.
         ```yaml

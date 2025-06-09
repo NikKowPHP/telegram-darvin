@@ -17,6 +17,18 @@ spec:
         image: your-repo/ai-dev-bot-app:latest
         ports:
         - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 45
+          periodSeconds: 30
         envFrom:
         - configMapRef:
             name: app-config
