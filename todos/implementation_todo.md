@@ -1,256 +1,381 @@
-Of course. Based on the detailed verification report, I will now create a new `implementation_todo.md` file.
+Of course. I will create a new, highly detailed `implementation_todo.md` file based on the analysis and recommended next steps.
 
-This file is designed with a small 4B LLM in mind. The steps are extremely granular, sequential, and explicit to minimize ambiguity and ensure the model can complete the tasks successfully.
+This plan is meticulously structured for an autonomous 4B LLM agent. Each step is an atomic, explicit, and verifiable action, minimizing ambiguity and cognitive load. The goal is to guide the agent to elevate the application from its current state to a feature-complete and production-hardened system.
 
 ---
 Here is the content for the new file:
 
-# `implementation_todo.md` - Critical Fixes for Production Readiness
+# `implementation_todo.md` - From MVP to Production Readiness
 
-**Project Goal:** To resolve critical bugs, operational gaps, and architectural inconsistencies identified in the verification report. Completing these tasks will make the application stable, functional, and ready for deployment.
+**Project Goal:** To implement the remaining core features and production-hardening measures, making the AI Development Assistant robust, secure, and ready for deployment.
 
-**Guiding Principle:** Each task is an atomic unit of work. Complete one task, verify it, and then move to the next.
-
----
-
-## Fix 1: Repair Credit Deduction System (Critical)
-
-**Goal:** Ensure that LLM token usage data is correctly passed from the Agents to the Orchestrator so that credit deduction can function as designed.
-
-*   `[x]` **F1.1: Update `ImplementerAgent` to handle LLM response dictionary**
-    *   **File:** `ai_dev_bot_platform/app/agents/implementer_agent.py`
-    *   **Action:**
-        1.  Find the `implement_todo_item` method.
-        2.  Locate the line: `code_response = await self.llm_client.call_openrouter(...)`
-        3.  Rename the variable `code_response` to `llm_response_dict`. The line should now be: `llm_response_dict = await self.llm_client.call_openrouter(...)`
-        4.  Directly below that line, add a new line to extract the text content: `code_response = llm_response_dict.get("text_response", "")`
-        5.  Find the final `return` statement in the method. It currently looks like `return {"filename": filename, "code": code_content.strip()}`.
-        6.  Modify it to include the full LLM response dictionary. The new return statement should be:
-            ```python
-            return {"filename": filename, "code": code_content.strip(), "llm_call_details": llm_response_dict}
-            ```
-    *   **Verification:** The `implement_todo_item` method now returns a dictionary that includes the `llm_call_details` key.
-
-*   `[x]` **F1.2: Update `ArchitectAgent` (Planning) to return LLM details**
-    *   **File:** `ai_dev_bot_platform/app/agents/architect_agent.py`
-    *   **Action:**
-        1.  Find the `generate_initial_plan_and_docs` method.
-        2.  Locate the line: `response_text = await self.llm_client.call_gemini(...)`
-        3.  Rename the variable `response_text` to `llm_response_dict`.
-        4.  Directly below it, add a new line: `response_text = llm_response_dict.get("text_response", "")`
-        5.  Find the final `return` statement in the `try` block. Modify it to include the LLM details:
-            ```python
-            return {
-                "documentation": doc_content,
-                "tech_stack_suggestion": tech_stack_str,
-                "todo_list_markdown": todo_list_md,
-                "llm_call_details": llm_response_dict
-            }
-            ```
-    *   **Verification:** The `generate_initial_plan_and_docs` method now returns a dictionary containing the `llm_call_details` key.
-
-*   `[x]` **F1.3: Update `ArchitectAgent` (Verification) to return LLM details**
-    *   **File:** `ai_dev_bot_platform/app/agents/architect_agent.py`
-    *   **Action:**
-        1.  Find the `verify_implementation_step` method.
-        2.  Locate the line: `response_text = await self.llm_client.call_gemini(...)`
-        3.  Rename the variable `response_text` to `llm_response_dict`.
-        4.  Directly below it, add a new line: `response_text = llm_response_dict.get("text_response", "")`
-        5.  Find the `return` statements within this method. Modify all of them to include the `llm_call_details` key.
-            *   Change `return {"status": "ERROR", "feedback": response_text}` to `return {"status": "ERROR", "feedback": response_text, "llm_call_details": llm_response_dict}`.
-            *   Change `return {"status": "APPROVED", "feedback": response_text}` to `return {"status": "APPROVED", "feedback": response_text, "llm_call_details": llm_response_dict}`.
-            *   Change `return {"status": "REJECTED", "feedback": response_text}` to `return {"status": "REJECTED", "feedback": response_text, "llm_call_details": llm_response_dict}`.
-    *   **Verification:** The `verify_implementation_step` method now always returns a dictionary containing the `llm_call_details` key.
-
-*   `[x]` **F1.4: Update Orchestrator to use new LLM details for credit deduction**
-    *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
-    *   **Action:**
-        1.  Find the `_handle_new_project` method. Locate the line `if "error" in plan_result:`. The credit deduction logic is right below it.
-        2.  Ensure the call to `_deduct_credits_for_llm_call` uses `plan_result["llm_call_details"]`. The code should look like this:
-            ```python
-            # Deduct credits for LLM call if successful
-            if "llm_call_details" in plan_result:
-                await self._deduct_credits_for_llm_call(
-                    user=user,
-                    llm_response_data=plan_result["llm_call_details"],
-                    task_type="planning",
-                    project_id=project.id
-                )
-            ```
-        3.  Find the `_handle_implement_task` method.
-        4.  After the `implementation = await self.implementer_agent.implement_todo_item(...)` call, add the credit deduction logic for the **implementation** step:
-            ```python
-            # Deduct credits for implementation LLM call
-            if "llm_call_details" in implementation:
-                await self._deduct_credits_for_llm_call(
-                    user=user,
-                    llm_response_data=implementation["llm_call_details"],
-                    task_type="implementation",
-                    project_id=project.id
-                )
-            ```
-        5.  In the same method, after the `verification_result = await self.architect_agent.verify_implementation_step(...)` call, add the credit deduction logic for the **verification** step:
-            ```python
-            # Deduct credits for verification LLM call
-            if "llm_call_details" in verification_result:
-                await self._deduct_credits_for_llm_call(
-                    user=user,
-                    llm_response_data=verification_result["llm_call_details"],
-                    task_type="verification",
-                    project_id=project.id
-                )
-            ```
-    *   **Verification:** The orchestrator now calls `_deduct_credits_for_llm_call` after each of the three agent calls (planning, implementation, verification), using the correct nested dictionary.
+**Guiding Principle:** Complete each task sequentially. Do not move to the next `[ ]` item until the current one is finished and verified.
 
 ---
 
-## Fix 2: Integrate Telegram Bot into Application Startup
+## Feature 1: Complete User-Facing Features (Credits & Delivery)
 
-**Goal:** Ensure the Telegram bot polling process runs automatically when the application is started with Docker or Uvicorn.
+**Goal:** Implement the user-facing stubs for purchasing credits and the backend logic for delivering the final project as a ZIP file.
 
-*   `[x]` **F2.1: Make the bot's run function asynchronous**
-    *   **File:** `ai_dev_bot_platform/app/telegram_bot/bot_main.py`
-    *   **Action:**
-        1.  Change the function definition `def run_bot():` to `async def run_bot():`.
-        2.  Change the final line `application.run_polling()` to `await application.run_polling()`.
-        3.  Remove the entire `if __name__ == "__main__":` block from the bottom of the file. It will no longer be run directly.
-    *   **Verification:** The file `bot_main.py` now contains an `async def run_bot()` function and has no `if __name__ == "__main__":` block.
-
-*   `[x]` **F2.2: Update main.py to manage the bot's lifecycle**
-    *   **File:** `ai_dev_bot_platform/main.py`
-    *   **Action:** Replace the entire content of the file with the following code. This adds the FastAPI `lifespan` manager to start the bot.
-        ```python
-        import asyncio
-        from contextlib import asynccontextmanager
-        from fastapi import FastAPI
-        from app.core.logging_config import setup_logging
-        from app.telegram_bot.bot_main import run_bot
-
-        # Setup logging at the application's entry point
-        setup_logging()
-
-        @asynccontextmanager
-        async def lifespan(app: FastAPI):
-            # This code runs on startup
-            print("Application startup: Starting Telegram bot in background...")
-            loop = asyncio.get_event_loop()
-            bot_task = loop.create_task(run_bot())
-            yield
-            # This code runs on shutdown
-            print("Application shutdown: Stopping Telegram bot...")
-            bot_task.cancel()
-            try:
-                await bot_task
-            except asyncio.CancelledError:
-                print("Bot task successfully cancelled.")
-
-        app = FastAPI(title="AI Development Assistant API", lifespan=lifespan)
-
-        @app.get("/")
-        async def root():
-            return {"message": "AI Development Assistant API is running and bot is active!"}
-        ```
-    *   **Verification:** `main.py` has been updated with the new content. When running `uvicorn main:app --reload`, the console should show "Starting Telegram bot in background..." and the bot should be responsive in Telegram.
-
----
-
-## Fix 3: Standardize Service Layer and User Service
-
-**Goal:** Refactor the function-based `user_service.py` into a class-based service to match the architecture of other services.
-
-*   `[x]` **F3.1: Convert user_service.py to a class**
-    *   **File:** `ai_dev_bot_platform/app/services/user_service.py`
-    *   **Action:** Replace the entire content of the file with the following class-based implementation.
-        ```python
-        from sqlalchemy.orm import Session
-        from app.models.user import User
-        from app.schemas.user import UserCreate, UserUpdate
-        from typing import Optional, List
-        from decimal import Decimal
-
-        class UserService:
-            def get_user_by_telegram_id(self, db: Session, telegram_user_id: int) -> Optional[User]:
-                return db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
-
-            def create_user(self, db: Session, user_in: UserCreate, initial_credits: Decimal = Decimal("10.00")) -> User:
-                db_user = User(
-                    telegram_user_id=user_in.telegram_user_id,
-                    username=user_in.username,
-                    email=user_in.email,
-                    credit_balance=initial_credits
-                )
-                db.add(db_user)
-                db.commit()
-                db.refresh(db_user)
-                return db_user
-
-            def update_user_credits(self, db: Session, telegram_user_id: int, amount: Decimal, is_deduction: bool = True) -> Optional[User]:
-                db_user = self.get_user_by_telegram_id(db, telegram_user_id)
-                if db_user:
-                    if is_deduction:
-                        if db_user.credit_balance < amount:
-                            return None # Insufficient credits
-                        db_user.credit_balance -= amount
-                    else:
-                        db_user.credit_balance += amount
-                    db.commit()
-                    db.refresh(db_user)
-                return db_user
-        ```
-    *   **Verification:** `user_service.py` now contains the `UserService` class with all the user-related methods inside it.
-
-*   `[x]` **F3.2: Update Telegram handlers to use the new UserService class**
+*   `[x]` **F1.1: Add "Buy Credits" buttons to the `/credits` command**
     *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
     *   **Action:**
-        1.  Change the import from `from app.services import user_service` to `from app.services.user_service import UserService`.
-        2.  In every handler function (`start_command`, `credits_command`, `message_handler`), find where `user_service` is used.
-        3.  Before it's used, add this line to create an instance: `user_service = UserService()`.
-        4.  Update all calls from `user_service.get_user_by_telegram_id(...)` to `user_service.get_user_by_telegram_id(...)` (no change here, but good to verify).
-        5.  Update `user_service.create_user(...)` to `user_service.create_user(...)`.
-    *   **Verification:** The handlers now import `UserService`, create an instance of it, and call its methods.
+        1.  At the top of the file, add the import: `from telegram import InlineKeyboardButton, InlineKeyboardMarkup`.
+        2.  Find the `credits_command` function.
+        3.  Replace the `await update.message.reply_text(...)` call with the following code to add buttons:
+            ```python
+            keyboard = [
+                [InlineKeyboardButton("Buy 100 Credits ($10)", callback_data='buy_100')],
+                [InlineKeyboardButton("Buy 500 Credits ($45)", callback_data='buy_500')],
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await update.message.reply_text(
+                f"Your current credit balance is: {user_db.credit_balance:.2f}.\n\n"
+                "Purchase options will be available soon! Select an option to be notified:",
+                reply_markup=reply_markup
+            )
+            ```
+    *   **Verification:** The `/credits` command now displays two inline buttons for purchasing credits.
 
-*   `[x]` **F3.3: Update Orchestrator to use the new UserService class**
+*   `[ ]` **F1.2: Create a handler for the new "Buy Credits" buttons**
+    *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
+    *   **Action:**
+        1.  Add a new function to the end of the file called `button_handler`:
+            ```python
+            async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+                query = update.callback_query
+                await query.answer() # Acknowledge the button press
+                
+                # For now, this is a stub.
+                await query.edit_message_text(
+                    text=f"Thank you for your interest in purchasing credits. "
+                         f"The payment system is not yet implemented. You selected: {query.data}"
+                )
+            ```
+    *   **Verification:** A new `button_handler` function exists in `handlers.py`.
+
+*   `[ ]` **F1.3: Register the new button handler in the bot**
+    *   **File:** `ai_dev_bot_platform/app/telegram_bot/bot_main.py`
+    *   **Action:**
+        1.  Add the import: `from telegram.ext import CallbackQueryHandler`.
+        2.  In the `run_bot` function, add this line after the other `add_handler` calls:
+            ```python
+            application.add_handler(CallbackQueryHandler(button_handler))
+            ```
+        3.  Make sure `button_handler` is imported from `.handlers`.
+    *   **Verification:** The `bot_main.py` now registers a `CallbackQueryHandler`. Clicking the "Buy Credits" buttons in Telegram now provides a response.
+
+*   `[ ]` **F1.4: Create a utility function to ZIP project files**
+    *   **File:** `ai_dev_bot_platform/app/utils/file_utils.py` (Create this new file)
+    *   **Action:** Add the following content to the new file. This function will create a ZIP archive in memory.
+        ```python
+        import io
+        import zipfile
+        from typing import List, Dict
+
+        def create_project_zip(project_files: List[Dict[str, str]]) -> io.BytesIO:
+            """
+            Creates a ZIP file in memory from a list of project files.
+            
+            Args:
+                project_files: A list of dictionaries, where each dict has "file_path" and "content".
+                
+            Returns:
+                An in-memory bytes buffer containing the ZIP file.
+            """
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                for p_file in project_files:
+                    # Ensure file_path is relative and safe
+                    file_path = p_file.get("file_path", "unknown_file.txt")
+                    content = p_file.get("content", "")
+                    zip_file.writestr(file_path, content.encode('utf-8'))
+            
+            zip_buffer.seek(0)
+            return zip_buffer
+        ```
+    *   **Verification:** The new file `app/utils/file_utils.py` exists and contains the `create_project_zip` function.
+
+*   `[ ]` **F1.5: Integrate ZIP creation and delivery into the Orchestrator**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:**
-        1.  At the top, change the import `from app.services.user_service import update_user_credits` to `from app.services.user_service import UserService`.
-        2.  Inside the `ModelOrchestrator`'s `__init__` method, add a new line to initialize the service: `self.user_service = UserService()`.
-        3.  Find the `_deduct_credits_for_llm_call` method.
-        4.  Locate the line `updated_user = update_user_credits(...)`.
-        5.  Change this call to use the instance: `updated_user = self.user_service.update_user_credits(...)`.
-    *   **Verification:** The orchestrator now correctly initializes and uses the `UserService` class.
+        1.  At the top, add the import: `from app.utils.file_utils import create_project_zip`.
+        2.  Modify the `process_user_request` method. Change its return type from `str` to a dictionary. The return dictionary will have the format `{'text': '...', 'zip_buffer': None}`.
+        3.  Find the `_handle_implement_task` method.
+        4.  Locate the section where the project status is set to `"completed"`.
+        5.  Inside that block, after fetching the project files (`project_files_for_readme`), add this logic to create the ZIP file:
+            ```python
+            # Create ZIP file of the project
+            zip_buffer = create_project_zip(project_files_for_readme)
+            ```
+        6.  Modify the final `return` statement in that block to return the dictionary with the zip buffer:
+            ```python
+            return {
+                "text": (
+                    f"Project '{project.title}' is complete! All tasks implemented and verified.\n"
+                    f"README.md has been generated. Find your project attached."
+                ),
+                "zip_buffer": zip_buffer,
+                "project_title": project.title
+            }
+            ```
+        7.  Update all other `return` statements in the `ModelOrchestrator` to return the dictionary format, e.g., `return {'text': 'Some message', 'zip_buffer': None}`.
+    *   **Verification:** The orchestrator now creates a ZIP file upon project completion and returns it in a dictionary structure.
+
+*   `[ ]` **F1.6: Update Telegram handler to send the ZIP file**
+    *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
+    *   **Action:**
+        1.  Find the `message_handler` function.
+        2.  Locate the line `response_text = await orchestrator.process_user_request(...)` and change it to `response_data = await orchestrator.process_user_request(...)`.
+        3.  Replace `await update.message.reply_text(response_text)` with the following logic:
+            ```python
+            response_text = response_data.get('text')
+            zip_buffer = response_data.get('zip_buffer')
+            
+            if response_text:
+                await update.message.reply_text(response_text)
+
+            if zip_buffer:
+                project_title = response_data.get('project_title', 'project')
+                file_name = f"{project_title.replace(' ', '_')}.zip"
+                await context.bot.send_document(
+                    chat_id=update.effective_chat.id,
+                    document=zip_buffer,
+                    filename=file_name
+                )
+            ```
+    *   **Verification:** When a project is completed, the bot now sends the generated text message AND attaches the project ZIP file.
 
 ---
 
-## Fix 4: Centralize Model Name Configuration
+## Feature 2: Production Hardening: Database Migrations (Alembic)
 
-**Goal:** Remove hardcoded LLM model names from the agent code and manage them in the central configuration file.
+**Goal:** Integrate Alembic to manage database schema changes safely, replacing the non-production `create_all()` method.
 
-*   `[x]` **F4.1: Add model names to the settings file**
-    *   **File:** `ai_dev_bot_platform/app/core/config.py`
-    *   **Action:** Inside the `Settings` class, add the following fields for model configuration:
-        ```python
-        # Model Configuration
-        ARCHITECT_MODEL: str = "gemini-1.5-pro-latest"
-        IMPLEMENTER_MODEL: str = "openrouter/auto" # Let OpenRouter decide the best model
-        VERIFICATION_MODEL: str = "gemini-1.5-pro-latest"
-        DEFAULT_GEMINI_MODEL: str = "gemini-1.5-flash-latest"
+*   `[ ]` **F2.1: Add Alembic to requirements**
+    *   **File:** `ai_dev_bot_platform/requirements.txt`
+    *   **Action:** Add the line `alembic` to the file.
+    *   **Verification:** `requirements.txt` contains `alembic`.
+
+*   `[ ]` **F2.2: Create the `alembic.ini` configuration file**
+    *   **File:** `ai_dev_bot_platform/alembic.ini` (Create this file in the project root)
+    *   **Action:** Add the following content:
+        ```ini
+        [alembic]
+        script_location = app/db/migrations
+        sqlalchemy.url = postgresql://user:password@host:port/dbname
+
+        [loggers]
+        keys = root,sqlalchemy,alembic
+
+        [handlers]
+        keys = console
+
+        [formatters]
+        keys = generic
+
+        [logger_root]
+        level = WARN
+        handlers = console
+        qualname =
+
+        [logger_sqlalchemy]
+        level = WARN
+        handlers =
+        qualname = sqlalchemy.engine
+
+        [logger_alembic]
+        level = INFO
+        handlers =
+        qualname = alembic
+
+        [handler_console]
+        class = StreamHandler
+        args = (sys.stderr,)
+        level = NOTSET
+        formatter = generic
+
+        [formatter_generic]
+        format = %(levelname)-5.5s [%(name)s] %(message)s
+        datefmt = %H:%M:%S
         ```
-    *   **Verification:** The `Settings` class in `config.py` now contains these new configuration variables.
+    *   **Verification:** `alembic.ini` exists in the project root.
 
-*   `[x]` **F4.2: Update Agents and LLMClient to use settings**
-    *   **File:** `ai_dev_bot_platform/app/agents/architect_agent.py`
-    *   **Action:**
-        1.  Add the import: `from app.core.config import settings`.
-        2.  In `generate_initial_plan_and_docs`, find `model_name="gemini-1.5-pro-latest"` and change it to `model_name=settings.ARCHITECT_MODEL`.
-        3.  In `verify_implementation_step`, find `model_name="gemini-1.5-pro-latest"` and change it to `model_name=settings.VERIFICATION_MODEL`.
-    *   **File:** `ai_dev_bot_platform/app/agents/implementer_agent.py`
-    *   **Action:**
-        1.  Add the import: `from app.core.config import settings`.
-        2.  In `implement_todo_item`, find the line `model_name = "openrouter/auto"`.
-        3.  Change it to `model_name = settings.IMPLEMENTER_MODEL`.
-    *   **File:** `ai_dev_bot_platform/app/utils/llm_client.py`
-    *   **Action:**
-        1.  Add the import: `from app.core.config import settings`.
-        2.  In `call_gemini`, change the method signature from `async def call_gemini(self, prompt: str, model_name: str = "gemini-1.5-flash-latest")` to `async def call_gemini(self, prompt: str, model_name: str = None)`.
-        3.  Inside `call_gemini`, add a check at the top: `if model_name is None: model_name = settings.DEFAULT_GEMINI_MODEL`.
-    *   **Verification:** All hardcoded model names in the agents and the LLM client's default have been replaced with references to the `settings` object.
+*   `[ ]` **F2.3: Create the Alembic `env.py` script**
+    *   **File:** `ai_dev_bot_platform/app/db/migrations/env.py` (Create the `migrations` directory first)
+    *   **Action:** Add the following content. This script tells Alembic how to find your models.
+        ```python
+        from logging.config import fileConfig
+        from sqlalchemy import engine_from_config
+        from sqlalchemy import pool
+        from alembic import context
+
+        # this is the Alembic Config object, which provides
+        # access to the values within the .ini file in use.
+        config = context.config
+
+        # Interpret the config file for Python logging.
+        # This line sets up loggers basically.
+        if config.config_file_name is not None:
+            fileConfig(config.config_file_name)
+
+        # add your model's MetaData object here
+        # for 'autogenerate' support
+        from app.db.session import Base
+        from app.models.user import User
+        from app.models.project import Project
+        from app.models.project_file import ProjectFile
+        from app.models.api_key_models import ModelPricing, APIKeyUsage
+        from app.models.transaction import CreditTransaction
+        
+        target_metadata = Base.metadata
+
+        # other values from the config, defined by the needs of env.py,
+        # can be acquired:
+        # my_important_option = config.get_main_option("my_important_option")
+        # ... etc.
+
+        def run_migrations_offline() -> None:
+            """Run migrations in 'offline' mode.
+            This configures the context with just a URL
+            and not an Engine, though an Engine is acceptable
+            here as well.  By skipping the Engine creation
+            we don't even need a DBAPI to be available.
+            Calls to context.execute() here emit the given string to the
+            script output.
+            """
+            url = config.get_main_option("sqlalchemy.url")
+            context.configure(
+                url=url,
+                target_metadata=target_metadata,
+                literal_binds=True,
+                dialect_opts={"paramstyle": "named"},
+            )
+
+            with context.begin_transaction():
+                context.run_migrations()
+
+
+        def run_migrations_online() -> None:
+            """Run migrations in 'online' mode.
+            In this scenario we need to create an Engine
+            and associate a connection with the context.
+            """
+            from app.core.config import settings
+            alembic_config = config.get_section(config.config_ini_section)
+            alembic_config['sqlalchemy.url'] = settings.get_database_url()
+            connectable = engine_from_config(
+                alembic_config,
+                prefix="sqlalchemy.",
+                poolclass=pool.NullPool,
+            )
+
+            with connectable.connect() as connection:
+                context.configure(
+                    connection=connection, target_metadata=target_metadata
+                )
+
+                with context.begin_transaction():
+                    context.run_migrations()
+
+
+        if context.is_offline_mode():
+            run_migrations_offline()
+        else:
+            run_migrations_online()
+        ```
+    *   **Verification:** The `app/db/migrations/env.py` file exists and is populated.
+
+*   `[ ]` **F2.4: Remove old database initialization logic**
+    *   **File:** `ai_dev_bot_platform/app/db/init_db.py`
+    *   **Action:** Delete this file. It is no longer needed and should not be used.
+    *   **Verification:** The file `app/db/init_db.py` has been deleted.
+
+---
+
+## Feature 3: Production Hardening: Observability & Testing
+
+**Goal:** Add a health check endpoint for Kubernetes and create the first unit test for the application.
+
+*   `[ ]` **F3.1: Add a health check endpoint to the API**
+    *   **File:** `ai_dev_bot_platform/main.py`
+    *   **Action:** In the `app = FastAPI(...)` section, find the `@app.get("/")` endpoint. Directly below it, add a new endpoint for health checks:
+        ```python
+        @app.get("/health")
+        async def health_check():
+            return {"status": "ok"}
+        ```
+    *   **Verification:** When the app is running, navigating to `/health` returns `{"status": "ok"}`.
+
+*   `[ ]` **F3.2: Update Kubernetes manifest with health probes**
+    *   **File:** `deploy/kubernetes/app-k8s.yaml`
+    *   **Action:** Find the `containers:` section for the `ai-dev-bot-app`. Add `livenessProbe` and `readinessProbe` to it.
+        ```yaml
+        # ... inside spec.template.spec.containers array
+        - name: ai-dev-bot-app
+          image: your-repo/ai-dev-bot-app:latest
+          ports:
+          - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 45
+            periodSeconds: 30
+          envFrom:
+        #... rest of file
+        ```
+    *   **Verification:** The `app-k8s.yaml` deployment now includes probe configurations.
+
+*   `[ ]` **F3.3: Add testing libraries to requirements**
+    *   **File:** `ai_dev_bot_platform/requirements.txt`
+    *   **Action:** Add the following lines to the file:
+        ```
+        pytest
+        pytest-mock
+        ```
+    *   **Verification:** `requirements.txt` contains `pytest` and `pytest-mock`.
+
+*   `[ ]` **F3.4: Create the first unit test**
+    *   **File:** `ai_dev_bot_platform/tests/test_services.py` (Create this new file and the `tests` directory if it doesn't exist)
+    *   **Action:** Add the following content to create a test for the `UserService`.
+        ```python
+        import pytest
+        from unittest.mock import MagicMock
+        from app.services.user_service import UserService
+        from app.models.user import User
+        from decimal import Decimal
+
+        def test_get_user_by_telegram_id():
+            # 1. Setup
+            mock_db_session = MagicMock()
+            user_service = UserService()
+            
+            test_user_id = 12345
+            expected_user = User(
+                id=1, 
+                telegram_user_id=test_user_id, 
+                username="testuser", 
+                credit_balance=Decimal("10.00")
+            )
+
+            # 2. Mock the DB call
+            mock_db_session.query.return_value.filter.return_value.first.return_value = expected_user
+            
+            # 3. Action
+            result_user = user_service.get_user_by_telegram_id(mock_db_session, telegram_user_id=test_user_id)
+            
+            # 4. Assert
+            assert result_user is not None
+            assert result_user.telegram_user_id == test_user_id
+            assert result_user.username == "testuser"
+            mock_db_session.query.return_value.filter.return_value.first.assert_called_once()
+        ```
+    *   **Verification:** The `tests/test_services.py` file exists and contains a valid `pytest` test. A human supervisor can run `pytest` from the root directory to confirm it passes.

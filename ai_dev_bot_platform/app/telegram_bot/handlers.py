@@ -1,6 +1,7 @@
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal # For direct session if not using DI from framework
 from app.services import user_service
@@ -56,9 +57,16 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await update.message.reply_text("Please use /start first to initialize your account.")
             return
             
+        keyboard = [
+            [InlineKeyboardButton("Buy 100 Credits ($10)", callback_data='buy_100')],
+            [InlineKeyboardButton("Buy 500 Credits ($45)", callback_data='buy_500')],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
         await update.message.reply_text(
-            f"Your current credit balance is: {user_db.credit_balance:.2f}\n"
-            f"Each credit is worth ${settings.PLATFORM_CREDIT_VALUE_USD:.4f}"
+            f"Your current credit balance is: {user_db.credit_balance:.2f}.\n\n"
+            "Purchase options will be available soon! Select an option to be notified:",
+            reply_markup=reply_markup
         )
     except Exception as e:
         logger.error(f"Error in credits_command for user {user_tg.id}: {e}", exc_info=True)
