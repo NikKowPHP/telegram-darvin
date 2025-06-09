@@ -66,12 +66,13 @@ Does this code correctly implement the task according to the project context and
 Provide feedback: 'APPROVED' or 'REJECTED: [detailed reasons and suggestions]'.
 If REJECTED, suggest updates to the code or the TODO list."""
 
-        response_text = await self.llm_client.call_gemini(prompt, model_name="gemini-1.5-pro-latest")
+        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name="gemini-1.5-pro-latest")
+        response_text = llm_response_dict.get("text_response", "")
         
         if response_text.startswith("Error:"):
-            return {"status": "ERROR", "feedback": response_text}
+            return {"status": "ERROR", "feedback": response_text, "llm_call_details": llm_response_dict}
         
         if "APPROVED" in response_text.upper():
-            return {"status": "APPROVED", "feedback": response_text}
+            return {"status": "APPROVED", "feedback": response_text, "llm_call_details": llm_response_dict}
         else:
-            return {"status": "REJECTED", "feedback": response_text}
+            return {"status": "REJECTED", "feedback": response_text, "llm_call_details": llm_response_dict}

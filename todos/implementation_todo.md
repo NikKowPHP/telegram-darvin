@@ -49,7 +49,7 @@ Here is the content for the new file:
             ```
     *   **Verification:** The `generate_initial_plan_and_docs` method now returns a dictionary containing the `llm_call_details` key.
 
-*   `[ ]` **F1.3: Update `ArchitectAgent` (Verification) to return LLM details**
+*   `[x]` **F1.3: Update `ArchitectAgent` (Verification) to return LLM details**
     *   **File:** `ai_dev_bot_platform/app/agents/architect_agent.py`
     *   **Action:**
         1.  Find the `verify_implementation_step` method.
