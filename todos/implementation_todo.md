@@ -855,7 +855,7 @@ This `implementation_todo.md` will assume:
         *   Ensure functions/methods return clear error indicators or raise custom exceptions that can be caught by the orchestrator or handlers.
     *   Verification: At least 3 key services/agents have improved `try-except` blocks and contextual logging for errors.
 
-*   `[ ]` **P5.4: Improve User-Facing Error Messages in Telegram Handlers**
+*   `[x]` **P5.4: Improve User-Facing Error Messages in Telegram Handlers**
     *   File: `app/telegram_bot/handlers.py`
     *   Action: Review `except Exception as e:` blocks.
         *   Instead of generic "Sorry, something went wrong", provide slightly more specific but still user-friendly messages.
@@ -863,7 +863,7 @@ This `implementation_todo.md` will assume:
         *   Avoid exposing raw exception details to the user.
     *   Verification: At least 2 error messages in handlers are more user-friendly.
 
-*   `[ ]` **P5.5: Document Key Manual Test Scenarios (in `documentation/test_plan.md`)**
+*   `[x]` **P5.5: Document Key Manual Test Scenarios (in `documentation/test_plan.md`)**
     *   File: `documentation/test_plan.md`
     *   Action: Add a new section "6. High-Level Test Scenarios" (or similar).
     *   List 5-7 end-to-end scenarios. Examples:
