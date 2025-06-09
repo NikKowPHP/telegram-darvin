@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from app.utils.llm_client import LLMClient
 from typing import Dict, Any
 from app.core.config import settings
@@ -75,39 +76,31 @@ def my_helper_function():
 
         return {"filename": filename, "code": code_content.strip(), "llm_call_details": llm_response_dict}
 
-    async def apply_changes_with_aider(self, project_root_path: str, file_path: str, instruction: str) -> Dict[str, str]:
-        logger.info(f"Attempting to apply changes to {file_path} using Aider: {instruction}")
-        # This is a highly simplified stub. Real Aider integration needs:
-        # - Aider installed in the environment
-        # - The project files accessible on the filesystem where Aider runs
-        # - Careful command construction and error handling
-        # - Potentially running Aider in a non-interactive mode or scripting its input
+    async def apply_changes_with_aider(self, project_root_path: str, files_to_edit: list[str], instruction: str) -> Dict[str, str]:
+        logger.info(f"Applying changes to {files_to_edit} with Aider: {instruction}")
         
-        # For now, this is a placeholder for where such logic would go.
-        # It's unlikely a 4B model can implement robust Aider interaction without very specific, step-by-step guidance
-        # on how Aider CLI works and how to manage its state.
-
-        # Example conceptual command structure (actual commands and flow will be more complex):
-        # aider_command = [
-        #     "aider",
-        #     file_path, # Add file to Aider session
-        #     "--message", instruction, # Provide the instruction
-        #     # Potentially flags for auto-apply, non-interactive, etc.
-        # ]
-        # Assuming project_root_path is the CWD for Aider
+        # Command structure: aider --yes --message "instruction" file1 file2 ...
+        command = ["aider", "--yes", "--message", instruction] + files_to_edit
+        
         try:
-            # This is a blocking call, for async, use asyncio.create_subprocess_exec
-            # result = subprocess.run(aider_command, cwd=project_root_path, capture_output=True, text=True, check=False, timeout=300)
-            # if result.returncode == 0:
-            #     logger.info(f"Aider command successful. Output: {result.stdout}")
-            #     # Need to read the file content after Aider modifies it
-            #     # with open(os.path.join(project_root_path, file_path), 'r') as f:
-            #     #    updated_content = f.read()
-            #     return {"status": "success", "output": result.stdout, "updated_content": "Placeholder: Read file content here"}
-            # else:
-            #     logger.error(f"Aider command failed. Error: {result.stderr}")
-            #     return {"status": "error", "output": result.stderr}
-            return {"status": "stubbed", "output": "Aider integration is stubbed."}
+            process = await asyncio.create_subprocess_exec(
+                *command,
+                cwd=project_root_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            
+            stdout, stderr = await process.communicate()
+            
+            if process.returncode == 0:
+                logger.info(f"Aider command successful. Output: {stdout.decode()}")
+                return {"status": "success", "output": stdout.decode()}
+            else:
+                logger.error(f"Aider command failed. Error: {stderr.decode()}")
+                return {"status": "error", "output": stderr.decode()}
+        except FileNotFoundError:
+            logger.error("Aider command not found. Is 'aider-chat' installed in the environment?")
+            return {"status": "error", "output": "Aider command not found."}
         except Exception as e:
             logger.error(f"Exception running Aider: {e}", exc_info=True)
             return {"status": "error", "output": str(e)}
