@@ -19,3 +19,4 @@ numpy
 alembic
 pytest
 pytest-mock
+aider-chat
