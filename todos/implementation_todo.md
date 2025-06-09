@@ -188,7 +188,7 @@ Here is the content for the new file:
             ```
     *   **Verification:** `UserService` now has a method to handle the logic of adding credits after a simulated purchase.
 
-*   `[ ]` **F2.3: Update Telegram button handler to use the new service**
+*   `[x]` **F2.3: Update Telegram button handler to use the new service**
     *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
     *   **Action:** Replace the stubbed `button_handler` with this new implementation that calls the service.
         ```python

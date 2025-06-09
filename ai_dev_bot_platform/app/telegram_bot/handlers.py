@@ -121,10 +121,31 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    await query.answer()  # Acknowledge the button press
+    await query.answer()
     
-    # For now, this is a stub.
-    await query.edit_message_text(
-        text=f"Thank you for your interest in purchasing credits. "
-             f"The payment system is not yet implemented. You selected: {query.data}"
-    )
+    user_tg = update.effective_user
+    credit_package = query.data # e.g., 'buy_100'
+
+    db: Session = SessionLocal()
+    try:
+        user_service = UserService()
+        user_db = user_service.get_user_by_telegram_id(db, user_tg.id)
+        if not user_db:
+            await query.edit_message_text(text="Could not find your account. Please /start first.")
+            return
+
+        updated_user = user_service.add_credits_after_purchase(db, user_id=user_db.id, credit_package=credit_package)
+
+        if updated_user:
+            await query.edit_message_text(
+                text=f"Success! Your purchase was simulated. "
+                     f"Your new credit balance is: {updated_user.credit_balance:.2f}"
+            )
+        else:
+            await query.edit_message_text(text="An error occurred during the simulated purchase.")
+
+    except Exception as e:
+        logger.error(f"Error in button_handler: {e}", exc_info=True)
+        await query.edit_message_text(text="A server error occurred. Please try again later.")
+    finally:
+        db.close()
