@@ -202,7 +202,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** `alembic.ini` exists in the project root.
 
-*   `[ ]` **F2.3: Create the Alembic `env.py` script**
+*   `[x]` **F2.3: Create the Alembic `env.py` script**
     *   **File:** `ai_dev_bot_platform/app/db/migrations/env.py` (Create the `migrations` directory first)
     *   **Action:** Add the following content. This script tells Alembic how to find your models.
         ```python
