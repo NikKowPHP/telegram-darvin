@@ -61,7 +61,7 @@ Here is the content for the new file:
 
 **Goal:** Create a new Docker Compose file that injects the proxy settings into the application container during build and at runtime.
 
-*   `[ ]` **F3.1: Create the `docker-compose.proxy.yml` file**
+*   `[x]` **F3.1: Create the `docker-compose.proxy.yml` file**
     *   **File:** `ai_dev_bot_platform/docker-compose.proxy.yml` (Create this new file)
     *   **Action:** Add the following content. This file will be used *in addition* to the main `docker-compose.yml` to add the proxy configuration.
         ```yaml
