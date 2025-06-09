@@ -158,7 +158,7 @@ Here is the content for the new file:
 
 **Goal:** Refactor the function-based `user_service.py` into a class-based service to match the architecture of other services.
 
-*   `[ ]` **F3.1: Convert user_service.py to a class**
+*   `[x]` **F3.1: Convert user_service.py to a class**
     *   **File:** `ai_dev_bot_platform/app/services/user_service.py`
     *   **Action:** Replace the entire content of the file with the following class-based implementation.
         ```python
