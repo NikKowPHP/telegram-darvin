@@ -1142,7 +1142,7 @@ This `implementation_todo.md` will assume:
     *   Verification: YAML file created for App Deployment and Service. Image name is a placeholder.
     *   Note: This only deploys the FastAPI part. The Telegram bot (`bot_main.py`) would need its own Deployment if it's a separate long-running process, or integration into the app's startup. **For now, this `app-k8s.yaml` focuses on the FastAPI server.**
 
-*   `[ ]` **P6.6: Document K8s `ConfigMap` and `Secret` Structure (Example)**
+*   `[x]` **P6.6: Document K8s `ConfigMap` and `Secret` Structure (Example)**
     *   File: `deploy/kubernetes/config-secrets-example.md` (new file)
     *   Action: Create a markdown file outlining example structures.
         ```markdown
