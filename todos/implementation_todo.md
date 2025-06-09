@@ -765,7 +765,7 @@ This `implementation_todo.md` will assume:
 
 **Goal:** Enhance user experience with project READMEs, refine overall system stability, and prepare for testing.
 
-*   `[ ]` **P5.1: Add `generate_project_readme` to `ArchitectAgent`**
+*   `[x]` **P5.1: Add `generate_project_readme` to `ArchitectAgent`**
     *   File: `app/agents/architect_agent.py`
     *   Action: Add a new method:
         ```python
