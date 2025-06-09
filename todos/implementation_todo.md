@@ -1,381 +1,349 @@
-Of course. I will create a new, highly detailed `implementation_todo.md` file based on the analysis and recommended next steps.
+Of course. Based on the analysis, here is a new, comprehensive `implementation_todo.md` file designed to be executed by a small, autonomous 4B LLM agent.
 
-This plan is meticulously structured for an autonomous 4B LLM agent. Each step is an atomic, explicit, and verifiable action, minimizing ambiguity and cognitive load. The goal is to guide the agent to elevate the application from its current state to a feature-complete and production-hardened system.
+The tasks are broken down into the smallest possible atomic units, with explicit file paths and code, to ensure clarity and successful implementation.
 
 ---
 Here is the content for the new file:
 
-# `implementation_todo.md` - From MVP to Production Readiness
+# `implementation_todo.md` - Advanced Features and Final Hardening
 
-**Project Goal:** To implement the remaining core features and production-hardening measures, making the AI Development Assistant robust, secure, and ready for deployment.
+**Project Goal:** To evolve the application from a functional MVP to a feature-rich, robust, and testable system by implementing Aider integration, a simulated payment flow, and an expanded test suite.
 
-**Guiding Principle:** Complete each task sequentially. Do not move to the next `[ ]` item until the current one is finished and verified.
+**Guiding Principle:** Complete each task in the exact order it is presented. Verify each step before proceeding to the next.
 
 ---
 
-## Feature 1: Complete User-Facing Features (Credits & Delivery)
+## Feature 1: Aider Integration for In-Place Code Editing
 
-**Goal:** Implement the user-facing stubs for purchasing credits and the backend logic for delivering the final project as a ZIP file.
+**Goal:** Implement the `apply_changes_with_aider` method and integrate it into the orchestrator, allowing for file refinement instead of just creation.
 
-*   `[x]` **F1.1: Add "Buy Credits" buttons to the `/credits` command**
-    *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
-    *   **Action:**
-        1.  At the top of the file, add the import: `from telegram import InlineKeyboardButton, InlineKeyboardMarkup`.
-        2.  Find the `credits_command` function.
-        3.  Replace the `await update.message.reply_text(...)` call with the following code to add buttons:
-            ```python
-            keyboard = [
-                [InlineKeyboardButton("Buy 100 Credits ($10)", callback_data='buy_100')],
-                [InlineKeyboardButton("Buy 500 Credits ($45)", callback_data='buy_500')],
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await update.message.reply_text(
-                f"Your current credit balance is: {user_db.credit_balance:.2f}.\n\n"
-                "Purchase options will be available soon! Select an option to be notified:",
-                reply_markup=reply_markup
-            )
-            ```
-    *   **Verification:** The `/credits` command now displays two inline buttons for purchasing credits.
-
-*   `[x]` **F1.2: Create a handler for the new "Buy Credits" buttons**
-    *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
-    *   **Action:**
-        1.  Add a new function to the end of the file called `button_handler`:
-            ```python
-            async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-                query = update.callback_query
-                await query.answer() # Acknowledge the button press
-                
-                # For now, this is a stub.
-                await query.edit_message_text(
-                    text=f"Thank you for your interest in purchasing credits. "
-                         f"The payment system is not yet implemented. You selected: {query.data}"
-                )
-            ```
-    *   **Verification:** A new `button_handler` function exists in `handlers.py`.
-
-*   `[x]` **F1.3: Register the new button handler in the bot**
-    *   **File:** `ai_dev_bot_platform/app/telegram_bot/bot_main.py`
-    *   **Action:**
-        1.  Add the import: `from telegram.ext import CallbackQueryHandler`.
-        2.  In the `run_bot` function, add this line after the other `add_handler` calls:
-            ```python
-            application.add_handler(CallbackQueryHandler(button_handler))
-            ```
-        3.  Make sure `button_handler` is imported from `.handlers`.
-    *   **Verification:** The `bot_main.py` now registers a `CallbackQueryHandler`. Clicking the "Buy Credits" buttons in Telegram now provides a response.
-
-*   `[x]` **F1.4: Create a utility function to ZIP project files**
-    *   **File:** `ai_dev_bot_platform/app/utils/file_utils.py` (Create this new file)
-    *   **Action:** Add the following content to the new file. This function will create a ZIP archive in memory.
-        ```python
-        import io
-        import zipfile
-        from typing import List, Dict
-
-        def create_project_zip(project_files: List[Dict[str, str]]) -> io.BytesIO:
-            """
-            Creates a ZIP file in memory from a list of project files.
-            
-            Args:
-                project_files: A list of dictionaries, where each dict has "file_path" and "content".
-                
-            Returns:
-                An in-memory bytes buffer containing the ZIP file.
-            """
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-                for p_file in project_files:
-                    # Ensure file_path is relative and safe
-                    file_path = p_file.get("file_path", "unknown_file.txt")
-                    content = p_file.get("content", "")
-                    zip_file.writestr(file_path, content.encode('utf-8'))
-            
-            zip_buffer.seek(0)
-            return zip_buffer
+*   `[ ]` **F1.1: Add Aider dependency**
+    *   **File:** `ai_dev_bot_platform/requirements.txt`
+    *   **Action:** Add the following line to the end of the file:
         ```
-    *   **Verification:** The new file `app/utils/file_utils.py` exists and contains the `create_project_zip` function.
+        aider-chat
+        ```
+    *   **Verification:** The `aider-chat` package is listed in `requirements.txt`.
 
-*   `[x]` **F1.5: Integrate ZIP creation and delivery into the Orchestrator**
+*   `[ ]` **F1.2: Implement the `apply_changes_with_aider` method**
+    *   **File:** `ai_dev_bot_platform/app/agents/implementer_agent.py`
+    *   **Action:**
+        1.  Add `import asyncio` to the top of the file.
+        2.  Replace the entire stub method `async def apply_changes_with_aider(...)` with the following functional implementation:
+            ```python
+            async def apply_changes_with_aider(self, project_root_path: str, files_to_edit: list[str], instruction: str) -> Dict[str, str]:
+                logger.info(f"Applying changes to {files_to_edit} with Aider: {instruction}")
+                
+                # Command structure: aider --yes --message "instruction" file1 file2 ...
+                command = ["aider", "--yes", "--message", instruction] + files_to_edit
+                
+                try:
+                    process = await asyncio.create_subprocess_exec(
+                        *command,
+                        cwd=project_root_path,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    
+                    stdout, stderr = await process.communicate()
+                    
+                    if process.returncode == 0:
+                        logger.info(f"Aider command successful. Output: {stdout.decode()}")
+                        return {"status": "success", "output": stdout.decode()}
+                    else:
+                        logger.error(f"Aider command failed. Error: {stderr.decode()}")
+                        return {"status": "error", "output": stderr.decode()}
+                except FileNotFoundError:
+                    logger.error("Aider command not found. Is 'aider-chat' installed in the environment?")
+                    return {"status": "error", "output": "Aider command not found."}
+                except Exception as e:
+                    logger.error(f"Exception running Aider: {e}", exc_info=True)
+                    return {"status": "error", "output": str(e)}
+            ```
+    *   **Verification:** The `apply_changes_with_aider` method in `implementer_agent.py` is now fully implemented using `asyncio.subprocess`.
+
+*   `[ ]` **F1.3: Add a "refine" command handler to the Orchestrator**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:**
-        1.  At the top, add the import: `from app.utils.file_utils import create_project_zip`.
-        2.  Modify the `process_user_request` method. Change its return type from `str` to a dictionary. The return dictionary will have the format `{'text': '...', 'zip_buffer': None}`.
-        3.  Find the `_handle_implement_task` method.
-        4.  Locate the section where the project status is set to `"completed"`.
-        5.  Inside that block, after fetching the project files (`project_files_for_readme`), add this logic to create the ZIP file:
+        1.  In the `process_user_request` method, add a new `re.match` check for a refine command. Place it after the existing `todo_match` block.
             ```python
-            # Create ZIP file of the project
-            zip_buffer = create_project_zip(project_files_for_readme)
+            # Check if this is a command to refine a file
+            refine_match = re.match(r"refine file (.+) in project (.+) with instruction: (.+)", user_input, re.IGNORECASE | re.DOTALL)
+            if refine_match:
+                file_path = refine_match.group(1).strip()
+                project_id = refine_match.group(2).strip()
+                instruction = refine_match.group(3).strip()
+                return await self._handle_refine_request(user, project_id, file_path, instruction)
             ```
-        6.  Modify the final `return` statement in that block to return the dictionary with the zip buffer:
+        2.  Add the new `_handle_refine_request` method to the `ModelOrchestrator` class:
             ```python
-            return {
-                "text": (
-                    f"Project '{project.title}' is complete! All tasks implemented and verified.\n"
-                    f"README.md has been generated. Find your project attached."
-                ),
-                "zip_buffer": zip_buffer,
-                "project_title": project.title
-            }
-            ```
-        7.  Update all other `return` statements in the `ModelOrchestrator` to return the dictionary format, e.g., `return {'text': 'Some message', 'zip_buffer': None}`.
-    *   **Verification:** The orchestrator now creates a ZIP file upon project completion and returns it in a dictionary structure.
+            async def _handle_refine_request(self, user: User, project_id: str, file_path: str, instruction: str) -> dict:
+                logger.info(f"Refining file {file_path} for project {project_id}")
+                project = self.project_service.get_project(self.db, uuid.UUID(project_id))
+                if not project:
+                    return {'text': "Project not found", 'zip_buffer': None}
 
-*   `[x]` **F1.6: Update Telegram handler to send the ZIP file**
-    *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
+                # This assumes project files are stored locally, which is a simplification.
+                # For this implementation, we'll assume a base path.
+                # In a real multi-user system, this path would be unique per project.
+                project_root_path = f"./workspace/{project_id}"
+                
+                # Ensure the directory exists (Aider needs it)
+                import os
+                os.makedirs(os.path.dirname(os.path.join(project_root_path, file_path)), exist_ok=True)
+                
+                # Get the file content from DB and write to local file for Aider
+                db_file = self.project_file_service.get_file_by_path(self.db, project.id, file_path)
+                if not db_file:
+                    return {'text': f"File '{file_path}' not found in project.", 'zip_buffer': None}
+
+                with open(os.path.join(project_root_path, file_path), "w") as f:
+                    f.write(db_file.content)
+
+                aider_result = await self.implementer_agent.apply_changes_with_aider(
+                    project_root_path=project_root_path,
+                    files_to_edit=[file_path],
+                    instruction=instruction
+                )
+                
+                if aider_result["status"] == "success":
+                    # Read the modified file and update the DB
+                    with open(os.path.join(project_root_path, file_path), "r") as f:
+                        new_content = f.read()
+                    self.project_file_service.update_file_content(self.db, db_file.id, new_content)
+                    return {'text': f"Successfully refined file '{file_path}'.\n{aider_result['output']}", 'zip_buffer': None}
+                else:
+                    return {'text': f"Failed to refine file '{file_path}'.\nError: {aider_result['output']}", 'zip_buffer': None}
+            ```
+        3.  To support the above, add a `get_file_by_path` method to `ProjectFileService`. In `ai_dev_bot_platform/app/services/project_file_service.py`:
+            ```python
+            def get_file_by_path(self, db: Session, project_id: uuid.UUID, file_path: str) -> Optional[ProjectFile]:
+                return db.query(ProjectFile).filter(
+                    ProjectFile.project_id == project_id,
+                    ProjectFile.file_path == file_path
+                ).first()
+            ```
+    *   **Verification:** The orchestrator can now handle a "refine" command, which calls the Aider integration and updates the file in the database.
+
+---
+
+## Feature 2: Stripe Integration for Credit Purchases (Simulated)
+
+**Goal:** Create a simulated but functional credit purchase flow without a live payment gateway, establishing the full backend logic.
+
+*   `[ ]` **F2.1: Add Stripe dependency and configuration**
+    *   **File:** `ai_dev_bot_platform/requirements.txt`
+    *   **Action:** Add the line `stripe` to the file.
+    *   **File:** `ai_dev_bot_platform/app/core/config.py`
+    *   **Action:** Add Stripe configuration variables to the `Settings` class:
+        ```python
+        # Stripe Configuration
+        STRIPE_SECRET_KEY: Optional[str] = None
+        STRIPE_WEBHOOK_SECRET: Optional[str] = None
+        ```
+    *   **File:** `ai_dev_bot_platform/.env.example`
+    *   **Action:** Add placeholder keys to the example environment file:
+        ```
+        # Stripe
+        STRIPE_SECRET_KEY="sk_test_YOUR_KEY"
+        STRIPE_WEBHOOK_SECRET="whsec_YOUR_KEY"
+        ```
+    *   **Verification:** Dependencies and configurations for Stripe are present.
+
+*   `[ ]` **F2.2: Implement credit purchase logic in `UserService`**
+    *   **File:** `ai_dev_bot_platform/app/services/user_service.py`
     *   **Action:**
-        1.  Find the `message_handler` function.
-        2.  Locate the line `response_text = await orchestrator.process_user_request(...)` and change it to `response_data = await orchestrator.process_user_request(...)`.
-        3.  Replace `await update.message.reply_text(response_text)` with the following logic:
+        1.  Add imports: `from app.services.billing_service import CreditTransactionService` and `from app.schemas.transaction import CreditTransactionCreate`.
+        2.  Add a new method `add_credits_after_purchase` to the `UserService` class.
             ```python
-            response_text = response_data.get('text')
-            zip_buffer = response_data.get('zip_buffer')
-            
-            if response_text:
-                await update.message.reply_text(response_text)
-
-            if zip_buffer:
-                project_title = response_data.get('project_title', 'project')
-                file_name = f"{project_title.replace(' ', '_')}.zip"
-                await context.bot.send_document(
-                    chat_id=update.effective_chat.id,
-                    document=zip_buffer,
-                    filename=file_name
+            def add_credits_after_purchase(self, db: Session, user_id: int, credit_package: str) -> Optional[User]:
+                """Simulates a successful credit purchase."""
+                credit_amounts = {
+                    'buy_100': Decimal("100.00"),
+                    'buy_500': Decimal("500.00"),
+                }
+                amount_to_add = credit_amounts.get(credit_package)
+                if not amount_to_add:
+                    return None
+                    
+                db_user = db.query(User).filter(User.id == user_id).first()
+                if not db_user:
+                    return None
+                    
+                db_user.credit_balance += amount_to_add
+                
+                # Record the transaction
+                transaction_service = CreditTransactionService()
+                transaction_in = CreditTransactionCreate(
+                    user_id=user_id,
+                    transaction_type='purchase',
+                    credits_amount=amount_to_add,
+                    description=f"Simulated purchase of {credit_package}"
                 )
+                transaction_service.record_transaction(db, transaction_in)
+                
+                db.commit()
+                db.refresh(db_user)
+                return db_user
             ```
-    *   **Verification:** When a project is completed, the bot now sends the generated text message AND attaches the project ZIP file.
+    *   **Verification:** `UserService` now has a method to handle the logic of adding credits after a simulated purchase.
+
+*   `[ ]` **F2.3: Update Telegram button handler to use the new service**
+    *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
+    *   **Action:** Replace the stubbed `button_handler` with this new implementation that calls the service.
+        ```python
+        async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+            query = update.callback_query
+            await query.answer()
+            
+            user_tg = update.effective_user
+            credit_package = query.data # e.g., 'buy_100'
+
+            db: Session = SessionLocal()
+            try:
+                user_service = UserService()
+                user_db = user_service.get_user_by_telegram_id(db, user_tg.id)
+                if not user_db:
+                    await query.edit_message_text(text="Could not find your account. Please /start first.")
+                    return
+
+                updated_user = user_service.add_credits_after_purchase(db, user_id=user_db.id, credit_package=credit_package)
+
+                if updated_user:
+                    await query.edit_message_text(
+                        text=f"Success! Your purchase was simulated. "
+                             f"Your new credit balance is: {updated_user.credit_balance:.2f}"
+                    )
+                else:
+                    await query.edit_message_text(text="An error occurred during the simulated purchase.")
+
+            except Exception as e:
+                logger.error(f"Error in button_handler: {e}", exc_info=True)
+                await query.edit_message_text(text="A server error occurred. Please try again later.")
+            finally:
+                db.close()
+        ```
+    *   **Verification:** Clicking the "Buy Credits" buttons now updates the user's credit balance in the database and informs them of the new total.
 
 ---
 
-## Feature 2: Production Hardening: Database Migrations (Alembic)
+## Feature 3: Comprehensive Test Suite Expansion
 
-**Goal:** Integrate Alembic to manage database schema changes safely, replacing the non-production `create_all()` method.
+**Goal:** Build out the test suite to cover more services and the orchestrator, ensuring application reliability.
 
-*   `[x]` **F2.1: Add Alembic to requirements**
-    *   **File:** `ai_dev_bot_platform/requirements.txt`
-    *   **Action:** Add the line `alembic` to the file.
-    *   **Verification:** `requirements.txt` contains `alembic`.
-
-*   `[x]` **F2.2: Create the `alembic.ini` configuration file**
-    *   **File:** `ai_dev_bot_platform/alembic.ini` (Create this file in the project root)
-    *   **Action:** Add the following content:
-        ```ini
-        [alembic]
-        script_location = app/db/migrations
-        sqlalchemy.url = postgresql://user:password@host:port/dbname
-
-        [loggers]
-        keys = root,sqlalchemy,alembic
-
-        [handlers]
-        keys = console
-
-        [formatters]
-        keys = generic
-
-        [logger_root]
-        level = WARN
-        handlers = console
-        qualname =
-
-        [logger_sqlalchemy]
-        level = WARN
-        handlers =
-        qualname = sqlalchemy.engine
-
-        [logger_alembic]
-        level = INFO
-        handlers =
-        qualname = alembic
-
-        [handler_console]
-        class = StreamHandler
-        args = (sys.stderr,)
-        level = NOTSET
-        formatter = generic
-
-        [formatter_generic]
-        format = %(levelname)-5.5s [%(name)s] %(message)s
-        datefmt = %H:%M:%S
-        ```
-    *   **Verification:** `alembic.ini` exists in the project root.
-
-*   `[x]` **F2.3: Create the Alembic `env.py` script**
-    *   **File:** `ai_dev_bot_platform/app/db/migrations/env.py` (Create the `migrations` directory first)
-    *   **Action:** Add the following content. This script tells Alembic how to find your models.
+*   `[ ]` **F3.1: Add a test for the `ProjectService`**
+    *   **File:** `ai_dev_bot_platform/tests/test_services.py`
+    *   **Action:** Add the following new test function to the file.
         ```python
-        from logging.config import fileConfig
-        from sqlalchemy import engine_from_config
-        from sqlalchemy import pool
-        from alembic import context
+        from app.services.project_service import ProjectService
+        from app.schemas.project import ProjectCreate
 
-        # this is the Alembic Config object, which provides
-        # access to the values within the .ini file in use.
-        config = context.config
-
-        # Interpret the config file for Python logging.
-        # This line sets up loggers basically.
-        if config.config_file_name is not None:
-            fileConfig(config.config_file_name)
-
-        # add your model's MetaData object here
-        # for 'autogenerate' support
-        from app.db.session import Base
-        from app.models.user import User
-        from app.models.project import Project
-        from app.models.project_file import ProjectFile
-        from app.models.api_key_models import ModelPricing, APIKeyUsage
-        from app.models.transaction import CreditTransaction
-        
-        target_metadata = Base.metadata
-
-        # other values from the config, defined by the needs of env.py,
-        # can be acquired:
-        # my_important_option = config.get_main_option("my_important_option")
-        # ... etc.
-
-        def run_migrations_offline() -> None:
-            """Run migrations in 'offline' mode.
-            This configures the context with just a URL
-            and not an Engine, though an Engine is acceptable
-            here as well.  By skipping the Engine creation
-            we don't even need a DBAPI to be available.
-            Calls to context.execute() here emit the given string to the
-            script output.
-            """
-            url = config.get_main_option("sqlalchemy.url")
-            context.configure(
-                url=url,
-                target_metadata=target_metadata,
-                literal_binds=True,
-                dialect_opts={"paramstyle": "named"},
-            )
-
-            with context.begin_transaction():
-                context.run_migrations()
-
-
-        def run_migrations_online() -> None:
-            """Run migrations in 'online' mode.
-            In this scenario we need to create an Engine
-            and associate a connection with the context.
-            """
-            from app.core.config import settings
-            alembic_config = config.get_section(config.config_ini_section)
-            alembic_config['sqlalchemy.url'] = settings.get_database_url()
-            connectable = engine_from_config(
-                alembic_config,
-                prefix="sqlalchemy.",
-                poolclass=pool.NullPool,
-            )
-
-            with connectable.connect() as connection:
-                context.configure(
-                    connection=connection, target_metadata=target_metadata
-                )
-
-                with context.begin_transaction():
-                    context.run_migrations()
-
-
-        if context.is_offline_mode():
-            run_migrations_offline()
-        else:
-            run_migrations_online()
-        ```
-    *   **Verification:** The `app/db/migrations/env.py` file exists and is populated.
-
-*   `[x]` **F2.4: Remove old database initialization logic**
-    *   **File:** `ai_dev_bot_platform/app/db/init_db.py`
-    *   **Action:** Delete this file. It is no longer needed and should not be used.
-    *   **Verification:** The file `app/db/init_db.py` has been deleted.
-
----
-
-## Feature 3: Production Hardening: Observability & Testing
-
-**Goal:** Add a health check endpoint for Kubernetes and create the first unit test for the application.
-
-*   `[x]` **F3.1: Add a health check endpoint to the API**
-    *   **File:** `ai_dev_bot_platform/main.py`
-    *   **Action:** In the `app = FastAPI(...)` section, find the `@app.get("/")` endpoint. Directly below it, add a new endpoint for health checks:
-        ```python
-        @app.get("/health")
-        async def health_check():
-            return {"status": "ok"}
-        ```
-    *   **Verification:** When the app is running, navigating to `/health` returns `{"status": "ok"}`.
-
-*   `[x]` **F3.2: Update Kubernetes manifest with health probes**
-    *   **File:** `deploy/kubernetes/app-k8s.yaml`
-    *   **Action:** Find the `containers:` section for the `ai-dev-bot-app`. Add `livenessProbe` and `readinessProbe` to it.
-        ```yaml
-        # ... inside spec.template.spec.containers array
-        - name: ai-dev-bot-app
-          image: your-repo/ai-dev-bot-app:latest
-          ports:
-          - containerPort: 8000
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 45
-            periodSeconds: 30
-          envFrom:
-        #... rest of file
-        ```
-    *   **Verification:** The `app-k8s.yaml` deployment now includes probe configurations.
-
-*   `[x]` **F3.3: Add testing libraries to requirements**
-    *   **File:** `ai_dev_bot_platform/requirements.txt`
-    *   **Action:** Add the following lines to the file:
-        ```
-        pytest
-        pytest-mock
-        ```
-    *   **Verification:** `requirements.txt` contains `pytest` and `pytest-mock`.
-
-*   `[x]` **F3.4: Create the first unit test**
-    *   **File:** `ai_dev_bot_platform/tests/test_services.py` (Create this new file and the `tests` directory if it doesn't exist)
-    *   **Action:** Add the following content to create a test for the `UserService`.
-        ```python
-        import pytest
-        from unittest.mock import MagicMock
-        from app.services.user_service import UserService
-        from app.models.user import User
-        from decimal import Decimal
-
-        def test_get_user_by_telegram_id():
+        def test_create_project():
             # 1. Setup
             mock_db_session = MagicMock()
-            user_service = UserService()
+            project_service = ProjectService()
             
-            test_user_id = 12345
-            expected_user = User(
-                id=1, 
-                telegram_user_id=test_user_id, 
-                username="testuser", 
-                credit_balance=Decimal("10.00")
+            user_id = 1
+            project_in = ProjectCreate(
+                user_id=user_id,
+                title="Test Project",
+                description="A test description."
             )
-
-            # 2. Mock the DB call
-            mock_db_session.query.return_value.filter.return_value.first.return_value = expected_user
             
-            # 3. Action
-            result_user = user_service.get_user_by_telegram_id(mock_db_session, telegram_user_id=test_user_id)
+            # 2. Action
+            project_service.create_project(mock_db_session, project_in, user_id=user_id)
             
-            # 4. Assert
-            assert result_user is not None
-            assert result_user.telegram_user_id == test_user_id
-            assert result_user.username == "testuser"
-            mock_db_session.query.return_value.filter.return_value.first.assert_called_once()
+            # 3. Assert
+            mock_db_session.add.assert_called_once()
+            mock_db_session.commit.assert_called_once()
+            mock_db_session.refresh.assert_called_once()
+            
+            # Check the object passed to add()
+            added_object = mock_db_session.add.call_args[0][0]
+            assert added_object.title == "Test Project"
+            assert added_object.user_id == user_id
         ```
-    *   **Verification:** The `tests/test_services.py` file exists and contains a valid `pytest` test. A human supervisor can run `pytest` from the root directory to confirm it passes.
+    *   **Verification:** The file `test_services.py` now contains a test for `ProjectService`.
+
+*   `[ ]` **F3.2: Add a test for the `BillingService`**
+    *   **File:** `ai_dev_bot_platform/tests/test_services.py`
+    *   **Action:** Add the following new test function to the file.
+        ```python
+        from app.services.billing_service import CreditTransactionService
+        from app.schemas.transaction import CreditTransactionCreate
+
+        def test_record_transaction():
+            # 1. Setup
+            mock_db_session = MagicMock()
+            transaction_service = CreditTransactionService()
+            
+            transaction_in = CreditTransactionCreate(
+                user_id=1,
+                transaction_type='purchase',
+                credits_amount=Decimal("100.00")
+            )
+            
+            # 2. Action
+            transaction_service.record_transaction(mock_db_session, transaction_in)
+            
+            # 3. Assert
+            mock_db_session.add.assert_called_once()
+            mock_db_session.commit.assert_called_once()
+            mock_db_session.refresh.assert_called_once()
+            added_object = mock_db_session.add.call_args[0][0]
+            assert added_object.credits_amount == Decimal("100.00")
+        ```
+    *   **Verification:** The file `test_services.py` now contains a test for `CreditTransactionService`.
+
+*   `[ ]` **F3.3: Create an integration-style test for the Orchestrator**
+    *   **File:** `ai_dev_bot_platform/tests/test_orchestrator.py` (Create this new file)
+    *   **Action:** Add the following content to the new file. This test will mock the orchestrator's dependencies.
+        ```python
+        import pytest
+        import uuid
+        from unittest.mock import MagicMock, AsyncMock
+        from app.services.orchestrator_service import ModelOrchestrator
+        from app.schemas.user import User
+
+        @pytest.mark.asyncio
+        async def test_handle_new_project_flow(mocker):
+            # 1. Setup
+            mock_db = MagicMock()
+            
+            # Mock the services that the orchestrator initializes
+            mocker.patch('app.services.orchestrator_service.APIKeyManager')
+            mocker.patch('app.services.orchestrator_service.LLMClient')
+            mock_architect_agent = mocker.patch('app.services.orchestrator_service.ArchitectAgent')
+            mocker.patch('app.services.orchestrator_service.ImplementerAgent')
+            mock_project_service = mocker.patch('app.services.orchestrator_service.ProjectService')
+            # ... mock other services if needed
+
+            # Instantiate the orchestrator (its __init__ will use the mocked classes)
+            orchestrator = ModelOrchestrator(mock_db)
+
+            # Configure the mocks to return expected values
+            fake_project_id = uuid.uuid4()
+            mock_project_service.return_value.create_project.return_value = MagicMock(id=fake_project_id, title="Fake Project")
+            mock_architect_agent.return_value.generate_initial_plan_and_docs = AsyncMock(
+                return_value={
+                    "todo_list_markdown": "[ ] Task 1",
+                    "tech_stack_suggestion": {},
+                    "llm_call_details": {"model_name_used": "fake-model"} # For credit deduction
+                }
+            )
+            
+            # Mock the credit deduction method so it doesn't run real logic
+            orchestrator._deduct_credits_for_llm_call = AsyncMock()
+
+            # 2. Action
+            test_user = User(id=1, telegram_user_id=123, credit_balance=100, created_at=None, updated_at=None)
+            result = await orchestrator._handle_new_project(test_user, "create a new web app")
+
+            # 3. Assert
+            mock_project_service.return_value.create_project.assert_called_once()
+            mock_architect_agent.return_value.generate_initial_plan_and_docs.assert_awaited_once()
+            orchestrator._deduct_credits_for_llm_call.assert_awaited_once()
+            mock_project_service.return_value.update_project.assert_called_once()
+            assert "Project 'Fake Project' created!" in result['text']
+        ```
+    *   **Verification:** The new file `tests/test_orchestrator.py` exists and contains a test for the orchestrator's new project flow. A human can run `pytest` to confirm all tests pass.
