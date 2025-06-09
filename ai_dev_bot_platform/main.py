@@ -1,18 +1,29 @@
+import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.core.logging_config import setup_logging
+from app.telegram_bot.bot_main import run_bot
 
-app = FastAPI(title="AI Development Assistant API")
-
+# Setup logging at the application's entry point
 setup_logging()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # This code runs on startup
+    print("Application startup: Starting Telegram bot in background...")
+    loop = asyncio.get_event_loop()
+    bot_task = loop.create_task(run_bot())
+    yield
+    # This code runs on shutdown
+    print("Application shutdown: Stopping Telegram bot...")
+    bot_task.cancel()
+    try:
+        await bot_task
+    except asyncio.CancelledError:
+        print("Bot task successfully cancelled.")
+
+app = FastAPI(title="AI Development Assistant API", lifespan=lifespan)
 
 @app.get("/")
 async def root():
-    return {"message": "AI Development Assistant API is running!"}
-
-# Placeholder for future app setup
-# def create_application() -> FastAPI:
-#     application = FastAPI()
-#     # ... add routers, middleware, etc.
-#     return application
-#
-# app = create_application()
+    return {"message": "AI Development Assistant API is running and bot is active!"}

@@ -116,7 +116,7 @@ Here is the content for the new file:
         3.  Remove the entire `if __name__ == "__main__":` block from the bottom of the file. It will no longer be run directly.
     *   **Verification:** The file `bot_main.py` now contains an `async def run_bot()` function and has no `if __name__ == "__main__":` block.
 
-*   `[ ]` **F2.2: Update main.py to manage the bot's lifecycle**
+*   `[x]` **F2.2: Update main.py to manage the bot's lifecycle**
     *   **File:** `ai_dev_bot_platform/main.py`
     *   **Action:** Replace the entire content of the file with the following code. This adds the FastAPI `lifespan` manager to start the bot.
         ```python
