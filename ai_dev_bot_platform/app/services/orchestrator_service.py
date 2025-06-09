@@ -47,6 +47,14 @@ class ModelOrchestrator:
             task_index = int(todo_match.group(1))
             project_id = todo_match.group(2)
             return await self._handle_implement_task(user, project_id, task_index)
+            
+        # Check if this is a command to refine a file
+        refine_match = re.match(r"refine file (.+) in project (.+) with instruction: (.+)", user_input, re.IGNORECASE | re.DOTALL)
+        if refine_match:
+            file_path = refine_match.group(1).strip()
+            project_id = refine_match.group(2).strip()
+            instruction = refine_match.group(3).strip()
+            return await self._handle_refine_request(user, project_id, file_path, instruction)
         
         # Basic routing logic for agent-specific requests
         if "plan" in user_input.lower() or "architect" in user_input.lower():
@@ -294,6 +302,44 @@ class ModelOrchestrator:
         except Exception as e:
             logger.error(f"Error in architect request: {e}", exc_info=True)
             return {'text': "Error processing architect request.", 'zip_buffer': None}
+
+    async def _handle_refine_request(self, user: User, project_id: str, file_path: str, instruction: str) -> dict:
+        logger.info(f"Refining file {file_path} for project {project_id}")
+        project = self.project_service.get_project(self.db, uuid.UUID(project_id))
+        if not project:
+            return {'text': "Project not found", 'zip_buffer': None}
+
+        # This assumes project files are stored locally, which is a simplification.
+        # For this implementation, we'll assume a base path.
+        # In a real multi-user system, this path would be unique per project.
+        project_root_path = f"./workspace/{project_id}"
+        
+        # Ensure the directory exists (Aider needs it)
+        import os
+        os.makedirs(os.path.dirname(os.path.join(project_root_path, file_path)), exist_ok=True)
+        
+        # Get the file content from DB and write to local file for Aider
+        db_file = self.project_file_service.get_file_by_path(self.db, project.id, file_path)
+        if not db_file:
+            return {'text': f"File '{file_path}' not found in project.", 'zip_buffer': None}
+
+        with open(os.path.join(project_root_path, file_path), "w") as f:
+            f.write(db_file.content)
+
+        aider_result = await self.implementer_agent.apply_changes_with_aider(
+            project_root_path=project_root_path,
+            files_to_edit=[file_path],
+            instruction=instruction
+        )
+        
+        if aider_result["status"] == "success":
+            # Read the modified file and update the DB
+            with open(os.path.join(project_root_path, file_path), "r") as f:
+                new_content = f.read()
+            self.project_file_service.update_file_content(self.db, db_file.id, new_content)
+            return {'text': f"Successfully refined file '{file_path}'.\n{aider_result['output']}", 'zip_buffer': None}
+        else:
+            return {'text': f"Failed to refine file '{file_path}'.\nError: {aider_result['output']}", 'zip_buffer': None}
 
     async def _handle_implementer_request(self, user_input: str) -> str:
         """Handle implementer-specific requests with codebase context"""

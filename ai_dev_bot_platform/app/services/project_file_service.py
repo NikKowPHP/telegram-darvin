@@ -22,6 +22,12 @@ class ProjectFileService:
     def get_files_by_project(self, db: Session, project_id: uuid.UUID) -> List[ProjectFile]:
         return db.query(ProjectFile).filter(ProjectFile.project_id == project_id).all()
 
+    def get_file_by_path(self, db: Session, project_id: uuid.UUID, file_path: str) -> Optional[ProjectFile]:
+        return db.query(ProjectFile).filter(
+            ProjectFile.project_id == project_id,
+            ProjectFile.file_path == file_path
+        ).first()
+
     def update_file_content(self, db: Session, file_id: uuid.UUID, new_content: str) -> Optional[ProjectFile]:
         db_file = self.get_file(db, file_id)
         if db_file:

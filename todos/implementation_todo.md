@@ -62,7 +62,7 @@ Here is the content for the new file:
             ```
     *   **Verification:** The `apply_changes_with_aider` method in `implementer_agent.py` is now fully implemented using `asyncio.subprocess`.
 
-*   `[ ]` **F1.3: Add a "refine" command handler to the Orchestrator**
+*   `[x]` **F1.3: Add a "refine" command handler to the Orchestrator**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:**
         1.  In the `process_user_request` method, add a new `re.match` check for a refine command. Place it after the existing `todo_match` block.
