@@ -915,7 +915,7 @@ This `implementation_todo.md` will assume:
                 ```
     *   Verification: `Dockerfile` reviewed and `CMD` is set for FastAPI. `COPY` instructions are logical.
 
-*   `[ ]` **P6.2: Create/Update `docker-compose.yml`**
+*   `[x]` **P6.2: Create/Update `docker-compose.yml`**
     *   File: `deploy/docker/docker-compose.yml` (or `ai_dev_bot_platform/docker-compose.yml`)
     *   Action: Create or ensure it has services for `app` (your application), `postgres`, `redis`.
         ```yaml
