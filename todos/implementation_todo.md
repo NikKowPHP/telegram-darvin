@@ -31,7 +31,7 @@ Here is the content for the new file:
             ```
     *   **Verification:** The `implement_todo_item` method now returns a dictionary that includes the `llm_call_details` key.
 
-*   `[ ]` **F1.2: Update `ArchitectAgent` (Planning) to return LLM details**
+*   `[x]` **F1.2: Update `ArchitectAgent` (Planning) to return LLM details**
     *   **File:** `ai_dev_bot_platform/app/agents/architect_agent.py`
     *   **Action:**
         1.  Find the `generate_initial_plan_and_docs` method.

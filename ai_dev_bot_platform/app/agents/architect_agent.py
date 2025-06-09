@@ -23,7 +23,8 @@ Project Requirements:
 Output format should be structured clearly with headings for each section.
 Start the TODO list with '### Implementation TODO List'"""
 
-        response_text = await self.llm_client.call_gemini(prompt, model_name="gemini-1.5-pro-latest")
+        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name="gemini-1.5-pro-latest")
+        response_text = llm_response_dict.get("text_response", "")
         
         if response_text.startswith("Error:"):
             logger.error(f"Architect Agent: Error from LLM: {response_text}")
@@ -42,7 +43,8 @@ Start the TODO list with '### Implementation TODO List'"""
             return {
                 "documentation": doc_content,
                 "tech_stack_suggestion": tech_stack_str,
-                "todo_list_markdown": todo_list_md
+                "todo_list_markdown": todo_list_md,
+                "llm_call_details": llm_response_dict
             }
         except Exception as e:
             logger.error(f"Architect Agent: Error parsing LLM response: {e}", exc_info=True)
