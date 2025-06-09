@@ -977,7 +977,7 @@ This `implementation_todo.md` will assume:
     *   Note: The `app` service runs FastAPI. If the Telegram bot needs to run as a separate main process, it would need its own service definition in `docker-compose.yml` or be integrated into the FastAPI startup (e.g., as a background task). For simplicity, we'll assume for now the bot logic is invoked through FastAPI calls or runs as a background thread started by FastAPI (less ideal for production). The `telegram_bot` service example is commented out. **Decision: The `app` service will run FastAPI. The Telegram bot process (`python app/telegram_bot/bot_main.py`) will need to be run separately or integrated.** For now, focus on FastAPI in Docker.
     *   Verification: `docker-compose.yml` defines `app`, `postgres`, `redis`. `app` builds from Dockerfile and uses `.env`. Volumes are defined.
 
-*   `[ ]` **P6.3: Create Kubernetes Manifest Stubs - `postgres-k8s.yaml`**
+*   `[x]` **P6.3: Create Kubernetes Manifest Stubs - `postgres-k8s.yaml`**
     *   File: `deploy/kubernetes/postgres-k8s.yaml`
     *   Action: Generate basic YAML for PostgreSQL:
         ```yaml
