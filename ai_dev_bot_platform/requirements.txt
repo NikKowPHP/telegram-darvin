@@ -16,3 +16,4 @@ python-dotenv # For local .env file loading
 sentence-transformers
 faiss-cpu
 numpy
+alembic

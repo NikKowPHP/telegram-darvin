@@ -153,7 +153,7 @@ Here is the content for the new file:
 
 **Goal:** Integrate Alembic to manage database schema changes safely, replacing the non-production `create_all()` method.
 
-*   `[ ]` **F2.1: Add Alembic to requirements**
+*   `[x]` **F2.1: Add Alembic to requirements**
     *   **File:** `ai_dev_bot_platform/requirements.txt`
     *   **Action:** Add the line `alembic` to the file.
     *   **Verification:** `requirements.txt` contains `alembic`.
