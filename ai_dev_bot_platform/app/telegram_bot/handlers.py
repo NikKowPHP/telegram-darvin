@@ -104,3 +104,13 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         db.close()
 
 # Add more handlers here (e.g., for project descriptions, other commands)
+
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()  # Acknowledge the button press
+    
+    # For now, this is a stub.
+    await query.edit_message_text(
+        text=f"Thank you for your interest in purchasing credits. "
+             f"The payment system is not yet implemented. You selected: {query.data}"
+    )

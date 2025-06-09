@@ -38,7 +38,7 @@ Here is the content for the new file:
             ```
     *   **Verification:** The `/credits` command now displays two inline buttons for purchasing credits.
 
-*   `[ ]` **F1.2: Create a handler for the new "Buy Credits" buttons**
+*   `[x]` **F1.2: Create a handler for the new "Buy Credits" buttons**
     *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
     *   **Action:**
         1.  Add a new function to the end of the file called `button_handler`:
