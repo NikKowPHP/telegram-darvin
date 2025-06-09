@@ -265,7 +265,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The file `test_services.py` now contains a test for `ProjectService`.
 
-*   `[ ]` **F3.2: Add a test for the `BillingService`**
+*   `[x]` **F3.2: Add a test for the `BillingService`**
     *   **File:** `ai_dev_bot_platform/tests/test_services.py`
     *   **Action:** Add the following new test function to the file.
         ```python

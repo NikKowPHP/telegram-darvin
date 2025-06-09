@@ -55,3 +55,26 @@ def test_create_project():
     added_object = mock_db_session.add.call_args[0][0]
     assert added_object.title == "Test Project"
     assert added_object.user_id == user_id
+from app.services.billing_service import CreditTransactionService
+from app.schemas.transaction import CreditTransactionCreate
+
+def test_record_transaction():
+    # 1. Setup
+    mock_db_session = MagicMock()
+    transaction_service = CreditTransactionService()
+    
+    transaction_in = CreditTransactionCreate(
+        user_id=1,
+        transaction_type='purchase',
+        credits_amount=Decimal("100.00")
+    )
+    
+    # 2. Action
+    transaction_service.record_transaction(mock_db_session, transaction_in)
+    
+    # 3. Assert
+    mock_db_session.add.assert_called_once()
+    mock_db_session.commit.assert_called_once()
+    mock_db_session.refresh.assert_called_once()
+    added_object = mock_db_session.add.call_args[0][0]
+    assert added_object.credits_amount == Decimal("100.00")
