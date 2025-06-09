@@ -94,8 +94,22 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         from app.services.orchestrator_service import get_orchestrator
         orchestrator = get_orchestrator(db)
-        response_text = await orchestrator.process_user_request(user=user_db, user_input=text)
-        await update.message.reply_text(response_text)
+        response_data = await orchestrator.process_user_request(user=user_db, user_input=text)
+        
+        response_text = response_data.get('text')
+        zip_buffer = response_data.get('zip_buffer')
+        
+        if response_text:
+            await update.message.reply_text(response_text)
+
+        if zip_buffer:
+            project_title = response_data.get('project_title', 'project')
+            file_name = f"{project_title.replace(' ', '_')}.zip"
+            await context.bot.send_document(
+                chat_id=update.effective_chat.id,
+                document=zip_buffer,
+                filename=file_name
+            )
 
     except Exception as e:
         logger.error(f"Error in message_handler for user {user_tg.id}: {e}", exc_info=True)

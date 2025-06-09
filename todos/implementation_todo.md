@@ -123,7 +123,7 @@ Here is the content for the new file:
         7.  Update all other `return` statements in the `ModelOrchestrator` to return the dictionary format, e.g., `return {'text': 'Some message', 'zip_buffer': None}`.
     *   **Verification:** The orchestrator now creates a ZIP file upon project completion and returns it in a dictionary structure.
 
-*   `[ ]` **F1.6: Update Telegram handler to send the ZIP file**
+*   `[x]` **F1.6: Update Telegram handler to send the ZIP file**
     *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
     *   **Action:**
         1.  Find the `message_handler` function.
