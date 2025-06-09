@@ -158,7 +158,7 @@ Here is the content for the new file:
     *   **Action:** Add the line `alembic` to the file.
     *   **Verification:** `requirements.txt` contains `alembic`.
 
-*   `[ ]` **F2.2: Create the `alembic.ini` configuration file**
+*   `[x]` **F2.2: Create the `alembic.ini` configuration file**
     *   **File:** `ai_dev_bot_platform/alembic.ini` (Create this file in the project root)
     *   **Action:** Add the following content:
         ```ini
