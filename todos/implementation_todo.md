@@ -96,7 +96,7 @@ Here is the content for the new file:
 
 **Goal:** Update the main `README.md` file with clear instructions on how to use the new proxy development flow.
 
-*   `[ ]` **F4.1: Add "Running with a Proxy" section to README.md**
+*   `[x]` **F4.1: Add "Running with a Proxy" section to README.md**
     *   **File:** `README.md`
     *   **Action:** Find the "🚀 Running Locally" section. At the very end of this section, add a new subsection with the following content:
         ```markdown

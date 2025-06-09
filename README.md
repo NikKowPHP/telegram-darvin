@@ -135,6 +135,28 @@ uvicorn ai_dev_bot_platform.main:app --reload
 
 Go to Telegram, find the bot you created with BotFather, and send the `/start` command. The application running in your terminal should log the interaction, and the bot should reply. You're all set!
 
+### Running with a Proxy
+
+If you are behind a corporate or local proxy, follow these steps instead of the standard `docker-compose up`.
+
+1.  **Create a Proxy Environment File:** Copy the proxy environment template.
+    ```bash
+    cp ai_dev_bot_platform/.env.example.proxy ai_dev_bot_platform/.env.proxy
+    ```
+
+2.  **Edit `.env.proxy`:** Open the new `ai_dev_bot_platform/.env.proxy` file and fill in your `HTTP_PROXY` and `HTTPS_PROXY` details.
+
+3.  **Build and Run with Proxy Config:** Use both `docker-compose.yml` and `docker-compose.proxy.yml` files. The `-f` flag allows you to specify multiple files, which are merged together.
+    ```bash
+    docker-compose -f ai_dev_bot_platform/docker-compose.yml -f ai_dev_bot_platform/docker-compose.proxy.yml up -d --build
+    ```
+    This will start all services (app, postgres, redis) and correctly inject your proxy settings into the `app` container for both the build process and runtime.
+
+4.  **Apply Migrations:** This step is the same. Run migrations inside the running `app` container:
+    ```bash
+    docker-compose -f ai_dev_bot_platform/docker-compose.yml -f ai_dev_bot_platform/docker-compose.proxy.yml exec app alembic upgrade head
+    ```
+
 ---
 
 ## 🌐 Deployment
