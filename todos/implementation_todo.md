@@ -1090,7 +1090,7 @@ This `implementation_todo.md` will assume:
         ```
     *   Verification: YAML file created with Deployment and Service for Redis.
 
-*   `[ ]` **P6.5: Create Kubernetes Manifest Stubs - `app-k8s.yaml` (FastAPI part)**
+*   `[x]` **P6.5: Create Kubernetes Manifest Stubs - `app-k8s.yaml` (FastAPI part)**
     *   File: `deploy/kubernetes/app-k8s.yaml`
     *   Action: Generate basic YAML for the application (focusing on FastAPI component):
         ```yaml
