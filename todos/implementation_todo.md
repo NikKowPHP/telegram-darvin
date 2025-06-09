@@ -55,7 +55,7 @@ Here is the content for the new file:
             ```
     *   **Verification:** A new `button_handler` function exists in `handlers.py`.
 
-*   `[ ]` **F1.3: Register the new button handler in the bot**
+*   `[x]` **F1.3: Register the new button handler in the bot**
     *   **File:** `ai_dev_bot_platform/app/telegram_bot/bot_main.py`
     *   **Action:**
         1.  Add the import: `from telegram.ext import CallbackQueryHandler`.
