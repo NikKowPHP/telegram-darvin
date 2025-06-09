@@ -44,11 +44,12 @@ def my_helper_function():
     pass
 """
         model_name = "openrouter/auto"
-        code_response = await self.llm_client.call_openrouter(
+        llm_response_dict = await self.llm_client.call_openrouter(
             model_name=model_name,
             prompt=todo_item,
             system_prompt=system_prompt
         )
+        code_response = llm_response_dict.get("text_response", "")
         filename = None
         code_content = ""
         if code_response and "\n" in code_response:
@@ -71,7 +72,7 @@ def my_helper_function():
             filename = "unknown_file.txt" # Default filename if only one line.
             code_content = code_response
 
-        return {"filename": filename, "code": code_content.strip()}
+        return {"filename": filename, "code": code_content.strip(), "llm_call_details": llm_response_dict}
 
     async def apply_changes_with_aider(self, project_root_path: str, file_path: str, instruction: str) -> Dict[str, str]:
         logger.info(f"Attempting to apply changes to {file_path} using Aider: {instruction}")
