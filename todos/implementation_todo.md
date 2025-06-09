@@ -880,7 +880,7 @@ This `implementation_todo.md` will assume:
 
 **Goal:** Containerize the application, create basic deployment configurations for local (Docker Compose) and Kubernetes, and prepare for initial deployment.
 
-*   `[ ]` **P6.1: Finalize `Dockerfile`**
+*   `[x]` **P6.1: Finalize `Dockerfile`**
     *   File: `Dockerfile` (should be at `ai_dev_bot_platform/Dockerfile` if structure was fixed)
     *   Action: Review the existing `deploy/docker/Dockerfile` (or the one at the project root).
         1.  Ensure `WORKDIR` is set appropriately (e.g., `/app` or `/app/ai_dev_bot_platform` if `ai_dev_bot_platform` is copied into `/app`).
