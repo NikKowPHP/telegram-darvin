@@ -27,3 +27,7 @@ app = FastAPI(title="AI Development Assistant API", lifespan=lifespan)
 @app.get("/")
 async def root():
     return {"message": "AI Development Assistant API is running and bot is active!"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}

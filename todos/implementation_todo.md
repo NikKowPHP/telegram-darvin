@@ -298,7 +298,7 @@ Here is the content for the new file:
 
 **Goal:** Add a health check endpoint for Kubernetes and create the first unit test for the application.
 
-*   `[ ]` **F3.1: Add a health check endpoint to the API**
+*   `[x]` **F3.1: Add a health check endpoint to the API**
     *   **File:** `ai_dev_bot_platform/main.py`
     *   **Action:** In the `app = FastAPI(...)` section, find the `@app.get("/")` endpoint. Directly below it, add a new endpoint for health checks:
         ```python
