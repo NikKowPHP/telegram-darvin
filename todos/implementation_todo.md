@@ -97,7 +97,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The new file `app/utils/file_utils.py` exists and contains the `create_project_zip` function.
 
-*   `[ ]` **F1.5: Integrate ZIP creation and delivery into the Orchestrator**
+*   `[x]` **F1.5: Integrate ZIP creation and delivery into the Orchestrator**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:**
         1.  At the top, add the import: `from app.utils.file_utils import create_project_zip`.

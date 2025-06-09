@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.schemas.user import User
 from app.services.api_key_manager import APIKeyManager
 from app.utils.llm_client import LLMClient
+from app.utils.file_utils import create_project_zip
 from app.agents.architect_agent import ArchitectAgent
 from app.agents.implementer_agent import ImplementerAgent
 from app.services.project_service import ProjectService
@@ -33,7 +34,7 @@ class ModelOrchestrator:
         self.credit_transaction_service = CreditTransactionService()
         self.user_service = UserService()
 
-    async def process_user_request(self, user: User, user_input: str) -> str:
+    async def process_user_request(self, user: User, user_input: str) -> dict:
         logger.info(f"Orchestrator processing request for user {user.telegram_user_id}: '{user_input}'")
 
         # Check if this is a new project description
@@ -53,7 +54,7 @@ class ModelOrchestrator:
         elif "implement" in user_input.lower() or "code" in user_input.lower():
             return await self._handle_implementer_request(user_input)
         
-        return "I'm not sure how to handle that yet. Try describing a project or 'implement task X of project Y'."
+        return {'text': "I'm not sure how to handle that yet. Try describing a project or 'implement task X of project Y'", 'zip_buffer': None}
 
     def _is_new_project(self, user_input: str) -> bool:
         """Heuristic to detect new project descriptions"""
@@ -78,10 +79,10 @@ class ModelOrchestrator:
                 )
             except Exception as e:
                 logger.error(f"LLM error generating project plan: {e}", exc_info=True)
-                return f"Error generating project plan: {str(e)}"
+                return {'text': f"Error generating project plan: {str(e)}", 'zip_buffer': None}
             
             if "error" in plan_result:
-                return f"Error generating project plan: {plan_result['error']}"
+                return {'text': f"Error generating project plan: {plan_result['error']}", 'zip_buffer': None}
             
             # Deduct credits for LLM call if successful
             if "llm_call_details" in plan_result:
@@ -106,32 +107,32 @@ class ModelOrchestrator:
                 self.project_service.update_project(self.db, project.id, update_data)
             except Exception as e:
                 logger.error(f"Database update failed: {e}", exc_info=True)
-                return "Failed to save project details. Please contact support."
+                return {'text': "Failed to save project details. Please contact support.", 'zip_buffer': None}
             
             # Return summary to user
             todo_preview = "\n".join(plan_result.get("todo_list_markdown", "").split("\n")[:3])
-            return (
+            return {'text': (
                 f"Project '{project.title}' created!\n"
                 f"First tasks:\n{todo_preview}\n"
                 f"Use 'implement task 1 of project {project.id}' to start."
-            )
+            ), 'zip_buffer': None}
         except Exception as e:
             logger.error(f"Unexpected error creating project: {e}", exc_info=True)
-            return "Failed to create project due to an unexpected error. Please try again."
+            return {'text': "Failed to create project due to an unexpected error. Please try again.", 'zip_buffer': None}
 
     async def _handle_implement_task(self, user: User, project_id: str, task_index: int) -> str:
         """Implement a specific TODO item from a project"""
         try:
             project = self.project_service.get_project(self.db, uuid.UUID(project_id))
             if not project:
-                return "Project not found"
+                return {'text': "Project not found", 'zip_buffer': None}
             
             # Get the specific TODO item
             todo_items = [line for line in project.current_todo_markdown.split("\n") 
                          if line.startswith("[ ]")]
             
             if task_index < 1 or task_index > len(todo_items):
-                return f"Invalid task index. Please choose between 1 and {len(todo_items)}"
+                return {'text': f"Invalid task index. Please choose between 1 and {len(todo_items)}", 'zip_buffer': None}
             
             todo_item = todo_items[task_index - 1].replace("[ ]", "").strip()
             
@@ -145,7 +146,7 @@ class ModelOrchestrator:
             )
             
             if implementation.get("error"):
-                return f"Error implementing task: {implementation['error']}"
+                return {'text': f"Error implementing task: {implementation['error']}", 'zip_buffer': None}
             
             # Deduct credits for LLM call if successful
             if "llm_call_details" in implementation:
@@ -222,7 +223,7 @@ class ModelOrchestrator:
                         # Handle error, maybe set project status to 'readme_failed'
                         self.project_service.update_project(self.db, project.id, ProjectUpdate(status="readme_failed"))
                         # Return error message to user
-                        return f"All tasks implemented and verified, but failed to generate README.md: {readme_content}"
+                        return {'text': f"All tasks implemented and verified, but failed to generate README.md: {readme_content}", 'zip_buffer': None}
                     else:
                         # Save README.md as a project file
                         self.project_file_service.create_project_file(
@@ -234,41 +235,48 @@ class ModelOrchestrator:
                         )
                         self.project_service.update_project(self.db, project.id, ProjectUpdate(status="completed"))
                         logger.info(f"README.md generated and project {project.id} marked as completed.")
-                        return (
+                        # Create ZIP file of the project
+                        zip_buffer = create_project_zip(project_files_for_readme)
+                        
+                        return {
+                            'text': (
                             f"Project '{project.title}' is complete! All tasks implemented and verified.\n"
                             f"README.md has been generated. Project is ready for delivery."
-                        )
+                            ),
+                            'zip_buffer': zip_buffer,
+                            'project_title': project.title
+                        }
                 
                 self.project_service.update_project(self.db, project.id, ProjectUpdate(
                     current_todo_markdown=new_todo_markdown,
                     status=updated_project_status
                 ))
                 
-                return (
+                return {'text': (
                     f"Task '{todo_item}' implemented AND VERIFIED!\n"
                     f"File: {implementation.get('filename', 'N/A')}\n"
                     f"Architect Feedback: {verification_feedback}\n"
                     f"Project status: {updated_project_status}. Next steps..."
-                )
+                ), 'zip_buffer': None}
             elif verification_status == "REJECTED":
                 # Do not mark TODO as complete.
                 # Potentially add architect's feedback as a new sub-task or comment in TODO
                 # For now, just inform user.
                 self.project_service.update_project(self.db, project.id, ProjectUpdate(status="awaiting_refinement"))
-                return (
+                return {'text': (
                     f"Task '{todo_item}' implemented but REJECTED by Architect.\n"
                     f"File: {implementation.get('filename', 'N/A')}\n"
                     f"Architect Feedback: {verification_feedback}\n"
                     f"Please review the feedback and consider refining the task or providing more details."
-                )
+                ), 'zip_buffer': None}
             else: # ERROR case
-                return (
+                return {'text': (
                     f"Error during verification of task '{todo_item}'.\n"
                     f"Feedback: {verification_feedback}"
-                )
+                ), 'zip_buffer': None}
         except Exception as e:
             logger.error(f"Error implementing task: {e}", exc_info=True)
-            return "Failed to implement task. Please try again."
+            return {'text': "Failed to implement task. Please try again.", 'zip_buffer': None}
 
     async def _handle_architect_request(self, user_input: str) -> str:
         """Handle architect-specific requests with codebase context"""
@@ -279,13 +287,13 @@ class ModelOrchestrator:
             context_results = await self.codebase_indexing_service.query_codebase(project_id, user_input)
             context = "\n".join([f"{res['file_path']}:\n{res['content']}" for res in context_results])
             
-            return (
+            return {'text': (
                 f"Architect Agent would handle: '{user_input}'\n"
                 f"Code context:\n{context}"
-            )
+            ), 'zip_buffer': None}
         except Exception as e:
             logger.error(f"Error in architect request: {e}", exc_info=True)
-            return "Error processing architect request."
+            return {'text': "Error processing architect request.", 'zip_buffer': None}
 
     async def _handle_implementer_request(self, user_input: str) -> str:
         """Handle implementer-specific requests with codebase context"""
@@ -296,13 +304,13 @@ class ModelOrchestrator:
             context_results = await self.codebase_indexing_service.query_codebase(project_id, user_input)
             context = "\n".join([f"{res['file_path']}:\n{res['content']}" for res in context_results])
             
-            return (
+            return {'text': (
                 f"Implementer Agent would handle: '{user_input}'\n"
                 f"Code context:\n{context}"
-            )
+            ), 'zip_buffer': None}
         except Exception as e:
             logger.error(f"Error in implementer request: {e}", exc_info=True)
-            return "Error processing implementer request."
+            return {'text': "Error processing implementer request.", 'zip_buffer': None}
 
     async def _deduct_credits_for_llm_call(
         self,
