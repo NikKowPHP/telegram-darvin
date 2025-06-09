@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Any
 from app.utils.llm_client import LLMClient
 from app.schemas.project import Project
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ Project Requirements:
 Output format should be structured clearly with headings for each section.
 Start the TODO list with '### Implementation TODO List'"""
 
-        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name="gemini-1.5-pro-latest")
+        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name=settings.ARCHITECT_MODEL)
         response_text = llm_response_dict.get("text_response", "")
         
         if response_text.startswith("Error:"):
@@ -66,7 +67,7 @@ Does this code correctly implement the task according to the project context and
 Provide feedback: 'APPROVED' or 'REJECTED: [detailed reasons and suggestions]'.
 If REJECTED, suggest updates to the code or the TODO list."""
 
-        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name="gemini-1.5-pro-latest")
+        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name=settings.VERIFICATION_MODEL)
         response_text = llm_response_dict.get("text_response", "")
         
         if response_text.startswith("Error:"):

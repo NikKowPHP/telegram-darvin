@@ -2,6 +2,7 @@ import logging
 import httpx
 import google.generativeai as genai
 from app.services.api_key_manager import APIKeyManager
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,9 @@ class LLMClient:
         else:
             logger.warning("Google API key not found in APIKeyManager for LLMClient.")
 
-    async def call_gemini(self, prompt: str, model_name: str = "gemini-1.5-flash-latest") -> dict:
+    async def call_gemini(self, prompt: str, model_name: str = None) -> dict:
+        if model_name is None:
+            model_name = settings.DEFAULT_GEMINI_MODEL
         if not self.google_api_key_configured:
             return {
                 "text_response": "Error: Google Gemini API not configured.",

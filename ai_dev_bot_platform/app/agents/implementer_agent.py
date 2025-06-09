@@ -1,6 +1,7 @@
 import logging
 from app.utils.llm_client import LLMClient
 from typing import Dict, Any
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ src/utils/helper.py
 def my_helper_function():
     pass
 """
-        model_name = "openrouter/auto"
+        model_name = settings.IMPLEMENTER_MODEL
         llm_response_dict = await self.llm_client.call_openrouter(
             model_name=model_name,
             prompt=todo_item,

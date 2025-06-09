@@ -237,7 +237,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The `Settings` class in `config.py` now contains these new configuration variables.
 
-*   `[ ]` **F4.2: Update Agents and LLMClient to use settings**
+*   `[x]` **F4.2: Update Agents and LLMClient to use settings**
     *   **File:** `ai_dev_bot_platform/app/agents/architect_agent.py`
     *   **Action:**
         1.  Add the import: `from app.core.config import settings`.
