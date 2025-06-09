@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
+from app.services.billing_service import CreditTransactionService
+from app.schemas.transaction import CreditTransactionCreate
 from typing import Optional, List
 from decimal import Decimal
 
@@ -31,4 +33,34 @@ class UserService:
                 db_user.credit_balance += amount
             db.commit()
             db.refresh(db_user)
+        return db_user
+
+    def add_credits_after_purchase(self, db: Session, user_id: int, credit_package: str) -> Optional[User]:
+        """Simulates a successful credit purchase."""
+        credit_amounts = {
+            'buy_100': Decimal("100.00"),
+            'buy_500': Decimal("500.00"),
+        }
+        amount_to_add = credit_amounts.get(credit_package)
+        if not amount_to_add:
+            return None
+            
+        db_user = db.query(User).filter(User.id == user_id).first()
+        if not db_user:
+            return None
+            
+        db_user.credit_balance += amount_to_add
+        
+        # Record the transaction
+        transaction_service = CreditTransactionService()
+        transaction_in = CreditTransactionCreate(
+            user_id=user_id,
+            transaction_type='purchase',
+            credits_amount=amount_to_add,
+            description=f"Simulated purchase of {credit_package}"
+        )
+        transaction_service.record_transaction(db, transaction_in)
+        
+        db.commit()
+        db.refresh(db_user)
         return db_user

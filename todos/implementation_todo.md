@@ -150,7 +150,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** Dependencies and configurations for Stripe are present.
 
-*   `[ ]` **F2.2: Implement credit purchase logic in `UserService`**
+*   `[x]` **F2.2: Implement credit purchase logic in `UserService`**
     *   **File:** `ai_dev_bot_platform/app/services/user_service.py`
     *   **Action:**
         1.  Add imports: `from app.services.billing_service import CreditTransactionService` and `from app.schemas.transaction import CreditTransactionCreate`.
