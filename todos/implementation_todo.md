@@ -231,7 +231,7 @@ Here is the content for the new file:
 
 **Goal:** Build out the test suite to cover more services and the orchestrator, ensuring application reliability.
 
-*   `[ ]` **F3.1: Add a test for the `ProjectService`**
+*   `[x]` **F3.1: Add a test for the `ProjectService`**
     *   **File:** `ai_dev_bot_platform/tests/test_services.py`
     *   **Action:** Add the following new test function to the file.
         ```python

@@ -28,3 +28,30 @@ def test_get_user_by_telegram_id():
     assert result_user.telegram_user_id == test_user_id
     assert result_user.username == "testuser"
     mock_db_session.query.return_value.filter.return_value.first.assert_called_once()
+from app.services.project_service import ProjectService
+from app.schemas.project import ProjectCreate
+
+def test_create_project():
+    # 1. Setup
+    mock_db_session = MagicMock()
+    project_service = ProjectService()
+    
+    user_id = 1
+    project_in = ProjectCreate(
+        user_id=user_id,
+        title="Test Project",
+        description="A test description."
+    )
+    
+    # 2. Action
+    project_service.create_project(mock_db_session, project_in, user_id=user_id)
+    
+    # 3. Assert
+    mock_db_session.add.assert_called_once()
+    mock_db_session.commit.assert_called_once()
+    mock_db_session.refresh.assert_called_once()
+    
+    # Check the object passed to add()
+    added_object = mock_db_session.add.call_args[0][0]
+    assert added_object.title == "Test Project"
+    assert added_object.user_id == user_id
