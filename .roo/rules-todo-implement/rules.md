@@ -1,97 +1,87 @@
+### **Refined Roo Rules for Autonomous Task Execution**
 
-
-**Objective:** To guide "Roo" (the 4B LLM Implementation Assistant) in systematically implementing tasks from `todos/implementation_todo.md` (or the specific todo file name given), updating its progress, and **committing changes to Git.**
+**Objective:** To guide "Roo" (the LLM Implementation Assistant) to autonomously and sequentially complete all tasks defined in a given `.md` file. The agent will work continuously, committing each completed sub-task, until no tasks remain. Only upon full completion of all tasks will it signal it is finished using the `attempt_completion` tool.
 
 **Core Principles:**
-1.  **Atomicity:** Focus on one sub-task (an item marked `[ ]`) at a time.
-2.  **Sequentiality:** Generally, attempt tasks in the order they appear.
-3.  **Persistence & Auditability:** Your work is not done until `todos/implementation_todo.md` is updated and the corresponding changes are committed to Git.
-4.  **Self-Correction (Basic):** Attempt to identify and resolve simple errors.
-5.  **Incremental Progress:** If a task is large, complete a manageable chunk.
+1.  **Autonomous Loop:** Roo will continuously execute tasks without human intervention unless an unrecoverable error occurs.
+2.  **Atomicity & Persistence:** Each sub-task (`[ ]`) is a single unit of work. Its completion is recorded by updating the `.md` file and creating a corresponding Git commit.
+3.  **Sequential Order:** Tasks are executed strictly in the order they appear in the `.md` file.
+4.  **Completion-Driven Termination:** The work cycle only ends when zero `[ ]` tasks are left in the `.md` file.
 
 ---
 
-## I. Task Execution Workflow:
+### **I. Main Execution Loop**
 
-1.  **Identify Next Task:**
-    *   Scan `todos/implementation_todo.md` (or the specified todo file) from top to bottom.
-    *   Find the **first** sub-task item that starts with `[ ]`. This is your current target task. Let's call its identifier (e.g., P0.1, P1.3) the `TASK_ID` and its description the `TASK_DESCRIPTION`.
-    *   Read the task description carefully.
+Roo must repeat this loop until the condition in Step 1 is met.
 
-2.  **Understand Context:**
-    *   Refer to the "Goal" of the current Phase.
-    *   Refer to the "Verification" criteria for the target task.
-    *   If the task involves modifying an existing file, ensure you have access to or can recall the current state of that file.
-    *   If the task refers to other documentation, use that information.
+**1. Check for Remaining Tasks (Loop Condition):**
+   *   **Action:** Read the entire content of the specified todo file (e.g., `documentation/implementation_todo.md`).
+   *   **Analyze:** Scan the file for any line containing an unchecked box: `[ ]`.
+   *   **Decision:**
+      *   **If `[ ]` items EXIST:** Proceed to **Step 2**.
+      *   **If NO `[ ]` items exist:** The work is complete. Break this loop and proceed to the **II. Finalization Protocol**.
 
-3.  **Implement Task:**
-    *   Generate the required code, file content, or perform the described action.
-    *   List all files created or modified during this step. Let this be `MODIFIED_FILES_LIST`.
-    *   **(If the task is overwhelming):** Follow the incremental progress principle as described previously.
+**2. Identify and Define Current Task:**
+   *   **Action:** Find the **first** unchecked item `[ ]` from the top of the file.
+   *   **Define Variables:**
+      *   `TASK_ID`: The task's identifier (e.g., `P0.1`, `P1.3`).
+      *   `TASK_DESCRIPTION`: The text description of the task.
+   *   **Understand Context:** Read the "Goal" and "Verification" criteria associated with the `TASK_ID`.
 
-4.  **Verify (Self-Check - Basic):**
-    *   **Syntax Check (for code):** Review generated code for obvious Python syntax errors.
-    *   **File Path/Name Check:** Double-check file paths and names.
-    *   **Completeness for the sub-task:** Does the output address the *specific action* of the current `[ ]` item and align with its "Verification" criteria?
+**3. Implement Task:**
+   *   Based on the `TASK_DESCRIPTION` and context, generate the necessary code, commands, or file modifications.
+   *   Keep an internal list of all file paths that are created or modified. This is the `MODIFIED_FILES_LIST`.
+   *   **Self-Check:**
+      *   Review generated code for obvious syntax errors.
+      *   Verify that file paths and names are correct.
+      *   Ensure the implementation directly addresses the `TASK_DESCRIPTION` and meets its "Verification" criteria.
+   *   **Error Handling:**
+      *   If a simple error is found, correct it and re-verify.
+      *   If you cannot resolve an error or satisfy verification after 2 attempts, **STOP**. Signal to the human supervisor: `Roo is stuck on task [TASK_ID]. Reason: [brief, specific reason]. Requesting guidance.` Do not proceed.
 
-5.  **Handle Issues (Self-Correction Protocol):**
-    *   **(If a simple syntax error is identified):**
-        *   Go back to step 3. Re-generate, focusing on correction. Re-verify.
-    *   **(If "stuck" or cannot satisfy verification after 1-2 attempts):**
-        *   **Do not proceed.**
-        *   Signal to human supervisor: "Roo is stuck on task `[TASK_ID]`. Reason: [brief reason]. Requesting guidance."
-    *   **(If task is overwhelming and cannot be broken down further to complete the current `[ ]` item):**
-        *   Signal to human supervisor: "Roo finds task `[TASK_ID]` overwhelming. Current attempt for `[TASK_ID]`: [show attempt]. Requesting clarification."
+**4. Persist Progress (Update & Commit):**
+   *   **A. Mark Task as Done:**
+      *   **Tool:** `apply_diff`
+      *   **Action:** In the `.md` file, change the line for the `TASK_ID` from `[ ]` to `[x]`.
+      *   **Example:** Change `* [ ] **P1.1: Define User Model**` to `* [x] **P1.1: Define User Model**`.
 
-6.  **Update `todos/implementation_todo.md`:**
-    *   **Upon successful implementation and self-check of the current target sub-task:**
-        *   Locate the exact line in `todos/implementation_todo.md` for `TASK_ID`.
-        *   Change `[ ]` to `[x]` for that item.
-        *   Example: `*   [x] **P0.1: Create Project Root Directory**`
-    *   **Save the `todos/implementation_todo.md` file immediately.**
+   *   **B. Commit to Version Control:**
+      *   **Tool:** `execute_command`
+      *   **Action:** Stage and commit all changes.
+      *   **Commands:**
+          1.  `git add [path/to/todo.md]`
+          2.  For each file in `MODIFIED_FILES_LIST`: `git add [file_path]`
+          3.  `git commit -m "[Conventional Commit Message]"`
+      *   **Commit Message Format:** Use the Conventional Commits standard. The message MUST include the `TASK_ID`.
+          *   `Type(Scope): Complete [TASK_ID] - [TASK_DESCRIPTION]`
+          *   **`Type`:** `feat`, `fix`, `docs`, `chore`, `refactor`, `test`.
+          *   **`Scope` (optional):** The part of the codebase affected (e.g., `models`, `auth`, `project-setup`).
+          *   **Examples:**
+              *   `chore(project): Complete P0.1 - Create project root directory`
+              *   `feat(models): Complete P1.1 - Define User SQLAlchemy model`
+              *   `docs(readme): Complete P3.2 - Update README with setup instructions`
 
-7.  **Commit Changes to Git (NEW STEP):**
-    *   **If step 6 was successful (TODO item marked `[x]`):**
-        *   **Action:** Perform the following Git operations (or output the commands for the human supervisor to execute if Roo cannot directly execute shell commands):
-            1.  `git add .`
-                *   (Alternatively, be more specific: `git add todos/implementation_todo.md` and then `git add [path/to/file]` for each file in `MODIFIED_FILES_LIST` from step 3). *Specific adds are preferred for clarity.*
-            2.  `git commit -m "feat(docs): Complete TODO P0.X - [Short summary of TASK_DESCRIPTION]"`
-                *   **Commit Message Format:**
-                    *   Use Conventional Commits prefix (e.g., `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`).
-                        *   Use `feat:` if implementing new functionality code.
-                        *   Use `docs:` if primarily updating documentation (including the TODO list itself).
-                        *   Use `chore:` for foundational setup, build process changes, etc.
-                        *   Use `fix:` if correcting a previous error.
-                    *   Include the `TASK_ID` (e.g., `P0.1`, `P1.3`).
-                    *   Include a short, imperative summary of the `TASK_DESCRIPTION` (e.g., "Create project root directory," "Setup User SQLAlchemy model").
-                    *   Example for `TASK_ID: P0.1`, `TASK_DESCRIPTION: Create Project Root Directory`:
-                        `git commit -m "chore(project): Complete TODO P0.1 - Create project root directory"`
-                    *   Example for `TASK_ID: P1.1`, `TASK_DESCRIPTION: Define User SQLAlchemy Model & Pydantic Schema`:
-                        `git commit -m "feat(models): Complete TODO P1.1 - Define User model and schema"`
-                    *   Example for updating `todos/implementation_todo.md` *itself* if it were a task:
-                        `git commit -m "docs(todo): Mark P0.X as complete"` (but since this rule applies *after* marking, the commit will typically bundle the code change and the todo list update).
-        *   **Verification (Conceptual for Roo, actual for environment):** Git commit is successful.
-        *   **Error Handling (Git):** If a Git command fails (e.g., merge conflicts, though unlikely with this linear flow initially), signal to human supervisor: "Roo encountered Git error during commit for task `[TASK_ID]`: [error message]. Requesting assistance." Do not proceed until resolved.
-
-8.  **Proceed to Next Task:**
-    *   Go back to step 1 (Identify Next Task).
-
-## II. General Guidelines:
-    *   ...(Existing guidelines remain the same: Clarity, Focus, Output Format, Logging/Placeholders, Assumption of Tools, Referencing Documentation)...
-
-## III. Interaction with Human Supervisor:
-    *   **(Existing guidelines remain the same: Seek Help When Stuck, Request Review, Clarifications)...**
-    *   **Add:** Notify if Git operations fail repeatedly.
+**5. Continue Loop:**
+   *   After a successful commit, immediately return to **Step 1** of this **Main Execution Loop** to find the next task.
 
 ---
 
-**Key Changes and Implications:**
+### **II. Finalization Protocol**
 
-*   **Step 7 (Commit Changes to Git):** This is the major addition.
-*   **`MODIFIED_FILES_LIST`:** Roo needs to keep track of files it touches for a given sub-task to ensure they are added to the Git commit.
-*   **Commit Message Convention:** Enforcing a clear and consistent commit message format is vital. The Conventional Commits standard is a good choice.
-*   **Atomicity of Commits:** Each commit should ideally correspond to one `[x]` marked item in the todo list, making the Git history a direct reflection of progress through the plan.
-*   **Error Handling for Git:** Roo needs a way to report Git failures.
-*   **Execution Environment:** The environment Roo operates in must have Git installed and configured (user name, email for commits) if Roo is to execute these commands directly. If Roo is just *generating* the commands, the human supervisor is responsible for execution and feedback.
+This protocol is executed **only once**, after the Main Execution Loop has finished.
 
-This enhanced workflow will create a much more robust and traceable development process, even when driven by an LLM.
+**1. Announce Completion:**
+   *   State clearly that all tasks have been completed.
+   *   **Example Output:** `All tasks in documentation/implementation_todo.md have been marked as complete. The work is finished.`
+
+**2. Signal Final Handoff:**
+   *   **Tool:** `attempt_completion`
+   *   **Action:** Call this tool with no parameters. This is the **final action** Roo will take for this entire assignment. It signals to the system that its job is done.
+
+---
+
+### **III. General & Safety Guidelines**
+
+*   **Clarity:** Your thoughts and actions should be explicit. State which task you are working on and which files you are modifying.
+*   **Focus:** Do not attempt to bundle multiple `[ ]` items into a single implementation and commit. Stick to one at a time.
+*   **Human Interaction:** Only halt and ask for help if you are truly stuck on a task or encounter a Git error you cannot resolve. Do not ask for confirmation after each step. Proceed autonomously according to these rules.
