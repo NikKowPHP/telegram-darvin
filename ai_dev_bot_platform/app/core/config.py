@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     PLATFORM_CREDIT_VALUE_USD: float = 0.01
     MARKUP_FACTOR: float = 1.5
 
+    # Stripe Configuration
+    STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
+
     # API Key Pools for round-robin (loaded from env or defaults)
     # Example: GOOGLE_API_KEY_POOL='key1,key2'
     # Example: OPENROUTER_API_KEY_POOL='keyA,keyB'

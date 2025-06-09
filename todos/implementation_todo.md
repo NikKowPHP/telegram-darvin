@@ -131,7 +131,7 @@ Here is the content for the new file:
 
 **Goal:** Create a simulated but functional credit purchase flow without a live payment gateway, establishing the full backend logic.
 
-*   `[ ]` **F2.1: Add Stripe dependency and configuration**
+*   `[x]` **F2.1: Add Stripe dependency and configuration**
     *   **File:** `ai_dev_bot_platform/requirements.txt`
     *   **Action:** Add the line `stripe` to the file.
     *   **File:** `ai_dev_bot_platform/app/core/config.py`
