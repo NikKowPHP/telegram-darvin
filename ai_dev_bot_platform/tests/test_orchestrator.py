@@ -41,6 +41,6 @@ async def test_handle_new_project_flow(mocker):
     # 3. Assert
     mock_project_service.return_value.create_project.assert_called_once()
     mock_architect_agent.return_value.generate_initial_plan_and_docs.assert_awaited_once()
-    orchestrator._dedict_credits_for_llm_call.assert_awaited_once()
+    orchestrator._deduct_credits_for_llm_call.assert_awaited_once()
     mock_project_service.return_value.update_project.assert_called_once()
     assert "Project 'Fake Project' created!" in result['text']
