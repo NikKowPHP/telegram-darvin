@@ -199,7 +199,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** `user_service.py` now contains the `UserService` class with all the user-related methods inside it.
 
-*   `[ ]` **F3.2: Update Telegram handlers to use the new UserService class**
+*   `[x]` **F3.2: Update Telegram handlers to use the new UserService class**
     *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
     *   **Action:**
         1.  Change the import from `from app.services import user_service` to `from app.services.user_service import UserService`.

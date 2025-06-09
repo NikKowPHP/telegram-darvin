@@ -2,12 +2,13 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.services import user_service
+from app.services.user_service import UserService
 
 async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
     db: Session = SessionLocal()
     try:
+        user_service = UserService()
         user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
         if not user_db:
             await update.message.reply_text("Please use /start first.")
