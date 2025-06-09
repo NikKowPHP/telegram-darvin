@@ -295,7 +295,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The file `test_services.py` now contains a test for `CreditTransactionService`.
 
-*   `[ ]` **F3.3: Create an integration-style test for the Orchestrator**
+*   `[x]` **F3.3: Create an integration-style test for the Orchestrator**
     *   **File:** `ai_dev_bot_platform/tests/test_orchestrator.py` (Create this new file)
     *   **Action:** Add the following content to the new file. This test will mock the orchestrator's dependencies.
         ```python
