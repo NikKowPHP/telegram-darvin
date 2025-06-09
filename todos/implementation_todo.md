@@ -39,7 +39,7 @@ Here is the content for the new file:
 
 **Goal:** Modify the `Dockerfile` to accept and use the proxy environment variables during the image build process.
 
-*   `[ ]` **F2.1: Add ARG and ENV instructions to the Dockerfile**
+*   `[x]` **F2.1: Add ARG and ENV instructions to the Dockerfile**
     *   **File:** `ai_dev_bot_platform/Dockerfile`
     *   **Action:** Locate the `ENV PYTHONUNBUFFERED=1` line. Insert the following block of code directly after it. This tells Docker to expect proxy arguments during the build and to set them as environment variables inside the container.
         ```dockerfile
