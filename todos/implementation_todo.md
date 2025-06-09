@@ -343,7 +343,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** `requirements.txt` contains `pytest` and `pytest-mock`.
 
-*   `[ ]` **F3.4: Create the first unit test**
+*   `[x]` **F3.4: Create the first unit test**
     *   **File:** `ai_dev_bot_platform/tests/test_services.py` (Create this new file and the `tests` directory if it doesn't exist)
     *   **Action:** Add the following content to create a test for the `UserService`.
         ```python
