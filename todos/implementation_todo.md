@@ -1,349 +1,125 @@
-Of course. Based on the analysis, here is a new, comprehensive `implementation_todo.md` file designed to be executed by a small, autonomous 4B LLM agent.
+Of course. Here is a new, highly detailed `implementation_todo.md` file designed to configure the project for local development with a proxy.
 
-The tasks are broken down into the smallest possible atomic units, with explicit file paths and code, to ensure clarity and successful implementation.
+The plan is structured with extreme simplicity and clarity, making it ideal for an autonomous 4B LLM agent to execute flawlessly. Each step is an atomic, verifiable action.
 
 ---
 Here is the content for the new file:
 
-# `implementation_todo.md` - Advanced Features and Final Hardening
+# `implementation_todo.md` - Local Proxy Configuration
 
-**Project Goal:** To evolve the application from a functional MVP to a feature-rich, robust, and testable system by implementing Aider integration, a simulated payment flow, and an expanded test suite.
+**Project Goal:** To create the necessary configuration files and update existing ones to allow the entire application to be run locally via Docker Compose through an HTTP/HTTPS proxy.
 
 **Guiding Principle:** Complete each task in the exact order it is presented. Verify each step before proceeding to the next.
 
 ---
 
-## Feature 1: Aider Integration for In-Place Code Editing
+## Feature 1: Create Proxy Environment Configuration
 
-**Goal:** Implement the `apply_changes_with_aider` method and integrate it into the orchestrator, allowing for file refinement instead of just creation.
+**Goal:** Establish a dedicated environment file for proxy settings.
 
-*   `[x]` **F1.1: Add Aider dependency**
-    *   **File:** `ai_dev_bot_platform/requirements.txt`
-    *   **Action:** Add the following line to the end of the file:
+*   `[x]` **F1.1: Create the proxy environment example file**
+    *   **File:** `ai_dev_bot_platform/.env.example.proxy` (Create this new file)
+    *   **Action:** Add the following content to the new file. This file will serve as a template for users who need a proxy.
+        ```env
+        # Proxy Settings
+        # Fill these with your corporate or local proxy server details.
+        # Example: http://proxy.example.com:8080
+        HTTP_PROXY=http://your_proxy_ip:port
+        HTTPS_PROXY=http://your_proxy_ip:port
+
+        # Comma-separated list of hostnames that should NOT go through the proxy.
+        # This is crucial for letting the 'app' container talk to 'postgres' and 'redis' directly.
+        NO_PROXY=localhost,127.0.0.1,postgres,redis
         ```
-        aider-chat
-        ```
-    *   **Verification:** The `aider-chat` package is listed in `requirements.txt`.
-
-*   `[x]` **F1.2: Implement the `apply_changes_with_aider` method**
-    *   **File:** `ai_dev_bot_platform/app/agents/implementer_agent.py`
-    *   **Action:**
-        1.  Add `import asyncio` to the top of the file.
-        2.  Replace the entire stub method `async def apply_changes_with_aider(...)` with the following functional implementation:
-            ```python
-            async def apply_changes_with_aider(self, project_root_path: str, files_to_edit: list[str], instruction: str) -> Dict[str, str]:
-                logger.info(f"Applying changes to {files_to_edit} with Aider: {instruction}")
-                
-                # Command structure: aider --yes --message "instruction" file1 file2 ...
-                command = ["aider", "--yes", "--message", instruction] + files_to_edit
-                
-                try:
-                    process = await asyncio.create_subprocess_exec(
-                        *command,
-                        cwd=project_root_path,
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE
-                    )
-                    
-                    stdout, stderr = await process.communicate()
-                    
-                    if process.returncode == 0:
-                        logger.info(f"Aider command successful. Output: {stdout.decode()}")
-                        return {"status": "success", "output": stdout.decode()}
-                    else:
-                        logger.error(f"Aider command failed. Error: {stderr.decode()}")
-                        return {"status": "error", "output": stderr.decode()}
-                except FileNotFoundError:
-                    logger.error("Aider command not found. Is 'aider-chat' installed in the environment?")
-                    return {"status": "error", "output": "Aider command not found."}
-                except Exception as e:
-                    logger.error(f"Exception running Aider: {e}", exc_info=True)
-                    return {"status": "error", "output": str(e)}
-            ```
-    *   **Verification:** The `apply_changes_with_aider` method in `implementer_agent.py` is now fully implemented using `asyncio.subprocess`.
-
-*   `[x]` **F1.3: Add a "refine" command handler to the Orchestrator**
-    *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
-    *   **Action:**
-        1.  In the `process_user_request` method, add a new `re.match` check for a refine command. Place it after the existing `todo_match` block.
-            ```python
-            # Check if this is a command to refine a file
-            refine_match = re.match(r"refine file (.+) in project (.+) with instruction: (.+)", user_input, re.IGNORECASE | re.DOTALL)
-            if refine_match:
-                file_path = refine_match.group(1).strip()
-                project_id = refine_match.group(2).strip()
-                instruction = refine_match.group(3).strip()
-                return await self._handle_refine_request(user, project_id, file_path, instruction)
-            ```
-        2.  Add the new `_handle_refine_request` method to the `ModelOrchestrator` class:
-            ```python
-            async def _handle_refine_request(self, user: User, project_id: str, file_path: str, instruction: str) -> dict:
-                logger.info(f"Refining file {file_path} for project {project_id}")
-                project = self.project_service.get_project(self.db, uuid.UUID(project_id))
-                if not project:
-                    return {'text': "Project not found", 'zip_buffer': None}
-
-                # This assumes project files are stored locally, which is a simplification.
-                # For this implementation, we'll assume a base path.
-                # In a real multi-user system, this path would be unique per project.
-                project_root_path = f"./workspace/{project_id}"
-                
-                # Ensure the directory exists (Aider needs it)
-                import os
-                os.makedirs(os.path.dirname(os.path.join(project_root_path, file_path)), exist_ok=True)
-                
-                # Get the file content from DB and write to local file for Aider
-                db_file = self.project_file_service.get_file_by_path(self.db, project.id, file_path)
-                if not db_file:
-                    return {'text': f"File '{file_path}' not found in project.", 'zip_buffer': None}
-
-                with open(os.path.join(project_root_path, file_path), "w") as f:
-                    f.write(db_file.content)
-
-                aider_result = await self.implementer_agent.apply_changes_with_aider(
-                    project_root_path=project_root_path,
-                    files_to_edit=[file_path],
-                    instruction=instruction
-                )
-                
-                if aider_result["status"] == "success":
-                    # Read the modified file and update the DB
-                    with open(os.path.join(project_root_path, file_path), "r") as f:
-                        new_content = f.read()
-                    self.project_file_service.update_file_content(self.db, db_file.id, new_content)
-                    return {'text': f"Successfully refined file '{file_path}'.\n{aider_result['output']}", 'zip_buffer': None}
-                else:
-                    return {'text': f"Failed to refine file '{file_path}'.\nError: {aider_result['output']}", 'zip_buffer': None}
-            ```
-        3.  To support the above, add a `get_file_by_path` method to `ProjectFileService`. In `ai_dev_bot_platform/app/services/project_file_service.py`:
-            ```python
-            def get_file_by_path(self, db: Session, project_id: uuid.UUID, file_path: str) -> Optional[ProjectFile]:
-                return db.query(ProjectFile).filter(
-                    ProjectFile.project_id == project_id,
-                    ProjectFile.file_path == file_path
-                ).first()
-            ```
-    *   **Verification:** The orchestrator can now handle a "refine" command, which calls the Aider integration and updates the file in the database.
+    *   **Verification:** The new file `.env.example.proxy` exists in the `ai_dev_bot_platform` directory and contains the specified content.
 
 ---
 
-## Feature 2: Stripe Integration for Credit Purchases (Simulated)
+## Feature 2: Update Dockerfile to Use Proxy Settings
 
-**Goal:** Create a simulated but functional credit purchase flow without a live payment gateway, establishing the full backend logic.
+**Goal:** Modify the `Dockerfile` to accept and use the proxy environment variables during the image build process.
 
-*   `[x]` **F2.1: Add Stripe dependency and configuration**
-    *   **File:** `ai_dev_bot_platform/requirements.txt`
-    *   **Action:** Add the line `stripe` to the file.
-    *   **File:** `ai_dev_bot_platform/app/core/config.py`
-    *   **Action:** Add Stripe configuration variables to the `Settings` class:
-        ```python
-        # Stripe Configuration
-        STRIPE_SECRET_KEY: Optional[str] = None
-        STRIPE_WEBHOOK_SECRET: Optional[str] = None
+*   `[ ]` **F2.1: Add ARG and ENV instructions to the Dockerfile**
+    *   **File:** `ai_dev_bot_platform/Dockerfile`
+    *   **Action:** Locate the `ENV PYTHONUNBUFFERED=1` line. Insert the following block of code directly after it. This tells Docker to expect proxy arguments during the build and to set them as environment variables inside the container.
+        ```dockerfile
+        # Set up proxy arguments
+        ARG HTTP_PROXY
+        ARG HTTPS_PROXY
+        ARG NO_PROXY
+
+        # Set proxy environment variables
+        ENV HTTP_PROXY=$HTTP_PROXY
+        ENV HTTPS_PROXY=$HTTPS_PROXY
+        ENV NO_PROXY=$NO_PROXY
         ```
-    *   **File:** `ai_dev_bot_platform/.env.example`
-    *   **Action:** Add placeholder keys to the example environment file:
-        ```
-        # Stripe
-        STRIPE_SECRET_KEY="sk_test_YOUR_KEY"
-        STRIPE_WEBHOOK_SECRET="whsec_YOUR_KEY"
-        ```
-    *   **Verification:** Dependencies and configurations for Stripe are present.
-
-*   `[x]` **F2.2: Implement credit purchase logic in `UserService`**
-    *   **File:** `ai_dev_bot_platform/app/services/user_service.py`
-    *   **Action:**
-        1.  Add imports: `from app.services.billing_service import CreditTransactionService` and `from app.schemas.transaction import CreditTransactionCreate`.
-        2.  Add a new method `add_credits_after_purchase` to the `UserService` class.
-            ```python
-            def add_credits_after_purchase(self, db: Session, user_id: int, credit_package: str) -> Optional[User]:
-                """Simulates a successful credit purchase."""
-                credit_amounts = {
-                    'buy_100': Decimal("100.00"),
-                    'buy_500': Decimal("500.00"),
-                }
-                amount_to_add = credit_amounts.get(credit_package)
-                if not amount_to_add:
-                    return None
-                    
-                db_user = db.query(User).filter(User.id == user_id).first()
-                if not db_user:
-                    return None
-                    
-                db_user.credit_balance += amount_to_add
-                
-                # Record the transaction
-                transaction_service = CreditTransactionService()
-                transaction_in = CreditTransactionCreate(
-                    user_id=user_id,
-                    transaction_type='purchase',
-                    credits_amount=amount_to_add,
-                    description=f"Simulated purchase of {credit_package}"
-                )
-                transaction_service.record_transaction(db, transaction_in)
-                
-                db.commit()
-                db.refresh(db_user)
-                return db_user
-            ```
-    *   **Verification:** `UserService` now has a method to handle the logic of adding credits after a simulated purchase.
-
-*   `[x]` **F2.3: Update Telegram button handler to use the new service**
-    *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
-    *   **Action:** Replace the stubbed `button_handler` with this new implementation that calls the service.
-        ```python
-        async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-            query = update.callback_query
-            await query.answer()
-            
-            user_tg = update.effective_user
-            credit_package = query.data # e.g., 'buy_100'
-
-            db: Session = SessionLocal()
-            try:
-                user_service = UserService()
-                user_db = user_service.get_user_by_telegram_id(db, user_tg.id)
-                if not user_db:
-                    await query.edit_message_text(text="Could not find your account. Please /start first.")
-                    return
-
-                updated_user = user_service.add_credits_after_purchase(db, user_id=user_db.id, credit_package=credit_package)
-
-                if updated_user:
-                    await query.edit_message_text(
-                        text=f"Success! Your purchase was simulated. "
-                             f"Your new credit balance is: {updated_user.credit_balance:.2f}"
-                    )
-                else:
-                    await query.edit_message_text(text="An error occurred during the simulated purchase.")
-
-            except Exception as e:
-                logger.error(f"Error in button_handler: {e}", exc_info=True)
-                await query.edit_message_text(text="A server error occurred. Please try again later.")
-            finally:
-                db.close()
-        ```
-    *   **Verification:** Clicking the "Buy Credits" buttons now updates the user's credit balance in the database and informs them of the new total.
+    *   **Verification:** The `Dockerfile` now contains the `ARG` and `ENV` instructions for `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY`.
 
 ---
 
-## Feature 3: Comprehensive Test Suite Expansion
+## Feature 3: Create a Dedicated Docker Compose File for Proxy Setup
 
-**Goal:** Build out the test suite to cover more services and the orchestrator, ensuring application reliability.
+**Goal:** Create a new Docker Compose file that injects the proxy settings into the application container during build and at runtime.
 
-*   `[x]` **F3.1: Add a test for the `ProjectService`**
-    *   **File:** `ai_dev_bot_platform/tests/test_services.py`
-    *   **Action:** Add the following new test function to the file.
-        ```python
-        from app.services.project_service import ProjectService
-        from app.schemas.project import ProjectCreate
+*   `[ ]` **F3.1: Create the `docker-compose.proxy.yml` file**
+    *   **File:** `ai_dev_bot_platform/docker-compose.proxy.yml` (Create this new file)
+    *   **Action:** Add the following content. This file will be used *in addition* to the main `docker-compose.yml` to add the proxy configuration.
+        ```yaml
+        version: '3.8'
 
-        def test_create_project():
-            # 1. Setup
-            mock_db_session = MagicMock()
-            project_service = ProjectService()
-            
-            user_id = 1
-            project_in = ProjectCreate(
-                user_id=user_id,
-                title="Test Project",
-                description="A test description."
-            )
-            
-            # 2. Action
-            project_service.create_project(mock_db_session, project_in, user_id=user_id)
-            
-            # 3. Assert
-            mock_db_session.add.assert_called_once()
-            mock_db_session.commit.assert_called_once()
-            mock_db_session.refresh.assert_called_once()
-            
-            # Check the object passed to add()
-            added_object = mock_db_session.add.call_args[0][0]
-            assert added_object.title == "Test Project"
-            assert added_object.user_id == user_id
+        # This file is an overlay for the main docker-compose.yml.
+        # It adds proxy configuration to the 'app' service.
+        # To use it, run: docker-compose -f docker-compose.yml -f docker-compose.proxy.yml up
+
+        services:
+          app:
+            # Pass proxy settings to the Docker build process for 'pip install'
+            build:
+              args:
+                - HTTP_PROXY=${HTTP_PROXY}
+                - HTTPS_PROXY=${HTTPS_PROXY}
+                - NO_PROXY=${NO_PROXY}
+            # Pass proxy settings to the running container for runtime requests (e.g., to LLM APIs)
+            environment:
+              - HTTP_PROXY=${HTTP_PROXY}
+              - HTTPS_PROXY=${HTTPS_PROXY}
+              - NO_PROXY=${NO_PROXY}
+            # Load the proxy settings from a dedicated .env.proxy file
+            env_file:
+              - .env.proxy
         ```
-    *   **Verification:** The file `test_services.py` now contains a test for `ProjectService`.
+    *   **Verification:** The new file `docker-compose.proxy.yml` exists in the `ai_dev_bot_platform` directory and contains the specified YAML content.
 
-*   `[x]` **F3.2: Add a test for the `BillingService`**
-    *   **File:** `ai_dev_bot_platform/tests/test_services.py`
-    *   **Action:** Add the following new test function to the file.
-        ```python
-        from app.services.billing_service import CreditTransactionService
-        from app.schemas.transaction import CreditTransactionCreate
+---
 
-        def test_record_transaction():
-            # 1. Setup
-            mock_db_session = MagicMock()
-            transaction_service = CreditTransactionService()
-            
-            transaction_in = CreditTransactionCreate(
-                user_id=1,
-                transaction_type='purchase',
-                credits_amount=Decimal("100.00")
-            )
-            
-            # 2. Action
-            transaction_service.record_transaction(mock_db_session, transaction_in)
-            
-            # 3. Assert
-            mock_db_session.add.assert_called_once()
-            mock_db_session.commit.assert_called_once()
-            mock_db_session.refresh.assert_called_once()
-            added_object = mock_db_session.add.call_args[0][0]
-            assert added_object.credits_amount == Decimal("100.00")
+## Feature 4: Document the New Proxy Setup
+
+**Goal:** Update the main `README.md` file with clear instructions on how to use the new proxy development flow.
+
+*   `[ ]` **F4.1: Add "Running with a Proxy" section to README.md**
+    *   **File:** `README.md`
+    *   **Action:** Find the "🚀 Running Locally" section. At the very end of this section, add a new subsection with the following content:
+        ```markdown
+        ### Running with a Proxy
+
+        If you are behind a corporate or local proxy, follow these steps instead of the standard `docker-compose up`.
+
+        1.  **Create a Proxy Environment File:** Copy the proxy environment template.
+            ```bash
+            cp ai_dev_bot_platform/.env.example.proxy ai_dev_bot_platform/.env.proxy
+            ```
+
+        2.  **Edit `.env.proxy`:** Open the new `ai_dev_bot_platform/.env.proxy` file and fill in your `HTTP_PROXY` and `HTTPS_PROXY` details.
+
+        3.  **Build and Run with Proxy Config:** Use both `docker-compose.yml` and `docker-compose.proxy.yml` files. The `-f` flag allows you to specify multiple files, which are merged together.
+            ```bash
+            docker-compose -f ai_dev_bot_platform/docker-compose.yml -f ai_dev_bot_platform/docker-compose.proxy.yml up -d --build
+            ```
+            This will start all services (app, postgres, redis) and correctly inject your proxy settings into the `app` container for both the build process and runtime.
+
+        4.  **Apply Migrations:** This step is the same. Run migrations inside the running `app` container:
+            ```bash
+            docker-compose -f ai_dev_bot_platform/docker-compose.yml -f ai_dev_bot_platform/docker-compose.proxy.yml exec app alembic upgrade head
+            ```
         ```
-    *   **Verification:** The file `test_services.py` now contains a test for `CreditTransactionService`.
-
-*   `[x]` **F3.3: Create an integration-style test for the Orchestrator**
-    *   **File:** `ai_dev_bot_platform/tests/test_orchestrator.py` (Create this new file)
-    *   **Action:** Add the following content to the new file. This test will mock the orchestrator's dependencies.
-        ```python
-        import pytest
-        import uuid
-        from unittest.mock import MagicMock, AsyncMock
-        from app.services.orchestrator_service import ModelOrchestrator
-        from app.schemas.user import User
-
-        @pytest.mark.asyncio
-        async def test_handle_new_project_flow(mocker):
-            # 1. Setup
-            mock_db = MagicMock()
-            
-            # Mock the services that the orchestrator initializes
-            mocker.patch('app.services.orchestrator_service.APIKeyManager')
-            mocker.patch('app.services.orchestrator_service.LLMClient')
-            mock_architect_agent = mocker.patch('app.services.orchestrator_service.ArchitectAgent')
-            mocker.patch('app.services.orchestrator_service.ImplementerAgent')
-            mock_project_service = mocker.patch('app.services.orchestrator_service.ProjectService')
-            # ... mock other services if needed
-
-            # Instantiate the orchestrator (its __init__ will use the mocked classes)
-            orchestrator = ModelOrchestrator(mock_db)
-
-            # Configure the mocks to return expected values
-            fake_project_id = uuid.uuid4()
-            mock_project_service.return_value.create_project.return_value = MagicMock(id=fake_project_id, title="Fake Project")
-            mock_architect_agent.return_value.generate_initial_plan_and_docs = AsyncMock(
-                return_value={
-                    "todo_list_markdown": "[ ] Task 1",
-                    "tech_stack_suggestion": {},
-                    "llm_call_details": {"model_name_used": "fake-model"} # For credit deduction
-                }
-            )
-            
-            # Mock the credit deduction method so it doesn't run real logic
-            orchestrator._deduct_credits_for_llm_call = AsyncMock()
-
-            # 2. Action
-            test_user = User(id=1, telegram_user_id=123, credit_balance=100, created_at=None, updated_at=None)
-            result = await orchestrator._handle_new_project(test_user, "create a new web app")
-
-            # 3. Assert
-            mock_project_service.return_value.create_project.assert_called_once()
-            mock_architect_agent.return_value.generate_initial_plan_and_docs.assert_awaited_once()
-            orchestrator._deduct_credits_for_llm_call.assert_awaited_once()
-            mock_project_service.return_value.update_project.assert_called_once()
-            assert "Project 'Fake Project' created!" in result['text']
-        ```
-    *   **Verification:** The new file `tests/test_orchestrator.py` exists and contains a test for the orchestrator's new project flow. A human can run `pytest` to confirm all tests pass.
+    *   **Verification:** The `README.md` file now contains the new "Running with a Proxy" section with the correct instructions and commands.
