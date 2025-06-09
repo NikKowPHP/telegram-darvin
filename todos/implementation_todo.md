@@ -334,7 +334,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The `app-k8s.yaml` deployment now includes probe configurations.
 
-*   `[ ]` **F3.3: Add testing libraries to requirements**
+*   `[x]` **F3.3: Add testing libraries to requirements**
     *   **File:** `ai_dev_bot_platform/requirements.txt`
     *   **Action:** Add the following lines to the file:
         ```
