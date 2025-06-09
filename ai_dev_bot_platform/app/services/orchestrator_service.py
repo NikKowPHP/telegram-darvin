@@ -185,6 +185,15 @@ class ModelOrchestrator:
                 todo_item=todo_item
             )
 
+            # Deduct credits for verification LLM call
+            if "llm_call_details" in verification_result:
+                await self._deduct_credits_for_llm_call(
+                    user=user,
+                    llm_response_data=verification_result["llm_call_details"],
+                    task_type="verification",
+                    project_id=project.id
+                )
+
             verification_status = verification_result.get("status", "ERROR")
             verification_feedback = verification_result.get("feedback", "No feedback provided.")
 

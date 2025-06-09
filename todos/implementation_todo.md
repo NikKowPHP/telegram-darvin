@@ -62,7 +62,7 @@ Here is the content for the new file:
             *   Change `return {"status": "REJECTED", "feedback": response_text}` to `return {"status": "REJECTED", "feedback": response_text, "llm_call_details": llm_response_dict}`.
     *   **Verification:** The `verify_implementation_step` method now always returns a dictionary containing the `llm_call_details` key.
 
-*   `[ ]` **F1.4: Update Orchestrator to use new LLM details for credit deduction**
+*   `[x]` **F1.4: Update Orchestrator to use new LLM details for credit deduction**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:**
         1.  Find the `_handle_new_project` method. Locate the line `if "error" in plan_result:`. The credit deduction logic is right below it.
