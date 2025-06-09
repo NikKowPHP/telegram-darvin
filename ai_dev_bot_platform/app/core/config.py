@@ -24,6 +24,12 @@ class Settings(BaseSettings):
 
     API_KEY_ENCRYPTION_KEY: str # For encrypting any keys stored in DB (not external provider keys)
 
+    # Model Configuration
+    ARCHITECT_MODEL: str = "gemini-1.5-pro-latest"
+    IMPLEMENTER_MODEL: str = "openrouter/auto" # Let OpenRouter decide the best model
+    VERIFICATION_MODEL: str = "gemini-1.5-pro-latest"
+    DEFAULT_GEMINI_MODEL: str = "gemini-1.5-flash-latest"
+
     PLATFORM_CREDIT_VALUE_USD: float = 0.01
     MARKUP_FACTOR: float = 1.5
 

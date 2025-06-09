@@ -225,7 +225,7 @@ Here is the content for the new file:
 
 **Goal:** Remove hardcoded LLM model names from the agent code and manage them in the central configuration file.
 
-*   `[ ]` **F4.1: Add model names to the settings file**
+*   `[x]` **F4.1: Add model names to the settings file**
     *   **File:** `ai_dev_bot_platform/app/core/config.py`
     *   **Action:** Inside the `Settings` class, add the following fields for model configuration:
         ```python
