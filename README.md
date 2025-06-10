@@ -159,11 +159,29 @@ If you are behind a corporate or local proxy, you can inject the proxy settings 
     ```bash
     docker-compose --env-file .env --env-file .env.proxy -f deploy/docker/docker-compose.yml exec app alembic upgrade head
     ```
-
+ 
+### Testing Stripe Webhooks Locally
+ 
+To test the full payment flow with Stripe, you need a way for Stripe's servers to send events to your local machine. We use `ngrok` for this.
+ 
+1.  **Install `ngrok`:** Follow the instructions on the [ngrok website](https://ngrok.com/download).
+ 
+2.  **Run `ngrok`:** In a separate terminal, start `ngrok` to expose your local port 8000 to the internet.
+    ```bash
+    ngrok http 8000
+    ```
+ 
+3.  **Get Your Webhook URL:** `ngrok` will give you a public URL (e.g., `https://random-string.ngrok.io`). Your full webhook URL will be this URL plus the API path:
+    `https://random-string.ngrok.io/api/v1/stripe-webhook`
+ 
+4.  **Configure Stripe:** Go to your Stripe Dashboard, navigate to the "Webhooks" section, and add a new endpoint. Paste the full URL from the previous step. For the events, select "Listen to all events" for now, or specifically `checkout.session.completed`.
+ 
+5.  **Set `MOCK_STRIPE_PAYMENTS` to `false`** in your `.env` file to enable the live Stripe flow. Now, when you click a "Buy Credits" button, you will be redirected to a real Stripe checkout page. After a successful payment, Stripe will send an event to your `ngrok` URL, which will forward it to your local application to grant the credits.
+ 
 ---
-
+ 
 ## 🌐 Deployment
-
+ 
 This section provides step-by-step instructions for deploying the application to a production-like environment.
 
 ### Method 1: Using Docker Compose (for Single-Server Deployments)

@@ -226,7 +226,7 @@ Here is the content for the new file:
 
 **Goal:** Update the main `README.md` to explain the new Stripe variables and how to test webhooks locally.
 
-*   `[ ]` **F3.1: Update README.md with Stripe and Webhook instructions**
+*   `[x]` **F3.1: Update README.md with Stripe and Webhook instructions**
     *   **File:** `README.md`
     *   **Action:** Find the `### Running with a Proxy` section. Add a new section directly below it titled `### Testing Stripe Webhooks Locally`.
         ```markdown
