@@ -25,7 +25,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The `supabase` package is listed in `requirements.txt`.
 
-*   `[ ]` **F1.2: Add Supabase configuration variables**
+*   `[x]` **F1.2: Add Supabase configuration variables**
     *   **File:** `ai_dev_bot_platform/.env.example`
     *   **Action:** Add the following variables to the end of the file.
         ```env

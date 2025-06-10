@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     STRIPE_PUBLISHABLE_KEY: Optional[str] = None
     WEBAPP_URL: str = "http://localhost:8000"
 
+    # Supabase Configuration
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_KEY: Optional[str] = None
+
     # API Key Pools for round-robin (loaded from env or defaults)
     # Example: GOOGLE_API_KEY_POOL='key1,key2'
     # Example: OPENROUTER_API_KEY_POOL='keyA,keyB'
