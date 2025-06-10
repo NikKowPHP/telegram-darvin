@@ -1,130 +1,165 @@
-Of course. Here is a new, highly detailed `implementation_todo.md` file designed to fix the inconsistencies with the Supabase integration.
+Of course. Here is a new, highly detailed `implementation_todo.md` file designed to be executed by a small, autonomous 4B LLM agent.
 
-The plan is structured with extreme simplicity and clarity, breaking down the refactoring into atomic, verifiable steps suitable for a small 4B LLM agent.
+This plan breaks down the advanced orchestration, testing, and CI/CD setup into simple, sequential, and explicit steps. Each task is an atomic unit of work with clear verification criteria to ensure a successful and robust implementation.
 
 ---
 Here is the content for the new file:
 
-# `implementation_todo.md` - Supabase Integration and Final Fixes
+# `implementation_todo.md` - Production Polish and Automation
 
-**Project Goal:** To fully integrate Supabase Storage into the application's core workflows, ensuring that all file operations are stateless and ready for a serverless environment. This includes automating storage bucket creation, fixing the file implementation and delivery flows, and updating the test suite.
+**Project Goal:** To implement advanced orchestration logic, expand the test suite for full coverage, and create a complete CI/CD pipeline for automated testing and deployment.
 
 **Guiding Principle:** Complete each task in the exact order it is presented. Verify each step before proceeding to the next.
 
 ---
 
-## Feature 1: Automate Supabase Bucket Creation
+## Feature 1: Advanced Orchestration Logic
 
-**Goal:** Ensure that a dedicated storage bucket is automatically created in Supabase for every new project.
+**Goal:** Make the bot's interaction flow more robust by handling insufficient credit scenarios and interactive feedback for rejected tasks.
 
-*   `[x]` **F1.1: Add a `create_bucket` method to the Storage Service**
-    *   **File:** `ai_dev_bot_platform/app/services/storage_service.py`
-    *   **Action:** Add the following new method to the `StorageService` class.
-        ```python
-        def create_bucket(self, bucket_name: str) -> bool:
-            if not self.client:
-                logger.error("Storage client not initialized. Cannot create bucket.")
-                return False
-            try:
-                self.client.storage.create_bucket(bucket_name)
-                logger.info(f"Successfully created bucket: {bucket_name}")
-                return True
-            except Exception as e:
-                # APIError: 'Bucket already exists' is a common, non-fatal error here.
-                if "Bucket already exists" in str(e):
-                    logger.warning(f"Bucket '{bucket_name}' already exists. Skipping creation.")
-                    return True
-                logger.error(f"Failed to create bucket {bucket_name}: {e}", exc_info=True)
-                return False
-        ```
-    *   **Verification:** The `StorageService` class now has a `create_bucket` method.
-
-*   `[x]` **F1.2: Call `create_bucket` when a new project is handled**
+*   `[ ]` **F1.1: Add Pre-emptive Credit Check**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
-    *   **Action:** In the `_handle_new_project` method, immediately after the `project = self.project_service.create_project(...)` line, insert the following code block:
+    *   **Action:** In the `_handle_implement_task` method, at the very beginning (before fetching the project), add this credit check block:
         ```python
-        # Create a dedicated storage bucket for this project
-        self.storage_service.create_bucket(str(project.id))
+        # Add a pre-emptive check for credits before starting a task
+        if user.credit_balance < 1.0: # A reasonable minimum threshold
+            return {
+                'text': "Your credit balance is too low to start a new task. Please /credits to top up.",
+                'zip_buffer': None
+            }
         ```
-    *   **Verification:** The orchestrator now attempts to create a Supabase bucket every time a new project is created.
+    *   **Verification:** The `_handle_implement_task` method now checks for a minimum credit balance before executing.
+
+*   `[ ]` **F1.2: Improve Handling of Rejected Implementations**
+    *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
+    *   **Action:** Find the `_handle_implement_task` method. Locate the `elif verification_status == "REJECTED":` block. Replace the entire block with the following logic, which gives the user a clear, actionable next step.
+        ```python
+        elif verification_status == "REJECTED":
+            # Do not mark TODO as complete. Provide clear instructions for refinement.
+            self.project_service.update_project(self.db, project.id, ProjectUpdate(status="awaiting_refinement"))
+            feedback_message = (
+                f"Task '{todo_item}' was REJECTED by the Architect.\n\n"
+                f"**Feedback:**\n{verification_feedback}\n\n"
+                "To fix this, you can use the `refine` command. Example:\n"
+                f"`refine file {implementation.get('filename', 'path/to/your/file.py')} in project {project.id} with instruction: [Your instructions to fix the issue based on feedback]`"
+            )
+            return {'text': feedback_message, 'zip_buffer': None}
+        ```
+    *   **Verification:** The logic for a `REJECTED` verification now returns a detailed message guiding the user on how to use the `refine` command.
 
 ---
 
-## Feature 2: Fix File Implementation and Delivery Flows
+## Feature 2: Comprehensive Test Suite Expansion
 
-**Goal:** Refactor the implementer and delivery flows to use Supabase Storage as the single source of truth for file content.
+**Goal:** Increase test coverage to include the new payment and Aider/refinement flows.
 
-*   `[x]` **F2.1: Upload newly implemented files to Supabase Storage**
-    *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
-    *   **Action:** In the `_handle_implement_task` method, locate the block that starts with `if implementation["filename"] and implementation["code"]:`. Inside this block, after the call to `self.project_file_service.create_project_file(...)`, add the following code:
+*   `[ ]` **F2.1: Create a Test for the Payment Service**
+    *   **File:** `ai_dev_bot_platform/tests/test_services.py`
+    *   **Action:** Add the following new test function to the end of the file. This test will use `mocker` to simulate the Stripe API call.
         ```python
-        # Also upload the new file to Supabase Storage
-        self.storage_service.upload_file(
-            bucket_name=str(project.id),
-            file_path=implementation["filename"],
-            file_content=implementation["code"]
-        )
-        ```
-    *   **Verification:** When the implementer agent creates a new file, it is now saved to the database AND uploaded to the project's Supabase bucket.
+        from app.services.payment_service import PaymentService
 
-*   `[x]` **F2.2: Add a `list_files` method to the Storage Service**
-    *   **File:** `ai_dev_bot_platform/app/services/storage_service.py`
-    *   **Action:** Add the following new method to the `StorageService` class. This is needed to get all file names before creating the ZIP.
+        def test_create_checkout_session(mocker):
+            # 1. Setup
+            mock_stripe_session = mocker.patch('stripe.checkout.Session.create')
+            mock_stripe_session.return_value = {"url": "https://fake.stripe.url/session123"}
+            
+            payment_service = PaymentService()
+            # This user object is simplified for testing purposes
+            mock_user = User(id=1, telegram_user_id=12345)
+            
+            # 2. Action
+            result_url = payment_service.create_checkout_session(user=mock_user, credit_package='buy_100')
+            
+            # 3. Assert
+            assert result_url == "https://fake.stripe.url/session123"
+            mock_stripe_session.assert_called_once()
+            # Verify that our internal user ID was passed to Stripe
+            assert mock_stripe_session.call_args[1]['client_reference_id'] == '1'
+        ```
+    *   **Verification:** The file `test_services.py` now contains a test for `PaymentService`.
+
+*   `[ ]` **F2.2: Create a Test for the Aider Refinement Flow**
+    *   **File:** `ai_dev_bot_platform/tests/test_orchestrator.py`
+    *   **Action:** Add the following new test function to the file. This test verifies the stateless file handling logic.
         ```python
-        def list_files(self, bucket_name: str) -> list[dict]:
-            if not self.client:
-                logger.error("Storage client not initialized. Cannot list files.")
-                return []
-            try:
-                return self.client.storage.from_(bucket_name).list()
-            except Exception as e:
-                logger.error(f"Failed to list files for bucket {bucket_name}: {e}", exc_info=True)
-                return []
-        ```
-    *   **Verification:** The `StorageService` class now has a `list_files` method.
+        @pytest.mark.asyncio
+        async def test_handle_refine_request_flow(mocker):
+            # 1. Setup
+            mock_db = MagicMock()
+            
+            # Mock services
+            mocker.patch('app.services.orchestrator_service.APIKeyManager')
+            mocker.patch('app.services.orchestrator_service.LLMClient')
+            mocker.patch('app.services.orchestrator_service.ArchitectAgent')
+            mock_implementer_agent = mocker.patch('app.services.orchestrator_service.ImplementerAgent')
+            mock_project_service = mocker.patch('app.services.orchestrator_service.ProjectService')
+            mock_file_service = mocker.patch('app.services.orchestrator_service.ProjectFileService')
+            mock_storage_service = mocker.patch('app.services.orchestrator_service.StorageService')
 
-*   `[x]` **F2.3: Refactor ZIP delivery to use files from Supabase Storage**
-    *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
-    *   **Action:** Find the `_handle_implement_task` method. Locate the section where the project status becomes `"verification_complete"`. Replace the two lines that fetch files from the database with logic that fetches them from storage.
-        *   **Find and delete these two lines:**
-            ```python
-            # Fetch all project files
-            db_project_files = self.project_file_service.get_project_files_by_project(self.db, project_id=project.id)
-            project_files_for_readme = [{"file_path": pf.file_path, "content": pf.content} for pf in db_project_files]
-            ```
-        *   **In their place, insert this new logic:**
-            ```python
-            # Fetch all project files from Supabase Storage
-            bucket_name = str(project.id)
-            storage_files = self.storage_service.list_files(bucket_name)
-            project_files_for_readme = []
-            for storage_file in storage_files:
-                file_content = self.storage_service.download_file(bucket_name, storage_file['name'])
-                if file_content is not None:
-                    project_files_for_readme.append({"file_path": storage_file['name'], "content": file_content})
-            ```
-    *   **Verification:** The project completion logic now builds the ZIP file using content downloaded directly from Supabase Storage, ensuring it is the true source of data.
+            # Instantiate the orchestrator
+            orchestrator = ModelOrchestrator(mock_db)
+            
+            # Configure mocks
+            fake_project_id = uuid.uuid4()
+            mock_project_service.return_value.get_project.return_value = MagicMock(id=fake_project_id)
+            mock_storage_service.return_value.download_file.return_value = "original code"
+            mock_implementer_agent.return_value.apply_changes_with_aider = AsyncMock(
+                return_value={"status": "success"}
+            )
+
+            # 2. Action
+            test_user = User(id=1, telegram_user_id=123, credit_balance=100, created_at=None, updated_at=None)
+            await orchestrator._handle_refine_request(test_user, str(fake_project_id), "src/main.py", "add a comment")
+            
+            # 3. Assert
+            mock_storage_service.return_value.download_file.assert_called_once_with(str(fake_project_id), "src/main.py")
+            mock_implementer_agent.return_value.apply_changes_with_aider.assert_awaited_once()
+            mock_storage_service.return_value.upload_file.assert_called_once()
+            mock_file_service.return_value.update_file_content.assert_called_once()
+        ```
+    *   **Verification:** The new test `test_handle_refine_request_flow` exists in `test_orchestrator.py` and correctly mocks the required services.
 
 ---
 
-## Feature 3: Update Test Suite for New Architecture
+## Feature 3: CI/CD Automation Pipeline
 
-**Goal:** Modify the existing tests to account for the new `StorageService` and its role in the application's workflows.
+**Goal:** Create a GitHub Actions workflow to automatically test the code on every push and pull request.
 
-*   `[x]` **F3.1: Update the Orchestrator test to mock the Storage Service**
-    *   **File:** `ai_dev_bot_platform/tests/test_orchestrator.py`
-    *   **Action:** In the `test_handle_new_project_flow` test function, find the line `mock_project_service = mocker.patch(...)`. Directly after it, add a new line to mock the `StorageService`.
-        ```python
-        mock_storage_service = mocker.patch('app.services.orchestrator_service.StorageService')
+*   `[ ]` **F3.1: Create the Continuous Integration (CI) Workflow File**
+    *   **File:** `.github/workflows/ci.yml` (Create the `.github` and `workflows` directories in the project root)
+    *   **Action:** Add the following content to the new file.
+        ```yaml
+        name: Build and Test
+
+        on:
+          push:
+            branches: [ "main" ]
+          pull_request:
+            branches: [ "main" ]
+
+        jobs:
+          build-and-test:
+            runs-on: ubuntu-latest
+            
+            steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Python 3.11
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.11'
+
+            - name: Install dependencies
+              run: |
+                python -m pip install --upgrade pip
+                pip install -r ai_dev_bot_platform/requirements.txt
+
+            - name: Run tests with pytest
+              run: |
+                # The root of the project is the checkout directory, 
+                # so we run pytest from there.
+                pytest ai_dev_bot_platform/tests/
         ```
-    *   **Verification:** The `test_handle_new_project_flow` test now mocks the `StorageService`.
-
-*   `[x]` **F3.2: Add assertion for bucket creation in the Orchestrator test**
-    *   **File:** `ai_dev_bot_platform/tests/test_orchestrator.py`
-    *   **Action:** In the `test_handle_new_project_flow` test function, find the "Assert" section. Add the following line to verify that the bucket creation method is called.
-        ```python
-        # In the Assert section
-        mock_storage_service.return_value.create_bucket.assert_called_once()
-        ```
-    *   **Verification:** The test now correctly asserts that the orchestrator tries to create a Supabase bucket for every new project.
-
+    *   **Verification:** The file `.github/workflows/ci.yml` exists and contains the correct YAML configuration for a CI pipeline. When pushed to GitHub, this action will automatically run.
