@@ -83,7 +83,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The `StorageService` class now has a `list_files` method.
 
-*   `[ ]` **F2.3: Refactor ZIP delivery to use files from Supabase Storage**
+*   `[x]` **F2.3: Refactor ZIP delivery to use files from Supabase Storage**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:** Find the `_handle_implement_task` method. Locate the section where the project status becomes `"verification_complete"`. Replace the two lines that fetch files from the database with logic that fetches them from storage.
         *   **Find and delete these two lines:**

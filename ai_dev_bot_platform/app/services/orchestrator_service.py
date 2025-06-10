@@ -233,9 +233,14 @@ class ModelOrchestrator:
                     logger.info(f"Project {project.id} tasks complete. Generating README.md...")
                     self.project_service.update_project(self.db, project.id, ProjectUpdate(status="readme_generation")) # New status
 
-                    # Fetch all project files
-                    db_project_files = self.project_file_service.get_project_files_by_project(self.db, project_id=project.id)
-                    project_files_for_readme = [{"file_path": pf.file_path, "content": pf.content} for pf in db_project_files]
+                    # Fetch all project files from Supabase Storage
+                    bucket_name = str(project.id)
+                    storage_files = self.storage_service.list_files(bucket_name)
+                    project_files_for_readme = []
+                    for storage_file in storage_files:
+                        file_content = self.storage_service.download_file(bucket_name, storage_file['name'])
+                        if file_content is not None:
+                            project_files_for_readme.append({"file_path": storage_file['name'], "content": file_content})
 
                     readme_content = await self.architect_agent.generate_project_readme(project, project_files_for_readme)
 
