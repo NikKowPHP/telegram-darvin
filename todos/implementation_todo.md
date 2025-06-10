@@ -166,7 +166,7 @@ Here is the content for the new file:
             ```
     *   **Verification:** `main.py` now mounts the Stripe webhook router.
 
-*   `[ ]` **F2.4: Update the Telegram button handler to use the new payment flow**
+*   `[x]` **F2.4: Update the Telegram button handler to use the new payment flow**
     *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
     *   **Action:**
         1.  Add the imports: `from app.services.payment_service import PaymentService` and `from app.core.config import settings`.

@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from app.db.session import SessionLocal # For direct session if not using DI from framework
 from app.services import user_service
 from app.schemas.user import UserCreate
+from app.services.payment_service import PaymentService
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +126,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await query.answer()
     
     user_tg = update.effective_user
-    credit_package = query.data # e.g., 'buy_100'
+    credit_package = query.data
 
     db: Session = SessionLocal()
     try:
@@ -134,16 +136,31 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await query.edit_message_text(text="Could not find your account. Please /start first.")
             return
 
-        updated_user = user_service.add_credits_after_purchase(db, user_id=user_db.id, credit_package=credit_package)
-
-        if updated_user:
-            await query.edit_message_text(
-                text=f"Success! Your purchase was simulated. "
-                     f"Your new credit balance is: {updated_user.credit_balance:.2f}"
-            )
+        if settings.MOCK_STRIPE_PAYMENTS:
+            # MOCK FLOW: Directly add credits
+            updated_user = user_service.add_credits_after_purchase(db, user_id=user_db.id, credit_package=credit_package)
+            if updated_user:
+                await query.edit_message_text(
+                    text=f"Success! Your MOCK purchase was processed. "
+                         f"New balance: {updated_user.credit_balance:.2f}"
+                )
+            else:
+                await query.edit_message_text(text="An error occurred during the mock purchase.")
         else:
-            await query.edit_message_text(text="An error occurred during the simulated purchase.")
-
+            # LIVE FLOW: Generate a Stripe Checkout link
+            payment_service = PaymentService()
+            checkout_url = payment_service.create_checkout_session(user=user_db, credit_package=credit_package)
+            
+            if checkout_url:
+                keyboard = [[InlineKeyboardButton("➡️ Proceed to Payment", url=checkout_url)]]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                await query.edit_message_text(
+                    text="Please complete your purchase using the link below:",
+                    reply_markup=reply_markup
+                )
+            else:
+                await query.edit_message_text(text="Sorry, we could not create a payment link at this time.")
+    
     except Exception as e:
         logger.error(f"Error in button_handler: {e}", exc_info=True)
         await query.edit_message_text(text="A server error occurred. Please try again later.")
