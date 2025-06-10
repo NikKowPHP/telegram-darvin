@@ -13,6 +13,7 @@ from app.services.project_file_service import ProjectFileService
 from app.services.codebase_indexing_service import CodebaseIndexingService
 from app.services.billing_service import ModelPricingService, APIKeyUsageService, CreditTransactionService
 from app.services.user_service import UserService
+from app.services.storage_service import StorageService
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.core.config import settings
 from decimal import Decimal
@@ -32,6 +33,7 @@ class ModelOrchestrator:
         self.model_pricing_service = ModelPricingService()
         self.api_key_usage_service = APIKeyUsageService()
         self.credit_transaction_service = CreditTransactionService()
+        self.storage_service = StorageService()
         self.user_service = UserService()
 
     async def process_user_request(self, user: User, user_input: str) -> dict:

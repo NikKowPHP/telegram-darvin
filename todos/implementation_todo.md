@@ -108,7 +108,7 @@ Here is the content for the new file:
 
 **Goal:** Modify the code refinement logic to use the new `StorageService`, making it compatible with Cloud Run's ephemeral filesystem.
 
-*   `[ ]` **F3.1: Initialize StorageService in the Orchestrator**
+*   `[x]` **F3.1: Initialize StorageService in the Orchestrator**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:**
         1.  Add the import: `from app.services.storage_service import StorageService`.
