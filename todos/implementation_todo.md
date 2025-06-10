@@ -115,7 +115,7 @@ Here is the content for the new file:
         2.  In the `ModelOrchestrator`'s `__init__` method, add a new line to initialize the service: `self.storage_service = StorageService()`.
     *   **Verification:** The orchestrator's `__init__` method now creates an instance of `StorageService`.
 
-*   `[ ]` **F3.2: Refactor `_handle_refine_request` to use Supabase Storage**
+*   `[x]` **F3.2: Refactor `_handle_refine_request` to use Supabase Storage**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:** Replace the entire `_handle_refine_request` method with the following new logic. This logic downloads the file from Supabase, saves it to a temporary local path for Aider, runs Aider, and then uploads the result back to Supabase.
         ```python

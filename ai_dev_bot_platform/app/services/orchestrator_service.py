@@ -306,42 +306,52 @@ class ModelOrchestrator:
             return {'text': "Error processing architect request.", 'zip_buffer': None}
 
     async def _handle_refine_request(self, user: User, project_id: str, file_path: str, instruction: str) -> dict:
+        import os
+        import tempfile
+        
         logger.info(f"Refining file {file_path} for project {project_id}")
         project = self.project_service.get_project(self.db, uuid.UUID(project_id))
         if not project:
             return {'text': "Project not found", 'zip_buffer': None}
 
-        # This assumes project files are stored locally, which is a simplification.
-        # For this implementation, we'll assume a base path.
-        # In a real multi-user system, this path would be unique per project.
-        project_root_path = f"./workspace/{project_id}"
+        # Use the project ID as the bucket name (must be created in Supabase dashboard)
+        bucket_name = str(project.id)
         
-        # Ensure the directory exists (Aider needs it)
-        import os
-        os.makedirs(os.path.dirname(os.path.join(project_root_path, file_path)), exist_ok=True)
-        
-        # Get the file content from DB and write to local file for Aider
-        db_file = self.project_file_service.get_file_by_path(self.db, project.id, file_path)
-        if not db_file:
-            return {'text': f"File '{file_path}' not found in project.", 'zip_buffer': None}
+        # 1. Download file content from Supabase Storage
+        original_content = self.storage_service.download_file(bucket_name, file_path)
+        if original_content is None:
+            return {'text': f"Could not find file '{file_path}' in project storage.", 'zip_buffer': None}
 
-        with open(os.path.join(project_root_path, file_path), "w") as f:
-            f.write(db_file.content)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
+            
+            # 2. Write file to temporary local disk for Aider
+            with open(local_file_path, "w") as f:
+                f.write(original_content)
 
-        aider_result = await self.implementer_agent.apply_changes_with_aider(
-            project_root_path=project_root_path,
-            files_to_edit=[file_path],
-            instruction=instruction
-        )
-        
-        if aider_result["status"] == "success":
-            # Read the modified file and update the DB
-            with open(os.path.join(project_root_path, file_path), "r") as f:
-                new_content = f.read()
-            self.project_file_service.update_file_content(self.db, db_file.id, new_content)
-            return {'text': f"Successfully refined file '{file_path}'.\n{aider_result['output']}", 'zip_buffer': None}
-        else:
-            return {'text': f"Failed to refine file '{file_path}'.\nError: {aider_result['output']}", 'zip_buffer': None}
+            # 3. Run Aider on the local file
+            aider_result = await self.implementer_agent.apply_changes_with_aider(
+                project_root_path=temp_dir,
+                files_to_edit=[os.path.basename(file_path)],
+                instruction=instruction
+            )
+            
+            if aider_result["status"] == "success":
+                # 4. Read the modified file
+                with open(local_file_path, "r") as f:
+                    new_content = f.read()
+
+                # 5. Upload the new content back to Supabase Storage
+                self.storage_service.upload_file(bucket_name, file_path, new_content)
+
+                # 6. Update the content in the database as well
+                db_file = self.project_file_service.get_file_by_path(self.db, project.id, file_path)
+                if db_file:
+                    self.project_file_service.update_file_content(self.db, db_file.id, new_content)
+
+                return {'text': f"Successfully refined file '{file_path}'.", 'zip_buffer': None}
+            else:
+                return {'text': f"Failed to refine file '{file_path}'.\nError: {aider_result['output']}", 'zip_buffer': None}
 
     async def _handle_implementer_request(self, user_input: str) -> str:
         """Handle implementer-specific requests with codebase context"""
