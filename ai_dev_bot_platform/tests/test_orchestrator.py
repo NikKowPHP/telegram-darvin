@@ -15,6 +15,7 @@ async def test_handle_new_project_flow(mocker):
     mock_architect_agent = mocker.patch('app.services.orchestrator_service.ArchitectAgent')
     mocker.patch('app.services.orchestrator_service.ImplementerAgent')
     mock_project_service = mocker.patch('app.services.orchestrator_service.ProjectService')
+    mock_storage_service = mocker.patch('app.services.orchestrator_service.StorageService')
     # ... mock other services if needed
 
     # Instantiate the orchestrator (its __init__ will use the mocked classes)

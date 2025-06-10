@@ -111,7 +111,7 @@ Here is the content for the new file:
 
 **Goal:** Modify the existing tests to account for the new `StorageService` and its role in the application's workflows.
 
-*   `[ ]` **F3.1: Update the Orchestrator test to mock the Storage Service**
+*   `[x]` **F3.1: Update the Orchestrator test to mock the Storage Service**
     *   **File:** `ai_dev_bot_platform/tests/test_orchestrator.py`
     *   **Action:** In the `test_handle_new_project_flow` test function, find the line `mock_project_service = mocker.patch(...)`. Directly after it, add a new line to mock the `StorageService`.
         ```python
