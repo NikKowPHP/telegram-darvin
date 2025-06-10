@@ -95,7 +95,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The file `app/services/payment_service.py` exists and contains the `PaymentService` class.
 
-*   `[ ]` **F2.2: Create the Stripe Webhook API Endpoint**
+*   `[x]` **F2.2: Create the Stripe Webhook API Endpoint**
     *   **File:** `ai_dev_bot_platform/app/api/endpoints/stripe_webhooks.py` (Create the `api/endpoints` directories first)
     *   **Action:** Add the following content to the new file. This endpoint will listen for events from Stripe.
         ```python
