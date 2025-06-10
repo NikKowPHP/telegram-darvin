@@ -31,7 +31,7 @@ Here is the content for the new file:
 
 **Goal:** Modify the one true `Dockerfile` and `docker-compose.yml` to handle proxy settings correctly.
 
-*   `[ ]` **F2.1: Add proxy arguments to the correct Dockerfile**
+*   `[x]` **F2.1: Add proxy arguments to the correct Dockerfile**
     *   **File:** `deploy/docker/Dockerfile`
     *   **Action:** Find the line `ENV PYTHONUNBUFFERED=1`. Directly after this line, insert the following code block:
         ```dockerfile

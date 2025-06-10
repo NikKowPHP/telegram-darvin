@@ -5,6 +5,16 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Set up proxy arguments
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+
+# Set proxy environment variables
+ENV HTTP_PROXY=$HTTP_PROXY
+ENV HTTPS_PROXY=$HTTPS_PROXY
+ENV NO_PROXY=$NO_PROXY
+
 # Set the working directory
 WORKDIR /app
 
