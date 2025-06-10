@@ -21,7 +21,7 @@ Here is the content for the new file:
     *   **Action:** Delete the file located at `ai_dev_bot_platform/Dockerfile`.
     *   **Verification:** The file `ai_dev_bot_platform/Dockerfile` no longer exists.
 
-*   `[ ]` **F1.2: Delete the incorrect Docker Compose overlay file**
+*   `[x]` **F1.2: Delete the incorrect Docker Compose overlay file**
     *   **Action:** Delete the file located at `ai_dev_bot_platform/docker-compose.proxy.yml`.
     *   **Verification:** The file `ai_dev_bot_platform/docker-compose.proxy.yml` no longer exists.
 
