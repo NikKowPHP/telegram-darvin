@@ -54,7 +54,7 @@ Here is the content for the new file:
 
 **Goal:** Refactor the implementer and delivery flows to use Supabase Storage as the single source of truth for file content.
 
-*   `[ ]` **F2.1: Upload newly implemented files to Supabase Storage**
+*   `[x]` **F2.1: Upload newly implemented files to Supabase Storage**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:** In the `_handle_implement_task` method, locate the block that starts with `if implementation["filename"] and implementation["code"]:`. Inside this block, after the call to `self.project_file_service.create_project_file(...)`, add the following code:
         ```python

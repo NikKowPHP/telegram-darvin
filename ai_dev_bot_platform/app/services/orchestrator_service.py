@@ -179,6 +179,13 @@ class ModelOrchestrator:
                     content=implementation["code"]
                 )
                 
+                # Also upload the new file to Supabase Storage
+                self.storage_service.upload_file(
+                    bucket_name=str(project.id),
+                    file_path=implementation["filename"],
+                    file_content=implementation["code"]
+                )
+                
                 # Index the newly created/updated file
                 await self.codebase_indexing_service.index_file_content(
                     project_id=str(project.id), # Ensure project_id is string
