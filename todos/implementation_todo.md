@@ -82,7 +82,7 @@ Here is the content for the new file:
 
 **Goal:** Rewrite the `README.md` section for proxy setup with clear, simple, and functional instructions.
 
-*   `[ ]` **F3.1: Replace the "Running with a Proxy" section in README.md**
+*   `[x]` **F3.1: Replace the "Running with a Proxy" section in README.md**
     *   **File:** `README.md`
     *   **Action:** Find the subsection titled `### Running with a Proxy`. Replace that entire subsection with the following corrected content:
         ```markdown

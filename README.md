@@ -137,24 +137,27 @@ Go to Telegram, find the bot you created with BotFather, and send the `/start` c
 
 ### Running with a Proxy
 
-If you are behind a corporate or local proxy, follow these steps instead of the standard `docker-compose up`.
+If you are behind a corporate or local proxy, you can inject the proxy settings into the Docker containers.
 
-1.  **Create a Proxy Environment File:** Copy the proxy environment template.
-    ```bash
-    cp ai_dev_bot_platform/.env.example.proxy ai_dev_bot_platform/.env.proxy
+1.  **Create a Proxy Environment File:** In the project root (`ai_dev_bot_platform`), create a file named `.env.proxy`.
+
+2.  **Add Proxy Settings:** Add your proxy configuration to the `.env.proxy` file. The `NO_PROXY` variable is crucial to ensure containers can communicate with each other directly.
+    ```env
+    # .env.proxy
+    HTTP_PROXY=http://your.proxy.server:port
+    HTTPS_PROXY=http://your.proxy.server:port
+    NO_PROXY=localhost,127.0.0.1,postgres,redis
     ```
 
-2.  **Edit `.env.proxy`:** Open the new `ai_dev_bot_platform/.env.proxy` file and fill in your `HTTP_PROXY` and `HTTPS_PROXY` details.
-
-3.  **Build and Run with Proxy Config:** Use both `docker-compose.yml` and `docker-compose.proxy.yml` files. The `-f` flag allows you to specify multiple files, which are merged together.
+3.  **Build and Run with Proxy:** From the **project root (`ai_dev_bot_platform`)**, run the following command. It loads your standard `.env` file and the new `.env.proxy` file into the correct `docker-compose.yml`.
     ```bash
-    docker-compose -f ai_dev_bot_platform/docker-compose.yml -f ai_dev_bot_platform/docker-compose.proxy.yml up -d --build
+    docker-compose --env-file .env --env-file .env.proxy -f deploy/docker/docker-compose.yml up -d --build
     ```
     This will start all services (app, postgres, redis) and correctly inject your proxy settings into the `app` container for both the build process and runtime.
 
-4.  **Apply Migrations:** This step is the same. Run migrations inside the running `app` container:
+4.  **Apply Migrations:** This step is similar. Run migrations using the same environment files:
     ```bash
-    docker-compose -f ai_dev_bot_platform/docker-compose.yml -f ai_dev_bot_platform/docker-compose.proxy.yml exec app alembic upgrade head
+    docker-compose --env-file .env --env-file .env.proxy -f deploy/docker/docker-compose.yml exec app alembic upgrade head
     ```
 
 ---
