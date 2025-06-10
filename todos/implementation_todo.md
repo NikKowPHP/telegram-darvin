@@ -17,7 +17,7 @@ Here is the content for the new file:
 
 **Goal:** Update the project's configuration to support a "mock" mode for Stripe payments and to store necessary URLs.
 
-*   `[ ]` **F1.1: Add new environment variables for Stripe and Mocking**
+*   `[x]` **F1.1: Add new environment variables for Stripe and Mocking**
     *   **File:** `ai_dev_bot_platform/.env.example`
     *   **Action:** Add the following variables to the end of the file.
         ```env

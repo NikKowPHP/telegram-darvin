@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     # Stripe Configuration
     STRIPE_SECRET_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
+    MOCK_STRIPE_PAYMENTS: bool = False
+    STRIPE_PUBLISHABLE_KEY: Optional[str] = None
+    WEBAPP_URL: str = "http://localhost:8000"
 
     # API Key Pools for round-robin (loaded from env or defaults)
     # Example: GOOGLE_API_KEY_POOL='key1,key2'
