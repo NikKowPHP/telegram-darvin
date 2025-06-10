@@ -30,7 +30,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The `_handle_implement_task` method now checks for a minimum credit balance before executing.
 
-*   `[ ]` **F1.2: Improve Handling of Rejected Implementations**
+*   `[x]` **F1.2: Improve Handling of Rejected Implementations**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:** Find the `_handle_implement_task` method. Locate the `elif verification_status == "REJECTED":` block. Replace the entire block with the following logic, which gives the user a clear, actionable next step.
         ```python

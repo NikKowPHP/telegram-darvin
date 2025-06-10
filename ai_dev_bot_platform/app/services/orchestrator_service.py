@@ -291,16 +291,15 @@ class ModelOrchestrator:
                     f"Project status: {updated_project_status}. Next steps..."
                 ), 'zip_buffer': None}
             elif verification_status == "REJECTED":
-                # Do not mark TODO as complete.
-                # Potentially add architect's feedback as a new sub-task or comment in TODO
-                # For now, just inform user.
+                # Do not mark TODO as complete. Provide clear instructions for refinement.
                 self.project_service.update_project(self.db, project.id, ProjectUpdate(status="awaiting_refinement"))
-                return {'text': (
-                    f"Task '{todo_item}' implemented but REJECTED by Architect.\n"
-                    f"File: {implementation.get('filename', 'N/A')}\n"
-                    f"Architect Feedback: {verification_feedback}\n"
-                    f"Please review the feedback and consider refining the task or providing more details."
-                ), 'zip_buffer': None}
+                feedback_message = (
+                    f"Task '{todo_item}' was REJECTED by the Architect.\n\n"
+                    f"**Feedback:**\n{verification_feedback}\n\n"
+                    "To fix this, you can use the `refine` command. Example:\n"
+                    f"`refine file {implementation.get('filename', 'path/to/your/file.py')} in project {project.id} with instruction: [Your instructions to fix the issue based on feedback]`"
+                )
+                return {'text': feedback_message, 'zip_buffer': None}
             else: # ERROR case
                 return {'text': (
                     f"Error during verification of task '{todo_item}'.\n"
