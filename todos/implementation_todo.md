@@ -17,7 +17,7 @@ Here is the content for the new file:
 
 **Goal:** Ensure that a dedicated storage bucket is automatically created in Supabase for every new project.
 
-*   `[ ]` **F1.1: Add a `create_bucket` method to the Storage Service**
+*   `[x]` **F1.1: Add a `create_bucket` method to the Storage Service**
     *   **File:** `ai_dev_bot_platform/app/services/storage_service.py`
     *   **Action:** Add the following new method to the `StorageService` class.
         ```python

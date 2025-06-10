@@ -43,3 +43,19 @@ class StorageService:
             # Supabase client often raises a generic Exception if file not found
             logger.warning(f"Failed to download {file_path} from Supabase Storage: {e}")
             return None
+
+    def create_bucket(self, bucket_name: str) -> bool:
+        if not self.client:
+            logger.error("Storage client not initialized. Cannot create bucket.")
+            return False
+        try:
+            self.client.storage.create_bucket(bucket_name)
+            logger.info(f"Successfully created bucket: {bucket_name}")
+            return True
+        except Exception as e:
+            # APIError: 'Bucket already exists' is a common, non-fatal error here.
+            if "Bucket already exists" in str(e):
+                logger.warning(f"Bucket '{bucket_name}' already exists. Skipping creation.")
+                return True
+            logger.error(f"Failed to create bucket {bucket_name}: {e}", exc_info=True)
+            return False
