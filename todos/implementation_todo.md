@@ -17,7 +17,7 @@ Here is the content for the new file:
 
 **Goal:** Make the bot's interaction flow more robust by handling insufficient credit scenarios and interactive feedback for rejected tasks.
 
-*   `[ ]` **F1.1: Add Pre-emptive Credit Check**
+*   `[x]` **F1.1: Add Pre-emptive Credit Check**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:** In the `_handle_implement_task` method, at the very beginning (before fetching the project), add this credit check block:
         ```python

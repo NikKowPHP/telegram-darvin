@@ -136,6 +136,13 @@ class ModelOrchestrator:
     async def _handle_implement_task(self, user: User, project_id: str, task_index: int) -> str:
         """Implement a specific TODO item from a project"""
         try:
+            # Add a pre-emptive check for credits before starting a task
+            if user.credit_balance < 1.0: # A reasonable minimum threshold
+                return {
+                    'text': "Your credit balance is too low to start a new task. Please /credits to top up.",
+                    'zip_buffer': None
+                }
+            
             project = self.project_service.get_project(self.db, uuid.UUID(project_id))
             if not project:
                 return {'text': "Project not found", 'zip_buffer': None}
