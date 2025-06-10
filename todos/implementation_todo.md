@@ -67,7 +67,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** When the implementer agent creates a new file, it is now saved to the database AND uploaded to the project's Supabase bucket.
 
-*   `[ ]` **F2.2: Add a `list_files` method to the Storage Service**
+*   `[x]` **F2.2: Add a `list_files` method to the Storage Service**
     *   **File:** `ai_dev_bot_platform/app/services/storage_service.py`
     *   **Action:** Add the following new method to the `StorageService` class. This is needed to get all file names before creating the ZIP.
         ```python

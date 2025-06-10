@@ -59,3 +59,13 @@ class StorageService:
                 return True
             logger.error(f"Failed to create bucket {bucket_name}: {e}", exc_info=True)
             return False
+
+    def list_files(self, bucket_name: str) -> list[dict]:
+        if not self.client:
+            logger.error("Storage client not initialized. Cannot list files.")
+            return []
+        try:
+            return self.client.storage.from_(bucket_name).list()
+        except Exception as e:
+            logger.error(f"Failed to list files for bucket {bucket_name}: {e}", exc_info=True)
+            return []
