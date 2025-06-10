@@ -39,7 +39,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The `StorageService` class now has a `create_bucket` method.
 
-*   `[ ]` **F1.2: Call `create_bucket` when a new project is handled**
+*   `[x]` **F1.2: Call `create_bucket` when a new project is handled**
     *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
     *   **Action:** In the `_handle_new_project` method, immediately after the `project = self.project_service.create_project(...)` line, insert the following code block:
         ```python

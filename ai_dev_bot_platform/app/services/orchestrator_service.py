@@ -81,6 +81,9 @@ class ModelOrchestrator:
             )
             project = self.project_service.create_project(self.db, project_in)
             
+            # Create a dedicated storage bucket for this project
+            self.storage_service.create_bucket(str(project.id))
+            
             # Generate plan with architect agent
             try:
                 plan_result = await self.architect_agent.generate_initial_plan_and_docs(
