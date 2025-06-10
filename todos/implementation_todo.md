@@ -50,7 +50,7 @@ Here is the content for the new file:
 
 **Goal:** Abstract all filesystem operations into a service that interacts with Supabase Storage instead of a local disk. This is critical for a serverless environment.
 
-*   `[ ]` **F2.1: Create the Storage Service file**
+*   `[x]` **F2.1: Create the Storage Service file**
     *   **File:** `ai_dev_bot_platform/app/services/storage_service.py` (Create this new file)
     *   **Action:** Add the following content. This class will manage all file uploads, downloads, and deletions.
         ```python
