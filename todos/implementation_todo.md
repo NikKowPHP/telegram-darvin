@@ -47,7 +47,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The file `deploy/docker/Dockerfile` now contains the proxy `ARG` and `ENV` variables.
 
-*   `[ ]` **F2.2: Update the main docker-compose.yml to use proxy variables**
+*   `[x]` **F2.2: Update the main docker-compose.yml to use proxy variables**
     *   **File:** `deploy/docker/docker-compose.yml`
     *   **Action:** Replace the entire `app` service definition with the following updated version. This adds proxy settings to the build and runtime environments and fixes the application command.
         ```yaml
