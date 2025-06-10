@@ -180,155 +180,93 @@ To test the full payment flow with Stripe, you need a way for Stripe's servers t
  
 ---
  
-## 🌐 Deployment
- 
-This section provides step-by-step instructions for deploying the application to a production-like environment.
+## 🌐 Deployment (Cloud Run & Supabase)
 
-### Method 1: Using Docker Compose (for Single-Server Deployments)
+This section provides a complete guide for deploying the application to a scalable, serverless environment using Google Cloud Run for the application and Supabase for the database and file storage.
 
-This is a simpler method suitable for a single virtual machine.
+### 1. Supabase Setup
 
-1.  **Configure `.env`:** Copy `.env.example` to `.env` on your server and fill it with your **production** keys and database credentials. Ensure `POSTGRES_SERVER` is set to `postgres` (the service name in `docker-compose.yml`).
+Before deploying the application, you need to set up your Supabase project.
 
-2.  **Build and Run:** From the project root on your server, run the following command:
+1.  **Create a Project:** Go to [supabase.com](https://supabase.com) and create a new project.
+2.  **Get Database URL:** In your project's dashboard, go to `Settings` > `Database`. Find your connection string (URI) and use its components for the `POSTGRES_*` variables in your `.env` file.
+3.  **Get API Keys:** Go to `Settings` > `API`. You will find your `SUPABASE_URL` (Project URL) and `SUPABASE_KEY` (the `service_role` key).
+4.  **Create a Storage Bucket:** Go to `Storage` and create a new public bucket for each project you intend to test. The bucket name should be the Project ID (a UUID). For simplicity during testing, you can create one bucket with a known UUID and use that for your test project.
+
+### 2. Configure Environment for Production
+
+Create a `.env` file in your project root and fill it with your **production** keys from Supabase, Telegram, and your LLM providers. Ensure `MOCK_STRIPE_PAYMENTS` is set to `false`.
+
+### 3. Build and Push the Docker Image
+
+The application will run as a container on Cloud Run.
+
+1.  **Enable Google Cloud Services:** Make sure you have enabled the Artifact Registry API and the Cloud Run API in your Google Cloud project.
+2.  **Authenticate Docker:** Configure Docker to authenticate with Google Cloud's Artifact Registry.
     ```bash
-    docker-compose up -d --build
+    gcloud auth configure-docker your-region-docker.pkg.dev
     ```
-    -   `--build` forces Docker to rebuild your application image with the latest code.
-    -   `-d` runs all services (app, postgres, redis) in the background.
+    *(Replace `your-region` with your GCP region, e.g., `us-central1`)*
 
-3.  **Apply Migrations:** Run the Alembic migrations inside the running `app` container:
+3.  **Build the Image:** From the project root (`ai_dev_bot_platform`), build the Docker image.
     ```bash
-    docker-compose exec app alembic upgrade head
+    docker build -t your-region-docker.pkg.dev/your-gcp-project-id/ai-dev-bot:latest -f deploy/docker/Dockerfile .
     ```
 
-4.  **Managing the Deployment:**
-    -   To view logs: `docker-compose logs -f app`
-    -   To stop the services: `docker-compose down`
-
-### Method 2: Using Kubernetes (for Production-Scale Deployments)
-
-This is the recommended method for a scalable and resilient production environment.
-
-#### 1. Prerequisites
-- A running Kubernetes cluster (e.g., GKE, EKS, AKS, or a local one like Minikube).
-- `kubectl` command-line tool configured to connect to your cluster.
-- A Docker image registry (e.g., Docker Hub, Google Container Registry, Amazon ECR) that your Kubernetes cluster can access.
-
-#### 2. Build and Push the Docker Image
-
-1.  Build the application's Docker image, tagging it for your registry:
+4.  **Push the Image:**
     ```bash
-    docker build -t your-registry/ai-dev-bot-app:latest .
-    ```
-    *(Replace `your-registry` with your registry's path, e.g., `gcr.io/my-gcp-project`)*
-
-2.  Push the image to your registry:
-    ```bash
-    docker push your-registry/ai-dev-bot-app:latest
+    docker push your-region-docker.pkg.dev/your-gcp-project-id/ai-dev-bot:latest
     ```
 
-#### 3. Update the Kubernetes Deployment Manifest
+### 4. Deploy to Google Cloud Run
 
-Edit `deploy/kubernetes/app-k8s.yaml` and change the placeholder image name to the one you just pushed.
-
-```yaml
-# in deploy/kubernetes/app-k8s.yaml
-...
-spec:
-  containers:
-  - name: ai-dev-bot-app
-    image: your-registry/ai-dev-bot-app:latest # <-- UPDATE THIS LINE
-...
-```
-
-#### 4. Create Kubernetes Secrets & ConfigMaps
-
-You must create Kubernetes secrets to securely store your credentials. **Do not commit these files to Git.**
-
-1.  **Create `postgres-secret.yaml`:**
-    ```yaml
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: postgres-secret
-    type: Opaque
-    data:
-      user: $(echo -n 'your_db_user' | base64)
-      password: $(echo -n 'your_db_password' | base64)
-    ```
-
-2.  **Create `app-secrets.yaml`:**
-    ```yaml
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: app-secrets
-    type: Opaque
-    data:
-      TELEGRAM_BOT_TOKEN: $(echo -n 'YOUR_TELEGRAM_BOT_TOKEN' | base64)
-      GOOGLE_API_KEY: $(echo -n 'YOUR_GOOGLE_GEMINI_API_KEY' | base64)
-      OPENROUTER_API_KEY: $(echo -n 'YOUR_OPENROUTER_API_KEY' | base64)
-      # ... and other secrets from .env
-    ```
-
-3.  **Apply the secrets and the existing ConfigMap:**
-    ```bash
-    kubectl apply -f postgres-secret.yaml
-    kubectl apply -f app-secrets.yaml
-    kubectl apply -f deploy/kubernetes/config-secrets-example.md # This contains the app-config ConfigMap
-    ```
-
-#### 5. Deploy the Services
-
-Apply the Kubernetes manifest files to your cluster in order.
+Deploy the container image using the `gcloud` command-line tool. This single command sets up the service, injects all secrets as environment variables, and exposes it to the internet.
 
 ```bash
-# Deploy PostgreSQL StatefulSet and Service
-kubectl apply -f deploy/kubernetes/postgres-k8s.yaml
-
-# Deploy Redis Deployment and Service
-kubectl apply -f deploy/kubernetes/redis-k8s.yaml
-
-# Deploy the Application itself
-kubectl apply -f deploy/kubernetes/app-k8s.yaml
+gcloud run deploy ai-dev-bot-service \
+  --image your-region-docker.pkg.dev/your-gcp-project-id/ai-dev-bot:latest \
+  --platform managed \
+  --region your-gcp-region \
+  --allow-unauthenticated \
+  --set-env-vars="POSTGRES_USER=your_db_user" \
+  --set-env-vars="POSTGRES_PASSWORD=your_db_password" \
+  --set-env-vars="POSTGRES_SERVER=db.your-project-id.supabase.co" \
+  --set-env-vars="POSTGRES_PORT=5432" \
+  --set-env-vars="POSTGRES_DB=postgres" \
+  --set-env-vars="TELEGRAM_BOT_TOKEN=your_telegram_token" \
+  --set-env-vars="GOOGLE_API_KEY=your_google_key" \
+  --set-env-vars="OPENROUTER_API_KEY=your_openrouter_key" \
+  --set-env-vars="API_KEY_ENCRYPTION_KEY=a_strong_random_secret" \
+  --set-env-vars="SUPABASE_URL=https://your-project-id.supabase.co" \
+  --set-env-vars="SUPABASE_KEY=your_supabase_service_role_key" \
+  --set-env-vars="STRIPE_SECRET_KEY=sk_live_your_key" \
+  --set-env-vars="STRIPE_WEBHOOK_SECRET=whsec_your_key" \
+  --set-env-vars="MOCK_STRIPE_PAYMENTS=false"
 ```
+-   **Note:** After deployment, Cloud Run will provide a public URL for your service. Use this URL to configure your Stripe webhook endpoint.
 
-#### 6. Run Database Migrations (as a Job)
+### 5. Run Database Migrations
 
-Create a one-off Kubernetes Job to run the Alembic migrations.
+The recommended way to run migrations on Cloud Run is to submit a one-off Cloud Build job that uses the same container image.
 
-1.  Create `k8s-migration-job.yaml`:
+1.  Create a `cloudbuild.yaml` file in your project root:
     ```yaml
-    apiVersion: batch/v1
-    kind: Job
-    metadata:
-      name: alembic-migration
-    spec:
-      template:
-        spec:
-          containers:
-          - name: alembic
-            image: your-registry/ai-dev-bot-app:latest # Use the same app image
-            command: ["alembic", "upgrade", "head"]
-            envFrom:
-              - configMapRef:
-                  name: app-config
-              - secretRef:
-                  name: app-secrets
-          restartPolicy: Never
-      backoffLimit: 4
+    steps:
+    - name: 'your-region-docker.pkg.dev/your-gcp-project-id/ai-dev-bot:latest'
+      entrypoint: 'alembic'
+      args: ['upgrade', 'head']
+      secretEnv: ['POSTGRES_USER', 'POSTGRES_PASSWORD']
+    
+    availableSecrets:
+      secretManager:
+      - versionName: projects/your-gcp-project-id/secrets/POSTGRES_USER/versions/latest
+        env: 'POSTGRES_USER'
+      - versionName: projects/your-gcp-project-id/secrets/POSTGRES_PASSWORD/versions/latest
+        env: 'POSTGRES_PASSWORD'
     ```
+    *(This requires you to store your DB credentials in Google Secret Manager first.)*
 
-2.  Apply the job:
+2.  Submit the build:
     ```bash
-    kubectl apply -f k8s-migration-job.yaml
+    gcloud builds submit --config cloudbuild.yaml .
     ```
-
-#### 7. Verify the Deployment
-
--   Check if all pods are in the `Running` state: `kubectl get pods`
--   Check the logs of your application pod: `kubectl logs -f <your-app-pod-name>`
--   Get the external IP address of your service (if using `type: LoadBalancer`): `kubectl get svc ai-dev-bot-app-service`
-
-Your application is now deployed on Kubernetes

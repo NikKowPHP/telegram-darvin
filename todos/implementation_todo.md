@@ -175,7 +175,7 @@ Here is the content for the new file:
 
 **Goal:** Rewrite the deployment section of the `README.md` to prioritize Google Cloud Run and explain the Supabase setup.
 
-*   `[ ]` **F4.1: Replace Deployment section in README.md**
+*   `[x]` **F4.1: Replace Deployment section in README.md**
     *   **File:** `README.md`
     *   **Action:** Find the section titled `## 🌐 Deployment`. Replace that entire section and its subsections with the following new content, which provides a complete guide for the new deployment target.
         ```markdown
