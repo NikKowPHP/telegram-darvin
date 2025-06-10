@@ -1,47 +1,39 @@
-Of course. Here is a new, highly detailed `implementation_todo.md` file designed to configure the project for local development with a proxy.
+Of course. Based on the detailed analysis of the flawed proxy implementation, I will create a new, corrective `implementation_todo.md`.
 
-The plan is structured with extreme simplicity and clarity, making it ideal for an autonomous 4B LLM agent to execute flawlessly. Each step is an atomic, verifiable action.
+This plan is meticulously designed for a 4B LLM agent. It consists of simple, sequential, and explicit steps to remove the incorrect files, modify the correct ones, and update the documentation with clear, working commands.
 
 ---
 Here is the content for the new file:
 
-# `implementation_todo.md` - Local Proxy Configuration
+# `implementation_todo.md` - Proxy Configuration Correction
 
-**Project Goal:** To create the necessary configuration files and update existing ones to allow the entire application to be run locally via Docker Compose through an HTTP/HTTPS proxy.
+**Project Goal:** To fix the broken proxy configuration by removing incorrect files, centralizing the setup in the correct `deploy/docker/` directory, and providing clear, functional documentation.
 
 **Guiding Principle:** Complete each task in the exact order it is presented. Verify each step before proceeding to the next.
 
 ---
 
-## Feature 1: Create Proxy Environment Configuration
+## Fix 1: Clean Up Incorrectly Placed Files
 
-**Goal:** Establish a dedicated environment file for proxy settings.
+**Goal:** Remove the new, conflicting Docker files from the project root to avoid confusion.
 
-*   `[x]` **F1.1: Create the proxy environment example file**
-    *   **File:** `ai_dev_bot_platform/.env.example.proxy` (Create this new file)
-    *   **Action:** Add the following content to the new file. This file will serve as a template for users who need a proxy.
-        ```env
-        # Proxy Settings
-        # Fill these with your corporate or local proxy server details.
-        # Example: http://proxy.example.com:8080
-        HTTP_PROXY=http://your_proxy_ip:port
-        HTTPS_PROXY=http://your_proxy_ip:port
+*   `[ ]` **F1.1: Delete the incorrect Dockerfile**
+    *   **Action:** Delete the file located at `ai_dev_bot_platform/Dockerfile`.
+    *   **Verification:** The file `ai_dev_bot_platform/Dockerfile` no longer exists.
 
-        # Comma-separated list of hostnames that should NOT go through the proxy.
-        # This is crucial for letting the 'app' container talk to 'postgres' and 'redis' directly.
-        NO_PROXY=localhost,127.0.0.1,postgres,redis
-        ```
-    *   **Verification:** The new file `.env.example.proxy` exists in the `ai_dev_bot_platform` directory and contains the specified content.
+*   `[ ]` **F1.2: Delete the incorrect Docker Compose overlay file**
+    *   **Action:** Delete the file located at `ai_dev_bot_platform/docker-compose.proxy.yml`.
+    *   **Verification:** The file `ai_dev_bot_platform/docker-compose.proxy.yml` no longer exists.
 
 ---
 
-## Feature 2: Update Dockerfile to Use Proxy Settings
+## Fix 2: Correctly Configure the Main Docker and Compose Files
 
-**Goal:** Modify the `Dockerfile` to accept and use the proxy environment variables during the image build process.
+**Goal:** Modify the one true `Dockerfile` and `docker-compose.yml` to handle proxy settings correctly.
 
-*   `[x]` **F2.1: Add ARG and ENV instructions to the Dockerfile**
-    *   **File:** `ai_dev_bot_platform/Dockerfile`
-    *   **Action:** Locate the `ENV PYTHONUNBUFFERED=1` line. Insert the following block of code directly after it. This tells Docker to expect proxy arguments during the build and to set them as environment variables inside the container.
+*   `[ ]` **F2.1: Add proxy arguments to the correct Dockerfile**
+    *   **File:** `deploy/docker/Dockerfile`
+    *   **Action:** Find the line `ENV PYTHONUNBUFFERED=1`. Directly after this line, insert the following code block:
         ```dockerfile
         # Set up proxy arguments
         ARG HTTP_PROXY
@@ -53,73 +45,70 @@ Here is the content for the new file:
         ENV HTTPS_PROXY=$HTTPS_PROXY
         ENV NO_PROXY=$NO_PROXY
         ```
-    *   **Verification:** The `Dockerfile` now contains the `ARG` and `ENV` instructions for `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY`.
+    *   **Verification:** The file `deploy/docker/Dockerfile` now contains the proxy `ARG` and `ENV` variables.
 
----
-
-## Feature 3: Create a Dedicated Docker Compose File for Proxy Setup
-
-**Goal:** Create a new Docker Compose file that injects the proxy settings into the application container during build and at runtime.
-
-*   `[x]` **F3.1: Create the `docker-compose.proxy.yml` file**
-    *   **File:** `ai_dev_bot_platform/docker-compose.proxy.yml` (Create this new file)
-    *   **Action:** Add the following content. This file will be used *in addition* to the main `docker-compose.yml` to add the proxy configuration.
+*   `[ ]` **F2.2: Update the main docker-compose.yml to use proxy variables**
+    *   **File:** `deploy/docker/docker-compose.yml`
+    *   **Action:** Replace the entire `app` service definition with the following updated version. This adds proxy settings to the build and runtime environments and fixes the application command.
         ```yaml
-        version: '3.8'
-
-        # This file is an overlay for the main docker-compose.yml.
-        # It adds proxy configuration to the 'app' service.
-        # To use it, run: docker-compose -f docker-compose.yml -f docker-compose.proxy.yml up
-
-        services:
           app:
-            # Pass proxy settings to the Docker build process for 'pip install'
             build:
+              context: ../.. 
+              dockerfile: deploy/docker/Dockerfile
               args:
                 - HTTP_PROXY=${HTTP_PROXY}
                 - HTTPS_PROXY=${HTTPS_PROXY}
                 - NO_PROXY=${NO_PROXY}
-            # Pass proxy settings to the running container for runtime requests (e.g., to LLM APIs)
+            ports:
+              - "8000:8000" 
+            volumes:
+              - ../..:/app 
+            env_file:
+              - ../../.env 
             environment:
               - HTTP_PROXY=${HTTP_PROXY}
               - HTTPS_PROXY=${HTTPS_PROXY}
               - NO_PROXY=${NO_PROXY}
-            # Load the proxy settings from a dedicated .env.proxy file
-            env_file:
-              - .env.proxy
+            depends_on:
+              - postgres
+              - redis
+            command: uvicorn ai_dev_bot_platform.main:app --host 0.0.0.0 --port 8000 --reload 
         ```
-    *   **Verification:** The new file `docker-compose.proxy.yml` exists in the `ai_dev_bot_platform` directory and contains the specified YAML content.
+    *   **Verification:** The `app` service in `deploy/docker/docker-compose.yml` now includes the `args`, `environment`, and a corrected `command` and `dockerfile` path.
 
 ---
 
-## Feature 4: Document the New Proxy Setup
+## Fix 3: Provide Correct Documentation for Proxy Usage
 
-**Goal:** Update the main `README.md` file with clear instructions on how to use the new proxy development flow.
+**Goal:** Rewrite the `README.md` section for proxy setup with clear, simple, and functional instructions.
 
-*   `[x]` **F4.1: Add "Running with a Proxy" section to README.md**
+*   `[ ]` **F3.1: Replace the "Running with a Proxy" section in README.md**
     *   **File:** `README.md`
-    *   **Action:** Find the "🚀 Running Locally" section. At the very end of this section, add a new subsection with the following content:
+    *   **Action:** Find the subsection titled `### Running with a Proxy`. Replace that entire subsection with the following corrected content:
         ```markdown
         ### Running with a Proxy
 
-        If you are behind a corporate or local proxy, follow these steps instead of the standard `docker-compose up`.
+        If you are behind a corporate or local proxy, you can inject the proxy settings into the Docker containers.
 
-        1.  **Create a Proxy Environment File:** Copy the proxy environment template.
-            ```bash
-            cp ai_dev_bot_platform/.env.example.proxy ai_dev_bot_platform/.env.proxy
+        1.  **Create a Proxy Environment File:** In the project root (`ai_dev_bot_platform`), create a file named `.env.proxy`.
+
+        2.  **Add Proxy Settings:** Add your proxy configuration to the `.env.proxy` file. The `NO_PROXY` variable is crucial to ensure containers can communicate with each other directly.
+            ```env
+            # .env.proxy
+            HTTP_PROXY=http://your.proxy.server:port
+            HTTPS_PROXY=http://your.proxy.server:port
+            NO_PROXY=localhost,127.0.0.1,postgres,redis
             ```
 
-        2.  **Edit `.env.proxy`:** Open the new `ai_dev_bot_platform/.env.proxy` file and fill in your `HTTP_PROXY` and `HTTPS_PROXY` details.
-
-        3.  **Build and Run with Proxy Config:** Use both `docker-compose.yml` and `docker-compose.proxy.yml` files. The `-f` flag allows you to specify multiple files, which are merged together.
+        3.  **Build and Run with Proxy:** From the **project root (`ai_dev_bot_platform`)**, run the following command. It loads your standard `.env` file and the new `.env.proxy` file into the correct `docker-compose.yml`.
             ```bash
-            docker-compose -f ai_dev_bot_platform/docker-compose.yml -f ai_dev_bot_platform/docker-compose.proxy.yml up -d --build
+            docker-compose --env-file .env --env-file .env.proxy -f deploy/docker/docker-compose.yml up -d --build
             ```
             This will start all services (app, postgres, redis) and correctly inject your proxy settings into the `app` container for both the build process and runtime.
 
-        4.  **Apply Migrations:** This step is the same. Run migrations inside the running `app` container:
+        4.  **Apply Migrations:** This step is similar. Run migrations using the same environment files:
             ```bash
-            docker-compose -f ai_dev_bot_platform/docker-compose.yml -f ai_dev_bot_platform/docker-compose.proxy.yml exec app alembic upgrade head
+            docker-compose --env-file .env --env-file .env.proxy -f deploy/docker/docker-compose.yml exec app alembic upgrade head
             ```
         ```
-    *   **Verification:** The `README.md` file now contains the new "Running with a Proxy" section with the correct instructions and commands.
+    *   **Verification:** The `README.md` file now contains the new, corrected "Running with a Proxy" section with functional commands.
