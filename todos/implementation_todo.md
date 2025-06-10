@@ -53,7 +53,7 @@ Here is the content for the new file:
 
 **Goal:** Increase test coverage to include the new payment and Aider/refinement flows.
 
-*   `[ ]` **F2.1: Create a Test for the Payment Service**
+*   `[x]` **F2.1: Create a Test for the Payment Service**
     *   **File:** `ai_dev_bot_platform/tests/test_services.py`
     *   **Action:** Add the following new test function to the end of the file. This test will use `mocker` to simulate the Stripe API call.
         ```python

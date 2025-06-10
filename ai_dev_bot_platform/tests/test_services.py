@@ -78,3 +78,23 @@ def test_record_transaction():
     mock_db_session.refresh.assert_called_once()
     added_object = mock_db_session.add.call_args[0][0]
     assert added_object.credits_amount == Decimal("100.00")
+
+from app.services.payment_service import PaymentService
+
+def test_create_checkout_session(mocker):
+    # 1. Setup
+    mock_stripe_session = mocker.patch('stripe.checkout.Session.create')
+    mock_stripe_session.return_value = {"url": "https://fake.stripe.url/session123"}
+    
+    payment_service = PaymentService()
+    # This user object is simplified for testing purposes
+    mock_user = User(id=1, telegram_user_id=12345)
+    
+    # 2. Action
+    result_url = payment_service.create_checkout_session(user=mock_user, credit_package='buy_100')
+    
+    # 3. Assert
+    assert result_url == "https://fake.stripe.url/session123"
+    mock_stripe_session.assert_called_once()
+    # Verify that our internal user ID was passed to Stripe
+    assert mock_stripe_session.call_args[1]['client_reference_id'] == '1'
