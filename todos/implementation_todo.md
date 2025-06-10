@@ -119,7 +119,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The `test_handle_new_project_flow` test now mocks the `StorageService`.
 
-*   `[ ]` **F3.2: Add assertion for bucket creation in the Orchestrator test**
+*   `[x]` **F3.2: Add assertion for bucket creation in the Orchestrator test**
     *   **File:** `ai_dev_bot_platform/tests/test_orchestrator.py`
     *   **Action:** In the `test_handle_new_project_flow` test function, find the "Assert" section. Add the following line to verify that the bucket creation method is called.
         ```python
