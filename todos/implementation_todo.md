@@ -46,7 +46,7 @@ Here is the content for the new file:
 
 **Goal:** Build the services and API endpoints required to create Stripe Checkout sessions and handle incoming webhooks.
 
-*   `[ ]` **F2.1: Create a dedicated Payment Service**
+*   `[x]` **F2.1: Create a dedicated Payment Service**
     *   **File:** `ai_dev_bot_platform/app/services/payment_service.py` (Create this new file)
     *   **Action:** Add the following content. This service will be responsible for all interactions with the Stripe API.
         ```python
