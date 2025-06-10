@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.core.logging_config import setup_logging
 from app.telegram_bot.bot_main import run_bot
+from app.api.endpoints import stripe_webhooks
 
 # Setup logging at the application's entry point
 setup_logging()
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
         print("Bot task successfully cancelled.")
 
 app = FastAPI(title="AI Development Assistant API", lifespan=lifespan)
+app.include_router(stripe_webhooks.router, prefix="/api/v1", tags=["Stripe"])
 
 @app.get("/")
 async def root():

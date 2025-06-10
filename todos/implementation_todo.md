@@ -156,7 +156,7 @@ Here is the content for the new file:
         ```
     *   **Verification:** The `stripe_webhooks.py` file exists and contains the webhook router and logic.
 
-*   `[ ]` **F2.3: Mount the new webhook router in the main application**
+*   `[x]` **F2.3: Mount the new webhook router in the main application**
     *   **File:** `ai_dev_bot_platform/main.py`
     *   **Action:**
         1.  Add the import: `from app.api.endpoints import stripe_webhooks`.
