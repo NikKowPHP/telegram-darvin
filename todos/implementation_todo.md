@@ -126,7 +126,7 @@ Here is the content for the new file:
 
 **Goal:** Create a GitHub Actions workflow to automatically test the code on every push and pull request.
 
-*   `[ ]` **F3.1: Create the Continuous Integration (CI) Workflow File**
+*   `[x]` **F3.1: Create the Continuous Integration (CI) Workflow File**
     *   **File:** `.github/workflows/ci.yml` (Create the `.github` and `workflows` directories in the project root)
     *   **Action:** Add the following content to the new file.
         ```yaml
