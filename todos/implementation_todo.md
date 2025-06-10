@@ -1,251 +1,277 @@
-Of course. Based on the detailed analysis and the defined path forward, I will create a new, comprehensive `implementation_todo.md` file.
+Of course. I will create a new, highly detailed `implementation_todo.md` file designed for a small 4B LLM agent.
 
-This plan is meticulously structured for a small, autonomous 4B LLM agent. It breaks down the complex task of integrating a payment provider into simple, sequential, and explicit steps. Each task is an atomic unit of work with clear verification criteria to ensure a successful and robust implementation.
+This plan breaks down the complex task of re-architecting for a serverless environment (Google Cloud Run) and Supabase. Each step is atomic, explicit, and simple to minimize ambiguity and ensure the agent can implement these significant changes correctly.
 
 ---
 Here is the content for the new file:
 
-# `implementation_todo.md` - Live Payments and Advanced Logic
+# `implementation_todo.md` - Cloud Run and Supabase Integration
 
-**Project Goal:** To implement a production-grade, toggleable Stripe payment system, add advanced orchestration logic for handling insufficient credits, and expand the test suite to cover these new, critical features.
+**Project Goal:** To refactor the application for a serverless deployment on Google Cloud Run, using Supabase for the database and file storage. This includes creating a new storage service, updating the Aider integration to be stateless, and documenting the new deployment process.
 
 **Guiding Principle:** Complete each task in the exact order it is presented. Verify each step before proceeding to the next.
 
 ---
 
-## Feature 1: Configuration for Toggleable Payments
+## Feature 1: Add Supabase Dependencies and Configuration
 
-**Goal:** Update the project's configuration to support a "mock" mode for Stripe payments and to store necessary URLs.
+**Goal:** Prepare the application to connect to Supabase services.
 
-*   `[x]` **F1.1: Add new environment variables for Stripe and Mocking**
+*   `[x]` **F1.1: Add the Supabase Python library**
+    *   **File:** `ai_dev_bot_platform/requirements.txt`
+    *   **Action:** Add the following line to the end of the file:
+        ```
+        supabase
+        ```
+    *   **Verification:** The `supabase` package is listed in `requirements.txt`.
+
+*   `[ ]` **F1.2: Add Supabase configuration variables**
     *   **File:** `ai_dev_bot_platform/.env.example`
     *   **Action:** Add the following variables to the end of the file.
         ```env
-        # Set to 'true' to simulate successful payments without calling Stripe
-        MOCK_STRIPE_PAYMENTS=true
-
-        # Stripe Publishable Key (safe to expose in client-side code)
-        STRIPE_PUBLISHABLE_KEY="pk_test_YOUR_KEY"
-
-        # The base URL of your web application for Stripe redirects
-        WEBAPP_URL=http://localhost:8000
+        # Supabase Configuration
+        # The URL for your Supabase project
+        SUPABASE_URL=https://your-project-id.supabase.co
+        # The 'service_role' key for backend operations (keep this secret)
+        SUPABASE_KEY=your-supabase-service-role-key
         ```
     *   **File:** `ai_dev_bot_platform/app/core/config.py`
     *   **Action:** Add the corresponding variables to the `Settings` class.
         ```python
-        # In the Settings class, after the other Stripe variables
-        MOCK_STRIPE_PAYMENTS: bool = False
-        STRIPE_PUBLISHABLE_KEY: Optional[str] = None
-        WEBAPP_URL: str = "http://localhost:8000"
+        # In the Settings class, after the other config variables
+        SUPABASE_URL: Optional[str] = None
+        SUPABASE_KEY: Optional[str] = None
         ```
     *   **Verification:** The new variables are present in both the example environment file and the Pydantic `Settings` class.
 
 ---
 
-## Feature 2: Full Stripe Integration (Live and Mock)
+## Feature 2: Create a Stateless Storage Service
 
-**Goal:** Build the services and API endpoints required to create Stripe Checkout sessions and handle incoming webhooks.
+**Goal:** Abstract all filesystem operations into a service that interacts with Supabase Storage instead of a local disk. This is critical for a serverless environment.
 
-*   `[x]` **F2.1: Create a dedicated Payment Service**
-    *   **File:** `ai_dev_bot_platform/app/services/payment_service.py` (Create this new file)
-    *   **Action:** Add the following content. This service will be responsible for all interactions with the Stripe API.
+*   `[ ]` **F2.1: Create the Storage Service file**
+    *   **File:** `ai_dev_bot_platform/app/services/storage_service.py` (Create this new file)
+    *   **Action:** Add the following content. This class will manage all file uploads, downloads, and deletions.
         ```python
-        import stripe
-        from typing import Optional
-        from app.core.config import settings
-        from app.schemas.user import User
-
-        class PaymentService:
-            def __init__(self):
-                if settings.STRIPE_SECRET_KEY:
-                    stripe.api_key = settings.STRIPE_SECRET_KEY
-
-            def create_checkout_session(self, user: User, credit_package: str) -> Optional[str]:
-                """
-                Creates a Stripe Checkout Session and returns the payment URL.
-                """
-                # These price IDs come from your Stripe Dashboard
-                price_ids = {
-                    'buy_100': 'price_1PEXAMPLEq0j0j0j0j0j0j0j0j',
-                    'buy_500': 'price_1PEXAMPLEr1k1k1k1k1k1k1k1k',
-                }
-                price_id = price_ids.get(credit_package)
-
-                if not price_id:
-                    return None
-
-                try:
-                    checkout_session = stripe.checkout.Session.create(
-                        line_items=[
-                            {
-                                'price': price_id,
-                                'quantity': 1,
-                            },
-                        ],
-                        mode='payment',
-                        success_url=f"{settings.WEBAPP_URL}/payment-success",
-                        cancel_url=f"{settings.WEBAPP_URL}/payment-cancelled",
-                        # IMPORTANT: This links the payment to our internal user ID
-                        client_reference_id=str(user.id),
-                    )
-                    return checkout_session.url
-                except Exception as e:
-                    print(f"Error creating Stripe checkout session: {e}")
-                    return None
-        ```
-    *   **Verification:** The file `app/services/payment_service.py` exists and contains the `PaymentService` class.
-
-*   `[x]` **F2.2: Create the Stripe Webhook API Endpoint**
-    *   **File:** `ai_dev_bot_platform/app/api/endpoints/stripe_webhooks.py` (Create the `api/endpoints` directories first)
-    *   **Action:** Add the following content to the new file. This endpoint will listen for events from Stripe.
-        ```python
-        import stripe
         import logging
-        from fastapi import APIRouter, Request, Header
-        from sqlalchemy.orm import Session
+        from typing import Optional
+        from supabase import create_client, Client
         from app.core.config import settings
-        from app.db.session import SessionLocal
-        from app.services.user_service import UserService
 
         logger = logging.getLogger(__name__)
-        router = APIRouter()
 
-        @router.post("/stripe-webhook")
-        async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
-            payload = await request.body()
-            
-            try:
-                event = stripe.Webhook.construct_event(
-                    payload=payload, sig_header=stripe_signature, secret=settings.STRIPE_WEBHOOK_SECRET
-                )
-            except ValueError as e:
-                # Invalid payload
-                logger.error(f"Stripe webhook value error: {e}")
-                return {"status": "invalid payload"}, 400
-            except stripe.error.SignatureVerificationError as e:
-                # Invalid signature
-                logger.error(f"Stripe webhook signature error: {e}")
-                return {"status": "invalid signature"}, 400
+        class StorageService:
+            def __init__(self):
+                self.client: Optional[Client] = None
+                if settings.SUPABASE_URL and settings.SUPABASE_KEY:
+                    try:
+                        self.client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+                        logger.info("Supabase client initialized for StorageService.")
+                    except Exception as e:
+                        logger.error(f"Failed to initialize Supabase client: {e}", exc_info=True)
 
-            # Handle the checkout.session.completed event
-            if event['type'] == 'checkout.session.completed':
-                session = event['data']['object']
-                user_id_str = session.get('client_reference_id')
-                
-                if not user_id_str:
-                    logger.error("Webhook received without client_reference_id")
-                    return {"status": "error", "message": "Missing client_reference_id"}, 400
-
-                # This is a simplification. A real app would look up the line items
-                # to determine exactly what was purchased.
-                credit_package_key = session['display_items'][0]['custom']['name'].lower().replace(' ', '_')
-
-                db: Session = SessionLocal()
+            def upload_file(self, bucket_name: str, file_path: str, file_content: str) -> bool:
+                if not self.client:
+                    logger.error("Storage client not initialized. Cannot upload file.")
+                    return False
                 try:
-                    user_service = UserService()
-                    user_service.add_credits_after_purchase(
-                        db=db, 
-                        user_id=int(user_id_str), 
-                        credit_package=credit_package_key
+                    self.client.storage.from_(bucket_name).upload(
+                        path=file_path,
+                        file=file_content.encode('utf-8'),
+                        file_options={"content-type": "text/plain;charset=utf-8", "upsert": "true"}
                     )
-                    logger.info(f"Successfully processed purchase for user {user_id_str}")
-                finally:
-                    db.close()
-
-            return {"status": "success"}
-        ```
-    *   **Verification:** The `stripe_webhooks.py` file exists and contains the webhook router and logic.
-
-*   `[x]` **F2.3: Mount the new webhook router in the main application**
-    *   **File:** `ai_dev_bot_platform/main.py`
-    *   **Action:**
-        1.  Add the import: `from app.api.endpoints import stripe_webhooks`.
-        2.  After the `app = FastAPI(...)` line, add the following line to include the new router:
-            ```python
-            app.include_router(stripe_webhooks.router, prefix="/api/v1", tags=["Stripe"])
-            ```
-    *   **Verification:** `main.py` now mounts the Stripe webhook router.
-
-*   `[x]` **F2.4: Update the Telegram button handler to use the new payment flow**
-    *   **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
-    *   **Action:**
-        1.  Add the imports: `from app.services.payment_service import PaymentService` and `from app.core.config import settings`.
-        2.  Replace the entire `button_handler` function with this new implementation that supports both mock and live modes.
-            ```python
-            async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-                query = update.callback_query
-                await query.answer()
-                
-                user_tg = update.effective_user
-                credit_package = query.data
-
-                db: Session = SessionLocal()
-                try:
-                    user_service = UserService()
-                    user_db = user_service.get_user_by_telegram_id(db, user_tg.id)
-                    if not user_db:
-                        await query.edit_message_text(text="Could not find your account. Please /start first.")
-                        return
-
-                    if settings.MOCK_STRIPE_PAYMENTS:
-                        # MOCK FLOW: Directly add credits
-                        updated_user = user_service.add_credits_after_purchase(db, user_id=user_db.id, credit_package=credit_package)
-                        if updated_user:
-                            await query.edit_message_text(
-                                text=f"Success! Your MOCK purchase was processed. "
-                                     f"New balance: {updated_user.credit_balance:.2f}"
-                            )
-                        else:
-                            await query.edit_message_text(text="An error occurred during the mock purchase.")
-                    else:
-                        # LIVE FLOW: Generate a Stripe Checkout link
-                        payment_service = PaymentService()
-                        checkout_url = payment_service.create_checkout_session(user=user_db, credit_package=credit_package)
-                        
-                        if checkout_url:
-                            keyboard = [[InlineKeyboardButton("➡️ Proceed to Payment", url=checkout_url)]]
-                            reply_markup = InlineKeyboardMarkup(keyboard)
-                            await query.edit_message_text(
-                                text="Please complete your purchase using the link below:",
-                                reply_markup=reply_markup
-                            )
-                        else:
-                            await query.edit_message_text(text="Sorry, we could not create a payment link at this time.")
-                
+                    logger.info(f"Successfully uploaded {file_path} to bucket {bucket_name}.")
+                    return True
                 except Exception as e:
-                    logger.error(f"Error in button_handler: {e}", exc_info=True)
-                    await query.edit_message_text(text="A server error occurred. Please try again later.")
-                finally:
-                    db.close()
-            ```
-    *   **Verification:** Clicking the credit buttons now sends a Stripe payment link when `MOCK_STRIPE_PAYMENTS` is false, and simulates the purchase when it is true.
+                    logger.error(f"Failed to upload {file_path} to Supabase Storage: {e}", exc_info=True)
+                    return False
+
+            def download_file(self, bucket_name: str, file_path: str) -> Optional[str]:
+                if not self.client:
+                    logger.error("Storage client not initialized. Cannot download file.")
+                    return None
+                try:
+                    response = self.client.storage.from_(bucket_name).download(path=file_path)
+                    logger.info(f"Successfully downloaded {file_path} from bucket {bucket_name}.")
+                    return response.decode('utf-8')
+                except Exception as e:
+                    # Supabase client often raises a generic Exception if file not found
+                    logger.warning(f"Failed to download {file_path} from Supabase Storage: {e}")
+                    return None
+        ```
+    *   **Verification:** The file `app/services/storage_service.py` exists and contains the `StorageService` class with `upload_file` and `download_file` methods.
 
 ---
 
-## Feature 3: Documentation Update for Stripe
+## Feature 3: Refactor Aider Integration to be Stateless
 
-**Goal:** Update the main `README.md` to explain the new Stripe variables and how to test webhooks locally.
+**Goal:** Modify the code refinement logic to use the new `StorageService`, making it compatible with Cloud Run's ephemeral filesystem.
 
-*   `[x]` **F3.1: Update README.md with Stripe and Webhook instructions**
+*   `[ ]` **F3.1: Initialize StorageService in the Orchestrator**
+    *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
+    *   **Action:**
+        1.  Add the import: `from app.services.storage_service import StorageService`.
+        2.  In the `ModelOrchestrator`'s `__init__` method, add a new line to initialize the service: `self.storage_service = StorageService()`.
+    *   **Verification:** The orchestrator's `__init__` method now creates an instance of `StorageService`.
+
+*   `[ ]` **F3.2: Refactor `_handle_refine_request` to use Supabase Storage**
+    *   **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
+    *   **Action:** Replace the entire `_handle_refine_request` method with the following new logic. This logic downloads the file from Supabase, saves it to a temporary local path for Aider, runs Aider, and then uploads the result back to Supabase.
+        ```python
+        async def _handle_refine_request(self, user: User, project_id: str, file_path: str, instruction: str) -> dict:
+            import os
+            import tempfile
+            
+            logger.info(f"Refining file {file_path} for project {project_id}")
+            project = self.project_service.get_project(self.db, uuid.UUID(project_id))
+            if not project:
+                return {'text': "Project not found", 'zip_buffer': None}
+
+            # Use the project ID as the bucket name (must be created in Supabase dashboard)
+            bucket_name = str(project.id)
+            
+            # 1. Download file content from Supabase Storage
+            original_content = self.storage_service.download_file(bucket_name, file_path)
+            if original_content is None:
+                return {'text': f"Could not find file '{file_path}' in project storage.", 'zip_buffer': None}
+
+            with tempfile.TemporaryDirectory() as temp_dir:
+                local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
+                
+                # 2. Write file to temporary local disk for Aider
+                with open(local_file_path, "w") as f:
+                    f.write(original_content)
+
+                # 3. Run Aider on the local file
+                aider_result = await self.implementer_agent.apply_changes_with_aider(
+                    project_root_path=temp_dir,
+                    files_to_edit=[os.path.basename(file_path)],
+                    instruction=instruction
+                )
+                
+                if aider_result["status"] == "success":
+                    # 4. Read the modified file
+                    with open(local_file_path, "r") as f:
+                        new_content = f.read()
+
+                    # 5. Upload the new content back to Supabase Storage
+                    self.storage_service.upload_file(bucket_name, file_path, new_content)
+
+                    # 6. Update the content in the database as well
+                    db_file = self.project_file_service.get_file_by_path(self.db, project.id, file_path)
+                    if db_file:
+                        self.project_file_service.update_file_content(self.db, db_file.id, new_content)
+
+                    return {'text': f"Successfully refined file '{file_path}'.", 'zip_buffer': None}
+                else:
+                    return {'text': f"Failed to refine file '{file_path}'.\nError: {aider_result['output']}", 'zip_buffer': None}
+        ```
+    *   **Verification:** The `_handle_refine_request` method is updated and no longer uses a persistent `./workspace` directory. It now uses a `tempfile.TemporaryDirectory`.
+
+---
+
+## Feature 4: Update Documentation for Cloud Run Deployment
+
+**Goal:** Rewrite the deployment section of the `README.md` to prioritize Google Cloud Run and explain the Supabase setup.
+
+*   `[ ]` **F4.1: Replace Deployment section in README.md**
     *   **File:** `README.md`
-    *   **Action:** Find the `### Running with a Proxy` section. Add a new section directly below it titled `### Testing Stripe Webhooks Locally`.
+    *   **Action:** Find the section titled `## 🌐 Deployment`. Replace that entire section and its subsections with the following new content, which provides a complete guide for the new deployment target.
         ```markdown
-        ### Testing Stripe Webhooks Locally
+        ## 🌐 Deployment (Cloud Run & Supabase)
 
-        To test the full payment flow with Stripe, you need a way for Stripe's servers to send events to your local machine. We use `ngrok` for this.
+        This section provides a complete guide for deploying the application to a scalable, serverless environment using Google Cloud Run for the application and Supabase for the database and file storage.
 
-        1.  **Install `ngrok`:** Follow the instructions on the [ngrok website](https://ngrok.com/download).
+        ### 1. Supabase Setup
 
-        2.  **Run `ngrok`:** In a separate terminal, start `ngrok` to expose your local port 8000 to the internet.
+        Before deploying the application, you need to set up your Supabase project.
+
+        1.  **Create a Project:** Go to [supabase.com](https://supabase.com) and create a new project.
+        2.  **Get Database URL:** In your project's dashboard, go to `Settings` > `Database`. Find your connection string (URI) and use its components for the `POSTGRES_*` variables in your `.env` file.
+        3.  **Get API Keys:** Go to `Settings` > `API`. You will find your `SUPABASE_URL` (Project URL) and `SUPABASE_KEY` (the `service_role` key).
+        4.  **Create a Storage Bucket:** Go to `Storage` and create a new public bucket for each project you intend to test. The bucket name should be the Project ID (a UUID). For simplicity during testing, you can create one bucket with a known UUID and use that for your test project.
+
+        ### 2. Configure Environment for Production
+
+        Create a `.env` file in your project root and fill it with your **production** keys from Supabase, Telegram, and your LLM providers. Ensure `MOCK_STRIPE_PAYMENTS` is set to `false`.
+
+        ### 3. Build and Push the Docker Image
+
+        The application will run as a container on Cloud Run.
+
+        1.  **Enable Google Cloud Services:** Make sure you have enabled the Artifact Registry API and the Cloud Run API in your Google Cloud project.
+        2.  **Authenticate Docker:** Configure Docker to authenticate with Google Cloud's Artifact Registry.
             ```bash
-            ngrok http 8000
+            gcloud auth configure-docker your-region-docker.pkg.dev
+            ```
+            *(Replace `your-region` with your GCP region, e.g., `us-central1`)*
+
+        3.  **Build the Image:** From the project root (`ai_dev_bot_platform`), build the Docker image.
+            ```bash
+            docker build -t your-region-docker.pkg.dev/your-gcp-project-id/ai-dev-bot:latest -f deploy/docker/Dockerfile .
             ```
 
-        3.  **Get Your Webhook URL:** `ngrok` will give you a public URL (e.g., `https://random-string.ngrok.io`). Your full webhook URL will be this URL plus the API path:
-            `https://random-string.ngrok.io/api/v1/stripe-webhook`
+        4.  **Push the Image:**
+            ```bash
+            docker push your-region-docker.pkg.dev/your-gcp-project-id/ai-dev-bot:latest
+            ```
 
-        4.  **Configure Stripe:** Go to your Stripe Dashboard, navigate to the "Webhooks" section, and add a new endpoint. Paste the full URL from the previous step. For the events, select "Listen to all events" for now, or specifically `checkout.session.completed`.
+        ### 4. Deploy to Google Cloud Run
 
-        5.  **Set `MOCK_STRIPE_PAYMENTS` to `false`** in your `.env` file to enable the live Stripe flow. Now, when you click a "Buy Credits" button, you will be redirected to a real Stripe checkout page. After a successful payment, Stripe will send an event to your `ngrok` URL, which will forward it to your local application to grant the credits.
+        Deploy the container image using the `gcloud` command-line tool. This single command sets up the service, injects all secrets as environment variables, and exposes it to the internet.
+
+        ```bash
+        gcloud run deploy ai-dev-bot-service \
+          --image your-region-docker.pkg.dev/your-gcp-project-id/ai-dev-bot:latest \
+          --platform managed \
+          --region your-gcp-region \
+          --allow-unauthenticated \
+          --set-env-vars="POSTGRES_USER=your_db_user" \
+          --set-env-vars="POSTGRES_PASSWORD=your_db_password" \
+          --set-env-vars="POSTGRES_SERVER=db.your-project-id.supabase.co" \
+          --set-env-vars="POSTGRES_PORT=5432" \
+          --set-env-vars="POSTGRES_DB=postgres" \
+          --set-env-vars="TELEGRAM_BOT_TOKEN=your_telegram_token" \
+          --set-env-vars="GOOGLE_API_KEY=your_google_key" \
+          --set-env-vars="OPENROUTER_API_KEY=your_openrouter_key" \
+          --set-env-vars="API_KEY_ENCRYPTION_KEY=a_strong_random_secret" \
+          --set-env-vars="SUPABASE_URL=https://your-project-id.supabase.co" \
+          --set-env-vars="SUPABASE_KEY=your_supabase_service_role_key" \
+          --set-env-vars="STRIPE_SECRET_KEY=sk_live_your_key" \
+          --set-env-vars="STRIPE_WEBHOOK_SECRET=whsec_your_key" \
+          --set-env-vars="MOCK_STRIPE_PAYMENTS=false"
         ```
-    *   **Verification:** The `README.md` file now contains the detailed instructions for testing Stripe webhooks locally.
+        -   **Note:** After deployment, Cloud Run will provide a public URL for your service. Use this URL to configure your Stripe webhook endpoint.
+
+        ### 5. Run Database Migrations
+
+        The recommended way to run migrations on Cloud Run is to submit a one-off Cloud Build job that uses the same container image.
+
+        1.  Create a `cloudbuild.yaml` file in your project root:
+            ```yaml
+            steps:
+            - name: 'your-region-docker.pkg.dev/your-gcp-project-id/ai-dev-bot:latest'
+              entrypoint: 'alembic'
+              args: ['upgrade', 'head']
+              secretEnv: ['POSTGRES_USER', 'POSTGRES_PASSWORD']
+            
+            availableSecrets:
+              secretManager:
+              - versionName: projects/your-gcp-project-id/secrets/POSTGRES_USER/versions/latest
+                env: 'POSTGRES_USER'
+              - versionName: projects/your-gcp-project-id/secrets/POSTGRES_PASSWORD/versions/latest
+                env: 'POSTGRES_PASSWORD'
+            ```
+            *(This requires you to store your DB credentials in Google Secret Manager first.)*
+
+        2.  Submit the build:
+            ```bash
+            gcloud builds submit --config cloudbuild.yaml .
+            ```
+        ```
+    *   **Verification:** The `README.md` file's deployment section has been completely updated to prioritize and detail the Cloud Run and Supabase deployment strategy.
+</file>
+
+</files>
+verify please

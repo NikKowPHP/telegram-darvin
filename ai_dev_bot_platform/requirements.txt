@@ -21,3 +21,4 @@ pytest
 pytest-mock
 aider-chat
 stripe
+supabase
