@@ -116,7 +116,7 @@ class ArchitectAgent:
 - **Verification:** At least 2 error messages in handlers are more user-friendly.
 
 ## Task 5: Document Key Manual Test Scenarios (in `documentation/test_plan.md`)
-- **File:** `documentation/test_plan.md`
+- [x] **File:** `documentation/test_plan.md`
 - **Action:** Add a new section "6. High-Level Test Scenarios" (or similar).
     *   List 5-7 end-to-end scenarios. Examples:
         *   `TS-001: New User - Full Project Cycle (Simple Python App)`: /start -> describe project -> architect plan -> implement 2 tasks -> verification pass -> implement 1 task -> verification reject -> (manual refinement if UI allows, or assume new prompt) -> implement final task -> verification pass -> README generation -> project completion.
