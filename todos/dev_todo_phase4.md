@@ -2,7 +2,7 @@
 
 **Project Goal:** Implement database models and services for tracking costs and credits, integrate credit deduction into the orchestrator, and add basic user-facing credit commands.
 
-## Task 1: Define `model_pricing` SQLAlchemy Model & Pydantic Schema
+## Task 1: Define `model_pricing` SQLAlchemy Model & Pydantic Schema (completed)
 - **File:** `ai_dev_bot_platform/app/models/api_key_models.py`
 - **Action:** Add the following `ModelPricing` class:
 ```python
