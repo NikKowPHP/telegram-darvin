@@ -221,7 +221,7 @@ class APIKeyUsageService:
 ```
 - **Verification:** Service class and method created.
 
-## Task 6: Create `CreditTransactionService`
+## Task 6: Create `CreditTransactionService` (completed)
 - **File:** `ai_dev_bot_platform/app/services/billing_service.py`
 - **Action:** Add the following `CreditTransactionService` class:
 ```python
