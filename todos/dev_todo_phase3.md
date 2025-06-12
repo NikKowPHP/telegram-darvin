@@ -66,7 +66,7 @@
 - **Verification:** All methods exist and are properly implemented.
 
 ## Task 3: Integrate Indexing in Orchestrator
-- **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
+- [x] **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
 - **Actions:**
   1. In `_handle_implement_task`, after creating/updating a project file:
      ```python
