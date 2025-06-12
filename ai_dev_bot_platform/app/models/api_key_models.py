@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, DECIMAL, Boolean, TEXT, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-from app.db.session import Base
+from ai_dev_bot_platform.app.db.session import Base
 
 class ModelPricing(Base):
     __tablename__ = "model_pricing"

@@ -14,12 +14,18 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from app.db.session import Base
-from app.models.user import User
-from app.models.project import Project
-from app.models.project_file import ProjectFile
-from app.models.api_key_models import ModelPricing, APIKeyUsage
-from app.models.transaction import CreditTransaction
+import sys
+import os
+
+# Add the ai_dev_bot_platform directory to the Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../../..'))
+
+from ai_dev_bot_platform.app.db.session import Base
+from ai_dev_bot_platform.app.models.user import User
+from ai_dev_bot_platform.app.models.project import Project
+from ai_dev_bot_platform.app.models.project_file import ProjectFile
+from ai_dev_bot_platform.app.models.api_key_models import ModelPricing, APIKeyUsage
+from ai_dev_bot_platform.app.models.transaction import CreditTransaction
 
 target_metadata = Base.metadata
 
@@ -54,7 +60,7 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
-    from app.core.config import settings
+    from ai_dev_bot_platform.app.core.config import settings
     alembic_config = config.get_section(config.config_ini_section)
     alembic_config['sqlalchemy.url'] = settings.get_database_url()
     connectable = engine_from_config(

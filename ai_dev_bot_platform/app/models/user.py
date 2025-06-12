@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, BigInteger, DateTime, DECIMAL
 from sqlalchemy.sql import func
-from app.db.session import Base
+from ai_dev_bot_platform.app.db.session import Base
 
 class User(Base):
     __tablename__ = "users"

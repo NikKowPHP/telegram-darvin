@@ -157,7 +157,7 @@ If you are behind a corporate or local proxy, you can inject the proxy settings 
 
 4.  **Apply Migrations:** This step is similar. Run migrations using the same environment files:
     ```bash
-    docker-compose --env-file .env --env-file .env.proxy -f deploy/docker/docker-compose.yml exec app alembic upgrade head
+    docker-compose --env-file .env  -f docker-compose.yml exec app alembic upgrade head
     ```
  
 ### Testing Stripe Webhooks Locally
