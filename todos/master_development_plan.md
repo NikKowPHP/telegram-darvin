@@ -9,13 +9,13 @@
    - Basic Aider integration
    - Todo file: `todos/dev_todo_phase3.md`
 
-2. [x] **Phase 4: Monetization & User Management** (in progress)
+2. [x] **Phase 4: Monetization & User Management**
    - Implement billing models and services
    - Add credit deduction logic
    - Create `/status` and `/credits` commands
    - Todo file: `todos/dev_todo_phase4.md`
 
-3. [ ] **Phase 5: Polish & README Generation**
+3. [x] **Phase 5: Polish & README Generation** (in progress)
    - Enhance error handling
    - Implement project README generation
    - Finalize test scenarios
