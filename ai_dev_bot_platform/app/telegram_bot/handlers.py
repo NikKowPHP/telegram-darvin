@@ -163,6 +163,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     except Exception as e:
         logger.error(f"Error in button_handler: {e}", exc_info=True)
-        await query.edit_message_text(text="A server error occurred. Please try again later.")
+        await query.edit_message_text(text="We're experiencing issues with our payment system. Please try your purchase again in a few minutes.")
     finally:
         db.close()

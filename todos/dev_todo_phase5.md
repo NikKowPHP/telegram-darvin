@@ -108,7 +108,7 @@ class ArchitectAgent:
 - **Verification:** At least 3 key services/agents have improved `try-except` blocks and contextual logging for errors.
 
 ## Task 4: Improve User-Facing Error Messages in Telegram Handlers
-- **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
+- [x] **File:** `ai_dev_bot_platform/app/telegram_bot/handlers.py`
 - **Action:** Review `except Exception as e:` blocks.
     *   Instead of generic "Sorry, something went wrong", provide slightly more specific but still user-friendly messages.
     *   Example: "Sorry, I couldn't process your request due to a problem with our AI services. Please try again later." or "An issue occurred with your project data. Our team has been notified."
