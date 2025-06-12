@@ -21,7 +21,7 @@
    - Finalize test scenarios
    - Todo file: `todos/dev_todo_phase5.md`
 
-4. [ ] **Phase 6: Deployment Preparation**
+4. [*] **Phase 6: Deployment Preparation**
    - Finalize Docker setup
    - Create Kubernetes manifests
    - Prepare production configs
