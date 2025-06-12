@@ -203,7 +203,7 @@ class ModelPricingService:
 ```
 - **Verification:** Service class and methods created.
 
-## Task 5: Create `APIKeyUsageService`
+## Task 5: Create `APIKeyUsageService` (completed)
 - **File:** `ai_dev_bot_platform/app/services/billing_service.py`
 - **Action:** Add the following `APIKeyUsageService` class:
 ```python
