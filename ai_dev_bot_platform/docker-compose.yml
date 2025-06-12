@@ -16,6 +16,7 @@ services:
     env_file:
       - .env
     environment:
+      - DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydb
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
       - NO_PROXY=${NO_PROXY}
