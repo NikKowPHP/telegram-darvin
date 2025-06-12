@@ -279,6 +279,48 @@ class ModelOrchestrator:
                             'project_title': project.title
                         }
                 
+                    logger.info(f"Project {project.id} tasks complete. Generating README.md...")
+                    self.project_service.update_project(self.db, project.id, ProjectUpdate(status="readme_generation")) # New status
+
+                    # Fetch all project files from Supabase Storage
+                    bucket_name = str(project.id)
+                    storage_files = self.storage_service.list_files(bucket_name)
+                    project_files_for_readme = []
+                    for storage_file in storage_files:
+                        file_content = self.storage_service.download_file(bucket_name, storage_file['name'])
+                        if file_content is not None:
+                            project_files_for_readme.append({"file_path": storage_file['name'], "content": file_content})
+
+                    readme_content = await self.architect_agent.generate_project_readme(project, project_files_for_readme)
+
+                    if readme_content.startswith("Error:"):
+                        # Handle error, maybe set project status to 'readme_failed'
+                        self.project_service.update_project(self.db, project.id, ProjectUpdate(status="readme_failed"))
+                        # Return error message to user
+                        return {'text': f"All tasks implemented and verified, but failed to generate README.md: {readme_content}", 'zip_buffer': None}
+                    else:
+                        # Save README.md as a project file
+                        self.project_file_service.create_project_file(
+                            db=self.db,
+                            project_id=project.id,
+                            file_path="README.md",
+                            content=readme_content,
+                            file_type="markdown"
+                        )
+                        self.project_service.update_project(self.db, project.id, ProjectUpdate(status="completed"))
+                        logger.info(f"README.md generated and project {project.id} marked as completed.")
+                        # Create ZIP file of the project
+                        zip_buffer = create_project_zip(project_files_for_readme)
+                        
+                        return {
+                            'text': (
+                            f"Project '{project.title}' is complete! All tasks implemented and verified.\n"
+                            f"README.md has been generated. Project is ready for delivery."
+                            ),
+                            'zip_buffer': zip_buffer,
+                            'project_title': project.title
+                        }
+                
                 self.project_service.update_project(self.db, project.id, ProjectUpdate(
                     current_todo_markdown=new_todo_markdown,
                     status=updated_project_status

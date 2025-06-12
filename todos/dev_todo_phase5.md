@@ -59,7 +59,7 @@ class ArchitectAgent:
 - **Verification:** Method exists.
 
 ## Task 2: Orchestrator Triggers `generate_project_readme`
-- **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
+- [x] **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
 - **Action:**
   1.  In `_handle_implement_task`, when `updated_project_status` becomes `"verification_complete"`:
     ```python
