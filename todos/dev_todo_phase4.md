@@ -241,7 +241,7 @@ class CreditTransactionService:
 ```
 - **Verification:** Service class and methods created.
 
-## Task 7: Enhance `LLMClient` to Return Token Counts and Model Info
+## Task 7: Enhance `LLMClient` to Return Token Counts and Model Info (completed)
 - **File:** `ai_dev_bot_platform/app/utils/llm_client.py`
 - **Action:** Modify `call_gemini` and `call_openrouter` to return a dictionary including `text_response`, `input_tokens`, `output_tokens`, `model_name_used`.
 - **Verification:** Methods return the enhanced dictionary.
