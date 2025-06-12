@@ -6,7 +6,7 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 router = APIRouter()
 
-@router.get("/health")
+@router.get("/")
 async def health_check():
     return {"status": "OK"}
 

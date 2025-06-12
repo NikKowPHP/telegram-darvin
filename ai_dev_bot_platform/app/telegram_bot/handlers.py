@@ -80,6 +80,8 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
     text = update.message.text
+  
+    print("!!!!!!!!!!!!!! MESSAGE HANDLER WAS CALLED !!!!!!!!!!!!!!")
     logger.info(f"Received message from {user_tg.id}: {text}")
 
     db: Session = SessionLocal()
