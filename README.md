@@ -125,9 +125,10 @@ alembic upgrade head
 
 Now, you can start the main application. This single command will launch the FastAPI server, which in turn starts the Telegram bot polling in the background.
 
-```bash
-uvicorn main:app --reload
-```
+
+docker-compose exec app uvicorn main:app --reload
+
+
 -   `--reload` enables hot-reloading, so the server will restart automatically when you save code changes.
 
 ### 8. Interact with Your Bot

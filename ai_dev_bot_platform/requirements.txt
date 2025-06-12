@@ -22,3 +22,5 @@ pytest-mock
 aider-chat
 stripe
 supabase
+email-validator
+prometheus-client
