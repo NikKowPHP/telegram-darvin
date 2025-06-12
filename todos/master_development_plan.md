@@ -15,13 +15,13 @@
    - Create `/status` and `/credits` commands
    - Todo file: `todos/dev_todo_phase4.md`
 
-3. [x] **Phase 5: Polish & README Generation** (in progress)
+3. [x] **Phase 5: Polish & README Generation**
    - Enhance error handling
    - Implement project README generation
    - Finalize test scenarios
    - Todo file: `todos/dev_todo_phase5.md`
 
-4. [*] **Phase 6: Deployment Preparation**
+4. [x] **Phase 6: Deployment Preparation**
    - Finalize Docker setup
    - Create Kubernetes manifests
    - Prepare production configs
