@@ -77,3 +77,33 @@ If REJECTED, suggest updates to the code or the TODO list."""
             return {"status": "APPROVED", "feedback": response_text, "llm_call_details": llm_response_dict}
         else:
             return {"status": "REJECTED", "feedback": response_text, "llm_call_details": llm_response_dict}
+
+    async def generate_readme(self, project: Project) -> str:
+        logger.info(f"Architect Agent: Generating README for project {project.id}")
+        prompt = f"""You are an expert technical writer. Generate a comprehensive README.md for the project titled '{project.title}'.
+Include these sections with appropriate content:
+1. Overview - Brief description of the project
+2. Features - List of main functionalities
+3. Installation - Step-by-step setup instructions
+4. Configuration - Environment variables and settings
+5. Usage - How to run/use the application
+6. API Documentation - If applicable
+7. Contributing - Guidelines for contributors
+8. License - Project license information
+
+Project Description:
+{project.description}
+
+Additional Context:
+{project.documentation}
+
+Use proper Markdown formatting with clear section headers and organization."""
+        
+        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name=settings.ARCHITECT_MODEL)
+        response_text = llm_response_dict.get("text_response", "")
+        
+        if response_text.startswith("Error:"):
+            logger.error(f"Architect Agent: Error generating README: {response_text}")
+            return f"# ERROR\n{response_text}"
+        
+        return response_text

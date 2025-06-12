@@ -3,7 +3,7 @@
 **Project Goal:** Enhance user experience with project READMEs, refine overall system stability, and prepare for testing.
 
 ## Task 1: Add `generate_project_readme` to `ArchitectAgent`
-- **File:** `ai_dev_bot_platform/app/agents/architect_agent.py`
+- [x] **File:** `ai_dev_bot_platform/app/agents/architect_agent.py`
 - **Action:** Add a new method:
 ```python
 from app.services.project_file_service import ProjectFileService
