@@ -246,7 +246,7 @@ class CreditTransactionService:
 - **Action:** Modify `call_gemini` and `call_openrouter` to return a dictionary including `text_response`, `input_tokens`, `output_tokens`, `model_name_used`.
 - **Verification:** Methods return the enhanced dictionary.
 
-## Task 8: Implement Credit Deduction in `ModelOrchestrator`
+## Task 8: Implement Credit Deduction in `ModelOrchestrator` (completed)
 - **File:** `ai_dev_bot_platform/app/services/orchestrator_service.py`
 - **Action:** Implement credit deduction logic in `ModelOrchestrator`.
 - **Verification:** Orchestrator attempts to deduct credits. Logs created in `api_key_usage` and `credit_transactions`. User credit balance updated.
