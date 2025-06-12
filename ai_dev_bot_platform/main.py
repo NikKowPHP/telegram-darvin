@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from app.core.logging_config import setup_logging
 from app.telegram_bot.bot_main import run_bot
 from app.api.endpoints import stripe_webhooks
+from ai_dev_bot_platform.app.api.health import router as health_router
 
 # Setup logging at the application's entry point
 setup_logging()
@@ -25,11 +26,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AI Development Assistant API", lifespan=lifespan)
 app.include_router(stripe_webhooks.router, prefix="/api/v1", tags=["Stripe"])
+app.include_router(health_router, prefix="/health", tags=["health"])
 
 @app.get("/")
 async def root():
     return {"message": "AI Development Assistant API is running and bot is active!"}
-
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
