@@ -117,10 +117,13 @@ This command starts only the services the application depends on, leaving the ap
 
 With the database running in Docker and your environment configured, apply the latest database schema using Alembic.
 
-```bash
+
 alembic upgrade head
-```
-This command reads your models, compares them to the database, and creates/updates tables as needed. You only need to run this once initially, and then again anytime the database models change.
+
+`cd ai_dev_bot_platform && /home/kasjer/projects/telegram-darvin/ai_dev_bot_platform/venv/bin/alembic upgrade head`.
+
+
+
 
 ### 7. Run the Application
 
@@ -135,40 +138,15 @@ uvicorn ai_dev_bot_platform.main:app --reload
 
 Go to Telegram, find the bot you created with BotFather, and send the `/start` command. The application running in your terminal should log the interaction, and the bot should reply. You're all set!
 
-### Running with a Proxy
-
-If you are behind a corporate or local proxy, you can inject the proxy settings into the Docker containers.
-
-1.  **Create a Proxy Environment File:** In the project root (`ai_dev_bot_platform`), create a file named `.env.proxy`.
-
-2.  **Add Proxy Settings:** Add your proxy configuration to the `.env.proxy` file. The `NO_PROXY` variable is crucial to ensure containers can communicate with each other directly.
-    ```env
-    # .env.proxy
-    HTTP_PROXY=http://your.proxy.server:port
-    HTTPS_PROXY=http://your.proxy.server:port
-    NO_PROXY=localhost,127.0.0.1,postgres,redis
-    ```
-
-3.  **Build and Run with Proxy:** From the **project root (`ai_dev_bot_platform`)**, run the following command. It loads your standard `.env` file and the new `.env.proxy` file into the correct `docker-compose.yml`.
-    ```bash
-    docker-compose --env-file .env --env-file .env.proxy -f deploy/docker/docker-compose.yml up -d --build
-    ```
-    This will start all services (app, postgres, redis) and correctly inject your proxy settings into the `app` container for both the build process and runtime.
-
-4.  **Apply Migrations:** This step is similar. Run migrations using the same environment files:
-    ```bash
-    docker-compose --env-file .env  -f docker-compose.yml exec app alembic upgrade head
-    ```
- 
 ### Testing Stripe Webhooks Locally
  
 To test the full payment flow with Stripe, you need a way for Stripe's servers to send events to your local machine. We use `ngrok` for this.
  
 1.  **Install `ngrok`:** Follow the instructions on the [ngrok website](https://ngrok.com/download).
  
-2.  **Run `ngrok`:** In a separate terminal, start `ngrok` to expose your local port 8000 to the internet.
+2.  **Run `ngrok`:** In a separate terminal, start `ngrok` to expose your local port 8345 to the internet.
     ```bash
-    ngrok http 8000
+    ngrok http 8345
     ```
  
 3.  **Get Your Webhook URL:** `ngrok` will give you a public URL (e.g., `https://random-string.ngrok.io`). Your full webhook URL will be this URL plus the API path:
