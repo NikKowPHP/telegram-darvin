@@ -101,7 +101,7 @@ class ArchitectAgent:
 - **Verification:** Orchestrator calls `generate_project_readme` and saves the output.
 
 ## Task 3: Refine Error Handling in Services & Agents
-- **Action:** Review all `*.py` files in `app/services/` and `app/agents/`.
+- [x] **Action:** Review all `*.py` files in `app/services/` and `app/agents/`.
     *   Wrap external calls (DB, LLM APIs) in more specific `try-except` blocks (e.g., `sqlalchemy.exc.SQLAlchemyError`, `httpx.HTTPStatusError`, specific Gemini/OpenRouter exceptions if their SDKs provide them).
     *   Log errors with detailed context (user_id, project_id, method name, parameters).
     *   Ensure functions/methods return clear error indicators or raise custom exceptions that can be caught by the orchestrator or handlers.

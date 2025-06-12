@@ -55,4 +55,17 @@ class CreditTransactionService:
             return None
     
     def get_transactions_for_user(self, db: Session, user_id: int) -> List[CreditTransaction]:
-        return db.query(CreditTransaction).filter(CreditTransaction.user_id == user_id).order_by(CreditTransaction.created_at.desc()).all()
+        try:
+            return db.query(CreditTransaction).filter(
+                CreditTransaction.user_id == user_id
+            ).order_by(CreditTransaction.created_at.desc()).all()
+        except SQLAlchemyError as e:
+            logger.error(
+                "Failed to get transactions for user",
+                exc_info=True,
+                extra={
+                    "user_id": user_id,
+                    "error": str(e)
+                }
+            )
+            return []

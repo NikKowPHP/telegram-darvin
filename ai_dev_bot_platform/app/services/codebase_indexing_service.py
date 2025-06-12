@@ -85,10 +85,24 @@ class CodebaseIndexingService:
 
     async def generate_embedding(self, text: str) -> np.ndarray: # Return numpy array
         """Generate embedding for text using an embedding model"""
-        logger.debug(f"Generating embedding for text chunk starting with: {text[:50]}...")
-        # SentenceTransformer works synchronously, wrap if true async needed elsewhere
-        embedding = self.embedding_model.encode(text, convert_to_tensor=False) # Get numpy array
-        return embedding.astype('float32') # FAISS typically wants float32
+        try:
+            logger.debug(
+                f"Generating embedding for text chunk starting with: {text[:50]}...",
+                extra={"text_sample": text[:100]}
+            )
+            # SentenceTransformer works synchronously, wrap if true async needed elsewhere
+            embedding = self.embedding_model.encode(text, convert_to_tensor=False) # Get numpy array
+            return embedding.astype('float32') # FAISS typically wants float32
+        except Exception as e:
+            logger.error(
+                "Error generating embedding",
+                exc_info=True,
+                extra={
+                    "text_sample": text[:100],
+                    "error": str(e)
+                }
+            )
+            raise  # Re-raise to let caller handle
 
     def _get_or_create_project_index(self, project_id: str, embedding_dim: int = 384) -> faiss.Index: # all-MiniLM-L6-v2 is 384-dim
         if project_id not in self.project_indexes:
