@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from app.core.logging_config import setup_logging
 from app.telegram_bot.bot_main import run_bot
 from app.api.endpoints import stripe_webhooks
-from ai_dev_bot_platform.app.api.health import router as health_router
+from app.api.health import router as health_router
 
 # Setup logging at the application's entry point
 setup_logging()

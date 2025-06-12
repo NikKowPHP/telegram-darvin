@@ -43,24 +43,24 @@ Before you begin, ensure you have the following installed:
     -   A **Google Gemini API Key**.
     -   An **OpenRouter API Key**.
 
-### 2. Clone the Repository
 
-```bash
-git clone https://github.com/your-username/ai-dev-bot-platform.git
-cd ai-dev-bot-platform
-```
 
 ### 3. Configure Your Environment
 
 This is the most crucial step. You need to create a `.env` file to store your secrets and configuration.
 
 1.  Copy the example file:
-    ```bash
+
+
+
     cp .env.example .env
-    ```
+ 
+
+
 2.  Open the new `.env` file in your editor and fill in the required values:
 
     ```env
+
     # Application
     APP_ENV="development"
     LOG_LEVEL="INFO"
@@ -82,15 +82,11 @@ This is the most crucial step. You need to create a `.env` file to store your se
     # Stripe (can be left as placeholders for now)
     STRIPE_SECRET_KEY="sk_test_YOUR_KEY"
     STRIPE_WEBHOOK_SECRET="whsec_YOUR_KEY"
+
+
     ```
 
-### 4. Start Backend Services
 
-Use Docker Compose to start the PostgreSQL database and Redis in the background.
-
-```bash
-docker-compose up -d postgres redis
-```
 This command starts only the services the application depends on, leaving the application itself to be run directly for easier debugging.
 
 ### 5. Set Up the Python Environment
@@ -130,7 +126,7 @@ alembic upgrade head
 Now, you can start the main application. This single command will launch the FastAPI server, which in turn starts the Telegram bot polling in the background.
 
 ```bash
-uvicorn ai_dev_bot_platform.main:app --reload
+uvicorn main:app --reload
 ```
 -   `--reload` enables hot-reloading, so the server will restart automatically when you save code changes.
 

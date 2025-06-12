@@ -171,7 +171,7 @@ Here is the content for the new `implementation_todo.md` file:
         In a **new, separate terminal**, activate the virtual environment again (`source venv/bin/activate`) and start the Celery worker. This process will listen for and execute the long-running AI tasks.
 
         ```bash
-        celery -A ai_dev_bot_platform.app.background_tasks.celery_app.celery_app worker --loglevel=info
+        celery -A app.background_tasks.celery_app.celery_app worker --loglevel=info
         ```
         Keep this terminal open to see the logs from your background jobs.
         ```
@@ -209,7 +209,7 @@ Here is the content for the new `implementation_todo.md` file:
             embedding = Column(Vector(384)) # Dimension for all-MiniLM-L6-v2 is 384
         ```
     *   **File:** `ai_dev_bot_platform/app/db/migrations/env.py`
-    *   **Action:** Add the import `from ai_dev_bot_platform.app.models.embedding import ProjectEmbedding` to ensure Alembic detects the new table.
+    *   **Action:** Add the import `from app.models.embedding import ProjectEmbedding` to ensure Alembic detects the new table.
     *   **Verification:** The new model file exists and is imported into `env.py`.
 
 *   `[x]` **F2.3: Refactor the `CodebaseIndexingService`**

@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, DateTime, JSON, TEXT, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from ai_dev_bot_platform.app.db.session import Base
+from app.db.session import Base
 
 class Project(Base):
     __tablename__ = "projects"

@@ -45,6 +45,9 @@ Upon activation, you must determine your operational mode based on the presence 
 
 3.  **Step 3: Generate Context-Aware To-Do List.**
     *   **Analyze Goal vs. Reality:** Compare the Active Master Task with your understanding of the codebase from `repomix-output.xml`.
+    *   **Semantic Discovery:**
+        - **Execute Command:** `python vector_tool.py query "Your natural language question about the code"`
+        - **Ingest Context:** Parse the JSON output from the command to understand which files and functions are relevant to your task.
     *   **Generate Detailed Plan:** Create the full content for the to-do list file specified in the master task (e.g., `todos/dev_todo_phase_3.md`). The prompts must be atomic, generative, and code-aware.
 
 4.  **Step 4: Update Master Plan.**

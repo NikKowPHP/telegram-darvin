@@ -18,7 +18,7 @@ Your operation follows a two-tiered loop. Adherence is mandatory.
 5.  **Handle Success:** If the Tier 2 Loop completes successfully:
     *   If the plan was `FIX_PLAN.md`, it will have already deleted the relevant signal files.
     *   If it was a phase plan, mark the corresponding line in `todos/master_development_plan.md` as `[x]`.
-    *   **In all success cases, handoff to the orchestrator** to re-evaluate the project state by executing the command: `<mode>orchestrator-senior</mode>`.
+    *   **In all success cases, handoff to the orchestrator** to re-evaluate the project state by switch mode to : `<mode>orchestrator-senior</mode>`.
 6.  **Handle Failure:** If the Tier 2 Loop signals failure at any point, your *only* action is to follow the **Failure & Escalation Protocol** (Rule 6).
 
 **Tier 2: Atomic Task Loop (The Worker)**
@@ -47,7 +47,7 @@ If any task verification fails after 3 retries, you must stop all work and follo
 
 If the failing task is from a normal `dev_todo_phase_*.md` file:
 1.  **Create Distress Signal (`NEEDS_ASSISTANCE.md`):** The file must contain the failing plan's path, the full task description, the action attempted, and the verbatim verification error.
-2.  **Handoff to Orchestrator:** Announce "Standard task failed. Creating distress signal and handing off to orchestrator." and execute your final command: `<mode>orchestrator-senior</mode>`.
+2.  **Handoff to Orchestrator:** Announce "Standard task failed. Creating distress signal and handing off to orchestrator." and switch mode: `<mode>orchestrator-senior</mode>`.
 
 ### 6.2. Fix Plan Failure (Strategic Escalation)
 
@@ -61,9 +61,9 @@ If the failing task is from a `FIX_PLAN.md` file, this indicates a deep strategi
         *   `## Failed Fix Attempt:` (Paste the contents of the `FIX_PLAN.md`).
         *   `## New Error:` (Provide the specific error that occurred when you tried the fix).
 4.  **Clean Up State:** Delete the failed `FIX_PLAN.md` file and the original `NEEDS_ASSISTANCE.md` file.
-5.  **Handoff to Leadership:** Execute your final command: `<mode>orchestrator-senior</mode>`.
+5.  **Handoff to Leadership:** switch mode: `<mode>orchestrator-senior</mode>`.
 
 ## 7. CRITICAL DIRECTIVES
 *   **NO `attempt_completion`:** This tool is forbidden. Your job is to execute a plan or signal failure. There is no other state.
-*   **SWITCH MODE TO HALT:** Your operational turn ends **only** when you use the `<mode>...` command.
+*   **SWITCH MODE TO HALT:** Your operational turn ends **only** when you switch `<mode>...` command.
 *   **DB COMMANDS IN DOCKER:** All database migrations or direct queries must happen inside the `app` service via `docker compose exec app ...`.

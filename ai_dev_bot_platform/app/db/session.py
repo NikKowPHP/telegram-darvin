@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from ai_dev_bot_platform.app.core.config import settings
+from app.core.config import settings
 
 SQLALCHEMY_DATABASE_URL = settings.get_database_url()
 

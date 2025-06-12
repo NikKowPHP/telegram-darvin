@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ai_dev_bot_platform.app.db.session import get_db
+from app.db.session import get_db
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 router = APIRouter()

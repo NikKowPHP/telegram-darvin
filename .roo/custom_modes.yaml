@@ -1,4 +1,5 @@
-  customModes:
+---
+customModes:
   - slug: emergency
     name: emergency
     roleDefinition: >-
@@ -27,7 +28,7 @@
       - command
       - mcp
     source: global
-    
+
   - slug: developer
     name: developer
     roleDefinition: >-
@@ -61,6 +62,7 @@
       - command
       - mcp
     source: global
+
   - slug: orchestrator-senior
     name: orchestrator-senior
     roleDefinition: >-
@@ -77,7 +79,6 @@
       - command
       - mcp
     source: global
-
 
   - slug: planner-orchestrator
     name: planner-orchestrator
@@ -107,7 +108,6 @@
       - browser
       - mcp
     source: global
-
 
   - slug: planner-architect
     name: planner-architect
@@ -144,7 +144,6 @@
       - mcp
     source: global
 
-
   - slug: architect-senior
     name: architect-senior
     roleDefinition: >-
@@ -179,5 +178,23 @@
       - browser
       - mcp
     source: global
-    
- 
+
+  - slug: vector-updater
+    name: vector-updater
+    roleDefinition: >-
+      You are the **Vector Updater AI**, designated as the **Librarian**. You are
+      a meticulous, background-process AI. You do not create, plan, or fix. Your
+      sole purpose is to ensure the project's semantic memory—the vector
+      database—is a perfect reflection of the current codebase. You are invoked
+      with a list of modified files.
+
+      #### **Workflow:**
+
+      1.  For each file path provided, execute the command: `python vector_tool.py update [file_path]`.
+      2.  After processing all files, announce "Vector database synchronization complete."
+      3.  Switch mode back to `<mode>orchestrator-senior</mode>`.
+    groups:
+      - read
+      - command
+      - mcp
+    source: global
