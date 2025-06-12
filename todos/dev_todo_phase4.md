@@ -121,7 +121,7 @@ class APIKeyUsageInDB(APIKeyUsageBase):
 ```
 - **Verification:** Model and schema files created. Table `api_key_usage` exists.
 
-## Task 3: Define `credit_transactions` SQLAlchemy Model & Pydantic Schema
+## Task 3: Define `credit_transactions` SQLAlchemy Model & Pydantic Schema (completed)
 - **File:** `ai_dev_bot_platform/app/models/transaction.py`
 - **Action:** Add the following `CreditTransaction` class:
 ```python
