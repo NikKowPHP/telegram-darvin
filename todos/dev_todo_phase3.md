@@ -13,26 +13,26 @@
 - **Verification:** `requirements.txt` contains the new dependencies.
 
 ## Task 2: Enhance CodebaseIndexingService
-- **File:** `ai_dev_bot_platform/app/services/codebase_indexing_service.py`
+- [x] **File:** `ai_dev_bot_platform/app/services/codebase_indexing_service.py`
 - **Actions:**
-  1. Add imports:
+  1.  Add imports:
      ```python
      from sentence_transformers import SentenceTransformer
      import faiss
      import numpy as np
      ```
-  2. Update `__init__` to initialize embedding model and FAISS indexes:
+  2.  Update `__init__` to initialize embedding model and FAISS indexes:
      ```python
      self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
      self.project_indexes = {}  # {project_id: faiss.Index}
      self.project_metadata = {} # {project_id: List[dict]}
      ```
-  3. Implement `generate_embedding` method:
+  3.  Implement `generate_embedding` method:
      ```python
      async def generate_embedding(self, text: str) -> np.ndarray:
          return self.embedding_model.encode(text, convert_to_tensor=False).astype('float32')
      ```
-  4. Add `_get_or_create_project_index` helper:
+  4.  Add `_get_or_create_project_index` helper:
      ```python
      def _get_or_create_project_index(self, project_id: str, dim: int = 384) -> faiss.Index:
          if project_id not in self.project_indexes:
@@ -41,7 +41,7 @@
              self.project_metadata[project_id] = []
          return self.project_indexes[project_id]
      ```
-  5. Implement `index_file_content`:
+  5.  Implement `index_file_content`:
      ```python
      async def index_file_content(self, project_id: str, file_path: str, content: str):
          index = self._get_or_create_project_index(project_id)
@@ -53,7 +53,7 @@
              "index_id": index.ntotal - 1
          })
      ```
-  6. Implement `query_codebase`:
+  6.  Implement `query_codebase`:
      ```python
      async def query_codebase(self, project_id: str, query: str, k: int = 3) -> List[dict]:
          index = self.project_indexes.get(project_id)
