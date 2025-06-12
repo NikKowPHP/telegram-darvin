@@ -62,7 +62,7 @@ class ModelPricingInDB(ModelPricingBase):
 ```
 - **Verification:** Model and schema files created. Table `model_pricing` exists in DB.
 
-## Task 2: Define `api_key_usage` SQLAlchemy Model & Pydantic Schema
+## Task 2: Define `api_key_usage` SQLAlchemy Model & Pydantic Schema (completed)
 - **File:** `ai_dev_bot_platform/app/models/api_key_models.py`
 - **Action:** Add the following `APIKeyUsage` class:
 ```python
