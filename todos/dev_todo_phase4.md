@@ -174,7 +174,7 @@ class CreditTransactionInDB(CreditTransactionBase):
 ```
 - **Verification:** Model and schema files created. Table `credit_transactions` exists.
 
-## Task 4: Create `ModelPricingService`
+## Task 4: Create `ModelPricingService` (completed)
 - **File:** `ai_dev_bot_platform/app/services/billing_service.py`
 - **Action:** Add the following `ModelPricingService` class:
 ```python
