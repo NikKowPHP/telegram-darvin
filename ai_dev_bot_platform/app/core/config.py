@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Dict, Any, Optional
 
+
 class Settings(BaseSettings):
     APP_ENV: str = "development"
     LOG_LEVEL: str = "INFO"
@@ -10,7 +11,7 @@ class Settings(BaseSettings):
     POSTGRES_SERVER: str
     POSTGRES_PORT: str
     POSTGRES_DB: str
-    DATABASE_URL: Optional[str] = None # Will be constructed if not provided
+    DATABASE_URL: Optional[str] = None  # Will be constructed if not provided
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
@@ -22,7 +23,9 @@ class Settings(BaseSettings):
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
     OPENROUTER_API_KEY: Optional[str] = None
 
-    API_KEY_ENCRYPTION_KEY: str # For encrypting any keys stored in DB (not external provider keys)
+    API_KEY_ENCRYPTION_KEY: (
+        str  # For encrypting any keys stored in DB (not external provider keys)
+    )
 
     # Model Configuration
     ARCHITECT_MODEL: str = "deepseek/deepseek-r1-0528:free"
@@ -56,5 +59,6 @@ class Settings(BaseSettings):
         if self.DATABASE_URL:
             return self.DATABASE_URL
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
 
 settings = Settings()

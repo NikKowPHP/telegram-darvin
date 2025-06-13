@@ -4,6 +4,7 @@ from decimal import Decimal
 import datetime
 import uuid
 
+
 class ModelPricingBase(BaseModel):
     model_provider: str
     model_name: str
@@ -11,14 +12,16 @@ class ModelPricingBase(BaseModel):
     output_cost_per_million_tokens: Decimal
     image_input_cost_per_image: Optional[Decimal] = None
     image_output_cost_per_image: Optional[Decimal] = None
-    currency: str = 'USD'
+    currency: str = "USD"
     notes: Optional[str] = None
     is_active: bool = True
+
 
 class ModelPricingCreate(ModelPricingBase):
     pass
 
-class ModelPricingUpdate(BaseModel): # Allow partial updates
+
+class ModelPricingUpdate(BaseModel):  # Allow partial updates
     input_cost_per_million_tokens: Optional[Decimal] = None
     output_cost_per_million_tokens: Optional[Decimal] = None
     image_input_cost_per_image: Optional[Decimal] = None
@@ -27,13 +30,15 @@ class ModelPricingUpdate(BaseModel): # Allow partial updates
     notes: Optional[str] = None
     is_active: Optional[bool] = None
 
+
 class ModelPricingInDB(ModelPricingBase):
     id: int
     created_at: datetime.datetime
     updated_at: datetime.datetime
-    
+
     class Config:
         from_attributes = True
+
 
 class APIKeyUsageBase(BaseModel):
     project_id: Optional[uuid.UUID] = None
@@ -48,12 +53,14 @@ class APIKeyUsageBase(BaseModel):
     actual_cost_usd: Optional[Decimal] = None
     response_time_ms: Optional[int] = None
 
+
 class APIKeyUsageCreate(APIKeyUsageBase):
     pass
+
 
 class APIKeyUsageInDB(APIKeyUsageBase):
     id: int
     created_at: datetime.datetime
-    
+
     class Config:
         from_attributes = True

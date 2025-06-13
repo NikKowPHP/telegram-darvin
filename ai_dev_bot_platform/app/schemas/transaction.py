@@ -4,6 +4,7 @@ from decimal import Decimal
 import datetime
 import uuid
 
+
 class CreditTransactionBase(BaseModel):
     user_id: int
     project_id: Optional[uuid.UUID] = None
@@ -14,13 +15,16 @@ class CreditTransactionBase(BaseModel):
     external_transaction_id: Optional[str] = None
     description: Optional[str] = None
 
+
 class CreditTransactionCreate(CreditTransactionBase):
     pass
+
 
 class CreditTransactionUpdate(BaseModel):
     credits_amount: Optional[Decimal] = None
     real_cost_associated_usd: Optional[Decimal] = None
     description: Optional[str] = None
+
 
 class CreditTransactionInDB(CreditTransactionBase):
     id: int

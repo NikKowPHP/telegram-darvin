@@ -4,13 +4,16 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class APIKeyManager:
     def __init__(self):
         # For simplicity, load directly from settings for now.
         # Later, this can load from DB, handle encryption, round-robin from pools etc.
         self.api_keys: Dict[str, List[str]] = {
             "google": [settings.GOOGLE_API_KEY] if settings.GOOGLE_API_KEY else [],
-            "openrouter": [settings.OPENROUTER_API_KEY] if settings.OPENROUTER_API_KEY else [],
+            "openrouter": (
+                [settings.OPENROUTER_API_KEY] if settings.OPENROUTER_API_KEY else []
+            ),
         }
         self.current_indices: Dict[str, int] = {
             provider: 0 for provider in self.api_keys
@@ -24,7 +27,10 @@ class APIKeyManager:
             if provider not in self.api_keys or not self.api_keys[provider]:
                 logger.error(
                     f"No API keys configured for provider: {provider}",
-                    extra={"provider": provider, "available_providers": list(self.api_keys.keys())}
+                    extra={
+                        "provider": provider,
+                        "available_providers": list(self.api_keys.keys()),
+                    },
                 )
                 return None
 
@@ -40,17 +46,18 @@ class APIKeyManager:
                 extra={
                     "provider": provider,
                     "status_code": e.response.status_code,
-                    "request_url": e.request.url
-                }
+                    "request_url": e.request.url,
+                },
             )
             return None
         except Exception as e:
             logger.error(
                 f"Unexpected error getting API key for provider {provider}: {str(e)}",
                 exc_info=True,
-                extra={"provider": provider}
+                extra={"provider": provider},
             )
             return None
+
 
 # Singleton instance or inject as dependency
 # api_key_manager_instance = APIKeyManager()

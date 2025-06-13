@@ -3,6 +3,7 @@ from typing import Optional
 from app.core.config import settings
 from app.schemas.user import User
 
+
 class PaymentService:
     def __init__(self):
         if settings.STRIPE_SECRET_KEY:
@@ -14,8 +15,8 @@ class PaymentService:
         """
         # These price IDs come from your Stripe Dashboard
         price_ids = {
-            'buy_100': 'price_1PEXAMPLEq0j0j0j0j0j0j0j0j',
-            'buy_500': 'price_1PEXAMPLEr1k1k1k1k1k1k1k1k',
+            "buy_100": "price_1PEXAMPLEq0j0j0j0j0j0j0j0j",
+            "buy_500": "price_1PEXAMPLEr1k1k1k1k1k1k1k1k",
         }
         price_id = price_ids.get(credit_package)
 
@@ -26,11 +27,11 @@ class PaymentService:
             checkout_session = stripe.checkout.Session.create(
                 line_items=[
                     {
-                        'price': price_id,
-                        'quantity': 1,
+                        "price": price_id,
+                        "quantity": 1,
                     },
                 ],
-                mode='payment',
+                mode="payment",
                 success_url=f"{settings.WEBAPP_URL}/payment-success",
                 cancel_url=f"{settings.WEBAPP_URL}/payment-cancelled",
                 # IMPORTANT: This links the payment to our internal user ID
