@@ -1,10 +1,18 @@
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends  
+from sqlalchemy.orm import Session 
+from decimal import Decimal 
+
 from app.core.logging_config import setup_logging
 from app.telegram_bot.bot_main import run_bot
 from app.api.endpoints import stripe_webhooks
 from app.api.health import router as health_router
+from app.db.session import get_db 
+from app.services.user_service import UserService 
+
+
+
 
 # Setup logging at the application's entry point
 setup_logging()

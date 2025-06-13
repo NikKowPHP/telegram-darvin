@@ -1,6 +1,7 @@
 import logging
 import re
 import uuid
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.schemas.user import User
 from app.services.api_key_manager import APIKeyManager
@@ -17,6 +18,7 @@ from app.services.storage_service import StorageService
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.core.config import settings
 from decimal import Decimal
+
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +81,7 @@ class ModelOrchestrator:
                 description=description,
                 user_id=user.id
             )
-            project = self.project_service.create_project(self.db, project_in)
+            project = self.project_service.create_project(self.db, project_in, user_id=user.id) 
             
             # Create a dedicated storage bucket for this project
             self.storage_service.create_bucket(str(project.id))
