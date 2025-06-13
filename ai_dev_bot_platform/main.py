@@ -31,3 +31,26 @@ app.include_router(health_router, prefix="/health", tags=["health"])
 @app.get("/")
 async def root():
     return {"message": "AI Development Assistant API is running and bot is active!"}
+
+
+
+@app.post("/admin/set-credits/{telegram_user_id}")
+async def set_user_credits(
+    telegram_user_id: int,
+    credits: float,
+    db: Session = Depends(get_db)
+):
+    """
+    Temporary admin endpoint to set a user's credit balance.
+    """
+    from decimal import Decimal
+    user_service = UserService()
+    user = user_service.get_user_by_telegram_id(db, telegram_user_id)
+    if not user:
+        return {"error": "User not found"}
+
+    user.credit_balance = Decimal(str(credits))
+    db.commit()
+    db.refresh(user)
+
+    return {"message": f"Successfully set credits for user {telegram_user_id} to {user.credit_balance}"}
