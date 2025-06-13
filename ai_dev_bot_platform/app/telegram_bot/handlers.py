@@ -8,6 +8,7 @@ from app.services.user_service import UserService # CORRECTED IMPORT
 from app.schemas.user import UserCreate
 from app.services.payment_service import PaymentService
 from app.core.config import settings
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +87,6 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     finally:
         db.close()
 
-# Updated message handler with orchestrator integration
 # In app/telegram_bot/handlers.py
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -107,25 +107,32 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await update.message.reply_text("You have insufficient credits. Please /credits to add more.")
             return
 
-     
-        # If the user is asking to implement a task, send a "working on it" message.
+        # Send an immediate acknowledgement for long-running tasks
         if is_new_project_description(text):
             await update.message.reply_text("Thanks! I'm analyzing your project requirements and creating an initial plan. This might take a moment...")
         elif text.lower().strip().startswith("implement task"):
             await update.message.reply_text("Got it. Working on that task now. This may take a minute...")
 
-        # Now, run the potentially long process
         from app.services.orchestrator_service import get_orchestrator
         orchestrator = get_orchestrator(db)
         response_data = await orchestrator.process_user_request(user=user_db, user_input=text)
         
         response_text = response_data.get('text')
         zip_buffer = response_data.get('zip_buffer')
-        
+        reply_markup = response_data.get('reply_markup')
+        project_id = response_data.get('project_id')
+
+        # If a new project was created, store its ID in the user's context data
+        if project_id and is_new_project_description(text):
+            context.user_data['last_project_id'] = project_id
+            logger.info(f"Stored last_project_id for user {user_tg.id}: {project_id}")
+
         if response_text:
-            # Instead of `reply_text`, use `send_message` to send a new message.
-            # This avoids issues if the user sends other messages in between.
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=response_text,
+                reply_markup=reply_markup
+            )
 
         if zip_buffer:
             project_title = response_data.get('project_title', 'project')
@@ -138,21 +145,63 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     except Exception as e:
         logger.error(f"Error in message_handler for user {user_tg.id}: {e}", exc_info=True)
-        # Check if the message has been replied to already. If not, send an error message.
         if not context.bot_data.get(f'replied_to_{update.message.message_id}', False):
             await update.message.reply_text("Sorry, an error occurred while processing your request.")
     finally:
         db.close()
 
-# Add more handlers here (e.g., for project descriptions, other commands)
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
     
     user_tg = update.effective_user
-    credit_package = query.data
+    
+    # Try to parse the callback data using the new 'action:value' format
+    try:
+        parts = query.data.split(':')
+        action = parts[0]
 
+        if action == "implement":
+            task_index = int(parts[1])
+            
+            project_id = context.user_data.get('last_project_id')
+            if not project_id:
+                await query.edit_message_text(text="Error: I've lost track of the project. Please create a new one.")
+                return
+
+            await query.edit_message_text(text=f"▶️ Working on Task {task_index} for project {project_id[:8]}...\n\nThis may take a minute or two.")
+
+            command_string = f"implement task {task_index} of project {project_id}"
+            
+            db: Session = SessionLocal()
+            try:
+                user_service = UserService()
+                user_db = user_service.get_user_by_telegram_id(db, user_tg.id)
+                if not user_db:
+                    await context.bot.send_message(chat_id=user_tg.id, text="Error: Could not find your user account.")
+                    return
+
+                from app.services.orchestrator_service import get_orchestrator
+                orchestrator = get_orchestrator(db)
+                response_data = await orchestrator.process_user_request(user=user_db, user_input=command_string)
+                
+                await context.bot.send_message(chat_id=user_tg.id, text=response_data.get('text', 'Task processing complete.'))
+                # TODO: Here you could add logic to send the next button, e.g., "Implement Task 2"
+            finally:
+                db.close()
+            return
+
+    except (IndexError, ValueError):
+        # Data is not in 'action:value' format, fall through to credit logic
+        pass
+    except Exception as e:
+        logger.error(f"Error in button_handler action processing: {e}", exc_info=True)
+        await context.bot.send_message(chat_id=user_tg.id, text="An error occurred while processing that action.")
+        return
+
+    # Fallback to existing credit purchase logic
+    credit_package = query.data
     db: Session = SessionLocal()
     try:
         user_service = UserService()
@@ -162,17 +211,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             return
 
         if settings.MOCK_STRIPE_PAYMENTS:
-            # MOCK FLOW: Directly add credits
             updated_user = user_service.add_credits_after_purchase(db, user_id=user_db.id, credit_package=credit_package)
             if updated_user:
                 await query.edit_message_text(
-                    text=f"Success! Your MOCK purchase was processed. "
-                         f"New balance: {updated_user.credit_balance:.2f}"
+                    text=f"Success! Your MOCK purchase was processed. New balance: {updated_user.credit_balance:.2f}"
                 )
             else:
                 await query.edit_message_text(text="An error occurred during the mock purchase.")
         else:
-            # LIVE FLOW: Generate a Stripe Checkout link
             payment_service = PaymentService()
             checkout_url = payment_service.create_checkout_session(user=user_db, credit_package=credit_package)
             

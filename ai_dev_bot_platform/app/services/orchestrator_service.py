@@ -18,6 +18,8 @@ from app.services.storage_service import StorageService
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.core.config import settings
 from decimal import Decimal
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+import json
 
 
 logger = logging.getLogger(__name__)
@@ -72,7 +74,8 @@ class ModelOrchestrator:
         """Heuristic to detect new project descriptions"""
         return len(user_input.split()) > 5 and not user_input.startswith(("implement", "plan", "code"))
 
-    async def _handle_new_project(self, user: User, description: str) -> str:
+
+    async def _handle_new_project(self, user: User, description: str) -> dict:
         """Create new project and generate initial plan"""
         try:
             # Create project
@@ -81,60 +84,62 @@ class ModelOrchestrator:
                 description=description,
                 user_id=user.id
             )
-            project = self.project_service.create_project(self.db, project_in, user_id=user.id) 
+            project = self.project_service.create_project(self.db, project_in, user_id=user.id)
             
-            # Create a dedicated storage bucket for this project
             self.storage_service.create_bucket(str(project.id))
             
-            # Generate plan with architect agent
-            try:
-                plan_result = await self.architect_agent.generate_initial_plan_and_docs(
-                    project_requirements=description,
-                    project_title=project.title
-                )
-            except Exception as e:
-                logger.error(f"LLM error generating project plan: {e}", exc_info=True)
-                return {'text': f"Error generating project plan: {str(e)}", 'zip_buffer': None}
+            plan_result = await self.architect_agent.generate_initial_plan_and_docs(
+                project_requirements=description,
+                project_title=project.title
+            )
             
             if "error" in plan_result:
-                return {'text': f"Error generating project plan: {plan_result['error']}", 'zip_buffer': None}
+                return {'text': f"Error generating project plan: {plan_result['error']}", 'zip_buffer': None, 'reply_markup': None, 'project_id': None}
             
-            # Deduct credits for LLM call if successful
             if "llm_call_details" in plan_result:
-                try:
-                    await self._deduct_credits_for_llm_call(
-                        user=user,
-                        llm_response_data=plan_result["llm_call_details"],
-                        task_type="planning",
-                        project_id=project.id
-                    )
-                except Exception as e:
-                    logger.error(f"Credit deduction failed: {e}", exc_info=True)
-                    # Continue despite credit deduction failure
-            
-            # Update project with generated artifacts
-            try:
-                update_data = ProjectUpdate(
-                    status="planning",
-                    current_todo_markdown=plan_result.get("todo_list_markdown", ""),
-                    tech_stack=plan_result.get("tech_stack_suggestion", {}) # Get the suggestion, default to {}
+                await self._deduct_credits_for_llm_call(
+                    user=user,
+                    llm_response_data=plan_result["llm_call_details"],
+                    task_type="planning",
+                    project_id=project.id
                 )
-                self.project_service.update_project(self.db, project.id, update_data)
-            except Exception as e:
-                logger.error(f"Database update failed: {e}", exc_info=True)
-                return {'text': "Failed to save project details. Please contact support.", 'zip_buffer': None}
             
-            # Return summary to user
+            update_data = ProjectUpdate(
+                status="planning",
+                current_todo_markdown=plan_result.get("todo_list_markdown", ""),
+                tech_stack=plan_result.get("tech_stack_suggestion", {})
+            )
+            self.project_service.update_project(self.db, project.id, update_data)
+
+            # Build the keyboard with a button for the first task
+            keyboard = []
+            todo_items = [line for line in plan_result.get("todo_list_markdown", "").split("\n") 
+                          if line.strip().startswith(("- [ ]", "[ ]"))]
+            
+            if todo_items:
+                # The new, much shorter callback data string
+                callback_data = "implement:1" 
+                button = [InlineKeyboardButton("▶️ Implement Task 1", callback_data=callback_data)]
+                keyboard.append(button)
+            
+            reply_markup = InlineKeyboardMarkup(keyboard) if keyboard else None
             todo_preview = "\n".join(plan_result.get("todo_list_markdown", "").split("\n")[:3])
-            return {'text': (
-                f"Project '{project.title}' created!\n"
-                f"First tasks:\n{todo_preview}\n"
-                f"Use 'implement task 1 of project {project.id}' to start."
-            ), 'zip_buffer': None}
+            
+            return {
+                'text': (
+                    f"Project '{project.title}' ({project.id}) created!\n\n"
+                    f"First tasks:\n{todo_preview}\n\n"
+                    "Ready to start building?"
+                ),
+                'zip_buffer': None,
+                'reply_markup': reply_markup,
+                'project_id': str(project.id) # Return the project ID
+            }
         except Exception as e:
             logger.error(f"Unexpected error creating project: {e}", exc_info=True)
-            return {'text': "Failed to create project due to an unexpected error. Please try again.", 'zip_buffer': None}
+            return {'text': "Failed to create project due to an unexpected error. Please try again.", 'zip_buffer': None, 'reply_markup': None, 'project_id': None}
 
+            
     async def _handle_implement_task(self, user: User, project_id: str, task_index: int) -> str:
         """Implement a specific TODO item from a project"""
         try:
