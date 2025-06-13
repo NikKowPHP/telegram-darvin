@@ -11,6 +11,14 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+def is_new_project_description(text: str) -> bool:
+    """Heuristic to detect if a message is a new project description."""
+    # It's a project description if it's long and doesn't start with a known command.
+    is_long_enough = len(text.split()) > 5
+    is_not_a_command = not text.lower().strip().startswith(("implement task", "refine file", "/"))
+    return is_long_enough and is_not_a_command
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
     logger.info(f"User {user_tg.id} ({user_tg.username}) started the bot.")
@@ -99,9 +107,11 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await update.message.reply_text("You have insufficient credits. Please /credits to add more.")
             return
 
-        # --- NEW: Send an immediate acknowledgement ---
+     
         # If the user is asking to implement a task, send a "working on it" message.
-        if text.lower().strip().startswith("implement task"):
+        if is_new_project_description(text):
+            await update.message.reply_text("Thanks! I'm analyzing your project requirements and creating an initial plan. This might take a moment...")
+        elif text.lower().strip().startswith("implement task"):
             await update.message.reply_text("Got it. Working on that task now. This may take a minute...")
 
         # Now, run the potentially long process
