@@ -1,10 +1,26 @@
 import logging
 import asyncio
+import re
 from app.utils.llm_client import LLMClient
 from typing import Dict, Any
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+VALID_FILENAME_REGEX = re.compile(r"^[a-zA-Z0-9_./-]+\.[a-zA-Z0-9]+$")
+
+
+def is_valid_filename(filename: str) -> bool:
+    """Checks if a string is a plausible filename."""
+    if not filename or len(filename) > 255:
+        return False
+    # Check for obvious sentence-like structures or invalid characters
+    if " " in filename.strip() or "\n" in filename or ":" in filename:
+        return False
+    # A simple check for file extension
+    if "." not in filename.split("/")[-1]:
+        return False
+    return True
 
 
 class ImplementerAgent:
@@ -47,87 +63,114 @@ class ImplementerAgent:
                     ]
                 )
 
-        system_prompt = f"""You are an expert software developer. Implement the following task in the specified tech stack.
+        system_prompt = f"""You are an expert, non-conversational file-generating AI. Your SOLE purpose is to generate the full content of a single file based on a given task.
+
 Tech Stack: {tech_stack_str}
-Project Context:
-{project_context}
+Project Context: {project_context}
 
-Relevant Code from Project:
-{relevant_code}
+**CRITICAL INSTRUCTIONS:**
+1.  Your entire response will be for a SINGLE file.
+2.  The VERY FIRST line of your output MUST be the relative file path (e.g., `src/components/Button.js`).
+3.  The SECOND line MUST begin the raw code for that file.
+4.  DO NOT include any other text, explanations, apologies, or conversational filler.
+5.  ABSOLUTELY NO markdown formatting like ```python or ``` around the code.
+6.  If you cannot complete the task or it is ambiguous, respond with only the single word: ERROR
 
-Instructions:
-1. Generate ONLY the code for the task.
-2. The output should be for a SINGLE file.
-3. Start your response with the filename on the VERY FIRST line (e.g., `my_new_file.py`).
-4. On the NEXT line, begin the code content for that file.
-5. Do NOT include any other explanations, markdown, or extra text. Just the filename and then the code.
-Example:
-src/utils/helper.py
-def my_helper_function():
-    pass
+**CORRECT Response Format Example:**
+src/utils/helpers.py
+def new_helper_function(param1, param2):
+    # function logic here
+    return param1 + param2
+
+**INCORRECT Response Format Example (DO NOT DO THIS):**
+Of course! Here is the file you requested:
+```python
+src/utils/helpers.py
+def new_helper_function(param1, param2):
+    # function logic here
+    return param1 + param2
+
 """
+
         model_name = settings.IMPLEMENTER_MODEL
         llm_response_dict = await self.llm_client.call_openrouter(
             model_name=model_name, prompt=todo_item, system_prompt=system_prompt
         )
-        code_response = llm_response_dict.get("text_response", "")
-        filename = None
-        code_content = ""
-        if code_response and "\n" in code_response:
-            try:
-                lines = code_response.split("\n", 1)
-                filename = lines[0].strip()
-                if len(lines) > 1:
-                    code_content = lines[1]
-                else:  # Only filename was provided
-                    code_content = ""
-            except Exception as e:
-                logger.error(f"ImplementerAgent: Error parsing filename and code: {e}")
-                # Fallback if parsing fails, or return an error structure
-                filename = "error_parsing_filename.txt"
-                code_content = code_response  # return raw response as code
-        elif code_response:  # No newline, assume it's all code or a filename only
-            # This simple logic assumes if no newline, it might be a filename or just code.
-            # For simplicity for 4B model, let's assume it's code without a clear filename.
-            # A more robust solution would handle this better.
-            filename = "unknown_file.txt"  # Default filename if only one line.
-            code_content = code_response
+        code_response = llm_response_dict.get("text_response", "").strip()
+
+        # --- START OF FIX ---
+        # 2. Defensive parsing and validation of the LLM response
+        if not code_response or code_response == "ERROR":
+            logger.error(
+                f"ImplementerAgent: LLM returned an error or empty response for task: {todo_item}"
+            )
+            return {
+                "error": "The AI model could not generate a file for this task. The task may be too ambiguous or complex. Please try refining the TODO list.",
+                "llm_call_details": llm_response_dict,
+            }
+
+        # Parse the response
+        if "\n" not in code_response:
+            # If there's no newline, it's likely a malformed response (e.g., just a filename, or just conversation)
+            logger.warning(
+                f"ImplementerAgent: LLM response has no newline, likely malformed. Response: '{code_response[:100]}...'"
+            )
+            return {
+                "error": "AI returned a malformed response (not a file). Please try the task again or refine the plan.",
+                "llm_call_details": llm_response_dict,
+            }
+
+        lines = code_response.split("\n", 1)
+        filename = lines[0].strip()
+        code_content = lines[1] if len(lines) > 1 else ""
+
+        # Validate the parsed filename
+        if not is_valid_filename(filename):
+            logger.error(
+                f"ImplementerAgent: LLM returned an invalid filename: '{filename}'. Full response: '{code_response[:200]}...'"
+            )
+            return {
+                "error": f"The AI model generated an invalid file path: '{filename}'. This often happens if the AI becomes conversational. Please try the task again.",
+                "llm_call_details": llm_response_dict,
+            }
 
         return {
             "filename": filename,
             "code": code_content.strip(),
             "llm_call_details": llm_response_dict,
         }
+        # --- END OF FIX ---
 
-    async def apply_changes_with_aider(
-        self, project_root_path: str, files_to_edit: list[str], instruction: str
-    ) -> Dict[str, str]:
-        logger.info(f"Applying changes to {files_to_edit} with Aider: {instruction}")
 
-        # Command structure: aider --yes --message "instruction" file1 file2 ...
-        command = ["aider", "--yes", "--message", instruction] + files_to_edit
+async def apply_changes_with_aider(
+    self, project_root_path: str, files_to_edit: list[str], instruction: str
+) -> Dict[str, str]:
+    logger.info(f"Applying changes to {files_to_edit} with Aider: {instruction}")
 
-        try:
-            process = await asyncio.create_subprocess_exec(
-                *command,
-                cwd=project_root_path,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+    # Command structure: aider --yes --message "instruction" file1 file2 ...
+    command = ["aider", "--yes", "--message", instruction] + files_to_edit
 
-            stdout, stderr = await process.communicate()
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            cwd=project_root_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
 
-            if process.returncode == 0:
-                logger.info(f"Aider command successful. Output: {stdout.decode()}")
-                return {"status": "success", "output": stdout.decode()}
-            else:
-                logger.error(f"Aider command failed. Error: {stderr.decode()}")
-                return {"status": "error", "output": stderr.decode()}
-        except FileNotFoundError:
-            logger.error(
-                "Aider command not found. Is 'aider-chat' installed in the environment?"
-            )
-            return {"status": "error", "output": "Aider command not found."}
-        except Exception as e:
-            logger.error(f"Exception running Aider: {e}", exc_info=True)
-            return {"status": "error", "output": str(e)}
+        stdout, stderr = await process.communicate()
+
+        if process.returncode == 0:
+            logger.info(f"Aider command successful. Output: {stdout.decode()}")
+            return {"status": "success", "output": stdout.decode()}
+        else:
+            logger.error(f"Aider command failed. Error: {stderr.decode()}")
+            return {"status": "error", "output": stderr.decode()}
+    except FileNotFoundError:
+        logger.error(
+            "Aider command not found. Is 'aider-chat' installed in the environment?"
+        )
+        return {"status": "error", "output": "Aider command not found."}
+    except Exception as e:
+        logger.error(f"Exception running Aider: {e}", exc_info=True)
+        return {"status": "error", "output": str(e)}
