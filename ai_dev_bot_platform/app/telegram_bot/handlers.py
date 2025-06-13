@@ -4,7 +4,7 @@ from telegram.ext import ContextTypes, CommandHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal # For direct session if not using DI from framework
-from app.services import user_service
+from app.services.user_service import UserService # CORRECTED IMPORT
 from app.schemas.user import UserCreate
 from app.services.payment_service import PaymentService
 from app.core.config import settings
@@ -17,6 +17,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     db: Session = SessionLocal() # Manual session management for handlers
     try:
+        user_service = UserService() # ADDED: Instantiate the service
         user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
         if not user_db:
             user_in = UserCreate(telegram_user_id=user_tg.id, username=user_tg.username)
@@ -54,6 +55,7 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     db: Session = SessionLocal()
     try:
+        user_service = UserService() # ADDED: Instantiate the service
         user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
         if not user_db:
             await update.message.reply_text("Please use /start first to initialize your account.")
@@ -86,6 +88,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     db: Session = SessionLocal()
     try:
+        user_service = UserService() # ADDED: Instantiate the service
         user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
         if not user_db: # Should not happen if /start is always first, but good check
             await update.message.reply_text("Please use /start first to initialize your account.")
