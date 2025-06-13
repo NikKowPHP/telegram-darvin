@@ -128,16 +128,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             )
             return
 
-        # Send an immediate acknowledgement for long-running tasks
-        if is_new_project_description(text):
-            await update.message.reply_text(
-                "Thanks! I'm analyzing your project requirements and creating an initial plan. This might take a moment..."
-            )
-        elif text.lower().strip().startswith("implement task"):
-            await update.message.reply_text(
-                "Got it. Working on that task now. This may take a minute..."
-            )
-
         from app.services.orchestrator_service import get_orchestrator
 
         orchestrator = get_orchestrator(db)

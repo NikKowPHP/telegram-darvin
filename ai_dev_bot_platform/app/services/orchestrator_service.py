@@ -19,6 +19,8 @@ from app.services.billing_service import (
 )
 from app.services.user_service import UserService
 from app.services.storage_service import StorageService
+from app.services.task_queue import TaskQueue
+from app.services.notification_service import NotificationService
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.core.config import settings
 from decimal import Decimal
@@ -44,24 +46,26 @@ class ModelOrchestrator:
         self.credit_transaction_service = CreditTransactionService()
         self.storage_service = StorageService()
         self.user_service = UserService()
+        self.task_queue = TaskQueue()
+        self.notifier = NotificationService()
+
+    def _is_long_running(self, user_input: str) -> bool:
+        """Determine if a request should be processed asynchronously"""
+        return self._is_new_project(user_input) or user_input.lower().startswith("implement task")
 
     async def process_user_request(self, user: User, user_input: str) -> dict:
         logger.info(
             f"Orchestrator processing request for user {user.telegram_user_id}: '{user_input}'"
         )
 
-        # Check if this is a new project description
-        if self._is_new_project(user_input):
-            return await self._handle_new_project(user, user_input)
-
-        # Check if this is a command to implement a TODO item
-        todo_match = re.match(
-            r"implement task (\d+) of project (.+)", user_input, re.IGNORECASE
-        )
-        if todo_match:
-            task_index = int(todo_match.group(1))
-            project_id = todo_match.group(2)
-            return await self._handle_implement_task(user, project_id, task_index)
+        if self._is_long_running(user_input):
+            await self.task_queue.add_task(
+                lambda: self._handle_task_async(user, user_input)
+            )
+            return {
+                "text": "Your request has been queued. You'll receive updates when processing starts.",
+                "zip_buffer": None
+            }
 
         # Check if this is a command to refine a file
         refine_match = re.match(
@@ -87,6 +91,37 @@ class ModelOrchestrator:
             "text": "I'm not sure how to handle that yet. Try describing a project or 'implement task X of project Y'",
             "zip_buffer": None,
         }
+
+    async def _handle_task_async(self, user: User, user_input: str):
+        """Process a task asynchronously from the queue"""
+        try:
+            await self.notifier.send_update(user.telegram_user_id, "🚀 Processing started...")
+
+            result = None
+            # Check if this is a new project description
+            if self._is_new_project(user_input):
+                result = await self._handle_new_project(user, user_input)
+            else:
+                # Check if this is a command to implement a TODO item
+                todo_match = re.match(
+                    r"implement task (\d+) of project (.+)", user_input, re.IGNORECASE
+                )
+                if todo_match:
+                    task_index = int(todo_match.group(1))
+                    project_id = todo_match.group(2)
+                    result = await self._handle_implement_task(user, project_id, task_index)
+
+            if result:
+                await self.notifier.send_update(user.telegram_user_id, "✅ Processing completed!")
+                return result
+
+        except Exception as e:
+            logger.error(f"Error processing async task: {e}", exc_info=True)
+            await self.notifier.send_update(
+                user.telegram_user_id,
+                f"❌ Processing failed: {str(e)}"
+            )
+            raise
 
     def _is_new_project(self, user_input: str) -> bool:
         """Heuristic to detect new project descriptions"""
