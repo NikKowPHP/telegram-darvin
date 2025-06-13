@@ -24,7 +24,7 @@ Project Requirements:
 Output format should be structured clearly with headings for each section.
 Start the TODO list with '### Implementation TODO List'"""
 
-        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name=settings.ARCHITECT_MODEL)
+        llm_response_dict = await self.llm_client.call_llm(prompt=prompt, model_name=settings.ARCHITECT_MODEL) 
         response_text = llm_response_dict.get("text_response", "")
         
         if response_text.startswith("Error:"):
@@ -34,7 +34,7 @@ Start the TODO list with '### Implementation TODO List'"""
         try:
             doc_content = response_text
             todo_list_md = ""
-            tech_stack_str = "Tech stack not extracted."
+            tech_stack = {} 
 
             if "### Implementation TODO List" in response_text:
                 parts = response_text.split("### Implementation TODO List", 1)
@@ -43,7 +43,7 @@ Start the TODO list with '### Implementation TODO List'"""
             
             return {
                 "documentation": doc_content,
-                "tech_stack_suggestion": tech_stack_str,
+                "tech_stack_suggestion": tech_stack, # NEW: Return the dict
                 "todo_list_markdown": todo_list_md,
                 "llm_call_details": llm_response_dict
             }
@@ -67,7 +67,7 @@ Does this code correctly implement the task according to the project context and
 Provide feedback: 'APPROVED' or 'REJECTED: [detailed reasons and suggestions]'.
 If REJECTED, suggest updates to the code or the TODO list."""
 
-        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name=settings.VERIFICATION_MODEL)
+        llm_response_dict = await self.llm_client.call_llm(prompt=prompt, model_name=settings.VERIFICATION_MODEL)
         response_text = llm_response_dict.get("text_response", "")
         
         if response_text.startswith("Error:"):
@@ -99,7 +99,7 @@ Additional Context:
 
 Use proper Markdown formatting with clear section headers and organization."""
         
-        llm_response_dict = await self.llm_client.call_gemini(prompt, model_name=settings.ARCHITECT_MODEL)
+        llm_response_dict = await self.llm_client.call_llm(prompt=prompt, model_name=settings.ARCHITECT_MODEL) 
         response_text = llm_response_dict.get("text_response", "")
         
         if response_text.startswith("Error:"):

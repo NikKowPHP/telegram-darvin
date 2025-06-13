@@ -117,7 +117,7 @@ class ModelOrchestrator:
                 update_data = ProjectUpdate(
                     status="planning",
                     current_todo_markdown=plan_result.get("todo_list_markdown", ""),
-                    tech_stack=plan_result.get("tech_stack_suggestion", {})
+                    tech_stack=plan_result.get("tech_stack_suggestion", {}) # Get the suggestion, default to {}
                 )
                 self.project_service.update_project(self.db, project.id, update_data)
             except Exception as e:
