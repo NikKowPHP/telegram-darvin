@@ -79,26 +79,32 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         db.close()
 
 # Updated message handler with orchestrator integration
+# In app/telegram_bot/handlers.py
+
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
     text = update.message.text
   
-    print("!!!!!!!!!!!!!! MESSAGE HANDLER WAS CALLED !!!!!!!!!!!!!!")
     logger.info(f"Received message from {user_tg.id}: {text}")
 
     db: Session = SessionLocal()
     try:
-        user_service = UserService() # ADDED: Instantiate the service
+        user_service = UserService()
         user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
-        if not user_db: # Should not happen if /start is always first, but good check
+        if not user_db:
             await update.message.reply_text("Please use /start first to initialize your account.")
             return
 
-        # Check credits (basic placeholder)
         if user_db.credit_balance <= 0:
-            await update.message.reply_text("You have insufficient credits. Please /credits to add more. (TODO)")
+            await update.message.reply_text("You have insufficient credits. Please /credits to add more.")
             return
 
+        # --- NEW: Send an immediate acknowledgement ---
+        # If the user is asking to implement a task, send a "working on it" message.
+        if text.lower().strip().startswith("implement task"):
+            await update.message.reply_text("Got it. Working on that task now. This may take a minute...")
+
+        # Now, run the potentially long process
         from app.services.orchestrator_service import get_orchestrator
         orchestrator = get_orchestrator(db)
         response_data = await orchestrator.process_user_request(user=user_db, user_input=text)
@@ -107,7 +113,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         zip_buffer = response_data.get('zip_buffer')
         
         if response_text:
-            await update.message.reply_text(response_text)
+            # Instead of `reply_text`, use `send_message` to send a new message.
+            # This avoids issues if the user sends other messages in between.
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
 
         if zip_buffer:
             project_title = response_data.get('project_title', 'project')
@@ -120,7 +128,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     except Exception as e:
         logger.error(f"Error in message_handler for user {user_tg.id}: {e}", exc_info=True)
-        await update.message.reply_text("Sorry, an error occurred while processing your request.")
+        # Check if the message has been replied to already. If not, send an error message.
+        if not context.bot_data.get(f'replied_to_{update.message.message_id}', False):
+            await update.message.reply_text("Sorry, an error occurred while processing your request.")
     finally:
         db.close()
 

@@ -16,7 +16,7 @@ class ArchitectAgent:
 generate:
 1. A brief technical overview/architecture document (Markdown)
 2. A preliminary technology stack suggestion (list form)
-3. A detailed TODO list in Markdown format for a small LLM (4B model) to implement the project
+3. A detailed TODO list in Markdown task list format (using '- [ ]' for each item) for a small LLM (4B model) to implement the project.
 
 Project Requirements:
 {project_requirements}
