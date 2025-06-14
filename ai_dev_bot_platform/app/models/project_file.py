@@ -5,6 +5,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 
+
 class ProjectFile(Base):
     __tablename__ = "project_files"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

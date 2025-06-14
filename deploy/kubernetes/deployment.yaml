@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-dev-bot-platform
+  labels:
+    app: ai-dev-bot-platform
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ai-dev-bot-platform
+  template:
+    metadata:
+      labels:
+        app: ai-dev-bot-platform
+    spec:
+      containers:
+      - name: app
+        image: ai-dev-bot-platform:latest
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: ai-dev-bot-platform-config
+        - secretRef:
+            name: ai-dev-bot-platform-secrets
+        resources:
+          limits:
+            cpu: "2"
+            memory: 1Gi
+          requests:
+            cpu: "1"
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10

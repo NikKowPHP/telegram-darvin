@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-dev-bot-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-dev-bot-app
+  template:
+    metadata:
+      labels:
+        app: ai-dev-bot-app
+    spec:
+      containers:
+      - name: ai-dev-bot-app
+        image: your-repo/ai-dev-bot-app:latest
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 45
+          periodSeconds: 30
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-dev-bot-app-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: ai-dev-bot-app

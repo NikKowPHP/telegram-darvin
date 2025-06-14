@@ -3,13 +3,16 @@ from typing import Optional, Dict, Any
 import uuid
 import datetime
 
+
 class ProjectBase(BaseModel):
     title: Optional[str] = "Untitled Project"
     description: Optional[str] = None
     tech_stack: Optional[Dict[str, Any]] = None
 
+
 class ProjectCreate(ProjectBase):
-    user_id: int # Must be provided by system
+    user_id: int  # Must be provided by system
+
 
 class ProjectUpdate(BaseModel):
     title: Optional[str] = None
@@ -18,6 +21,7 @@ class ProjectUpdate(BaseModel):
     tech_stack: Optional[Dict[str, Any]] = None
     current_todo_markdown: Optional[str] = None
     completed_at: Optional[datetime.datetime] = None
+
 
 class ProjectInDBBase(ProjectBase):
     id: uuid.UUID
@@ -29,6 +33,7 @@ class ProjectInDBBase(ProjectBase):
 
     class Config:
         from_attributes = True
+
 
 class Project(ProjectInDBBase):
     pass

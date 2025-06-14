@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-dev-bot-platform-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: ai-dev-bot.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-dev-bot-platform-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - ai-dev-bot.example.com
+    secretName: ai-dev-bot-tls

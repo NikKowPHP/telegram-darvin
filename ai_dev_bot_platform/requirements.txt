@@ -15,4 +15,12 @@ python-dotenv # For local .env file loading
 # For Codebase Indexing
 sentence-transformers
 faiss-cpu
-numpy
+numpy==1.26.4
+alembic
+pytest
+pytest-mock
+aider-chat
+stripe
+supabase
+email-validator
+prometheus-client
