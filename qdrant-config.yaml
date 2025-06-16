@@ -1,0 +1,7 @@
+# This configuration file forces Qdrant to save all data and snapshots
+# to the /qdrant/storage directory, which we have mapped to a persistent volume.
+log_level: INFO
+storage:
+  storage_path: /qdrant/storage/
+  snapshots_path: /qdrant/storage/snapshots/
+  on_disk_payload: true # Ensures payload data is also written to disk

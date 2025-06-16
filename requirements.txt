@@ -1,0 +1,4 @@
+-e .
+qdrant-client
+sentence-transformers
+tree-sitter
