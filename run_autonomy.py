@@ -14,7 +14,7 @@ def run_orchestrator():
     """Execute the Orchestrator agent using the Roo CLI"""
     try:
         result = subprocess.run(
-            ['./ai_dev_bot_platform/venv/bin/roo', '-m', 'orchestrator'],
+            ['./ai_dev_bot极_platform/venv/bin/python', '-m', 'src.code_context_tool.cli', 'orchestrator'],
             capture_output=True,
             text=True,
             check=True

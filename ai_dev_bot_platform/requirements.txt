@@ -24,3 +24,4 @@ stripe
 supabase
 email-validator
 prometheus-client
+qdrant-client

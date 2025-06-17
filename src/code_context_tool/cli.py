@@ -1,4 +1,4 @@
-# src/code_context_tool/cli.py
+# src/code_context _tool/cli.py
 import argparse
 import json
 import sys
@@ -56,7 +56,7 @@ def main():
         'query',
         help='Query the codebase with a natural language text search.'
     )
-    query_parser.add_argument(
+    query _parser.add_argument(
         'query_text',
         help='The natural language query to search for.'
     )
@@ -65,6 +65,12 @@ def main():
         type=int,
         default=5,
         help='Number of results to return (default: 5).'
+    )
+
+    # --- 'orchestrator' command ---
+    orchestrator_parser = subparsers.add_parser(
+        'orchestrator',
+        help='Run the Orchestrator agent'
     )
 
     args = parser.parse_args()
@@ -105,7 +111,7 @@ def main():
                 for file_path in args.files:
                     db.update_file(file_path)
                 console.print(f"[green]✅ Update process completed for {len(args.files)} file(s).[/green]")
-
+            
             elif args.command == 'query':
                 results = db.query(args.query_text, args.limit)
                 if not results:
@@ -133,6 +139,10 @@ def main():
                         start_line=hit['start_line']
                     )
                     console.print(Panel(code_snippet, title=panel_title, border_style="blue"))
+            
+            elif args.command == 'orchestrator':
+                from ai_dev_bot_platform.app.services.orchestrator_service import orchestrate
+                orchestrate()
 
     except qdrant_client.http.exceptions.ResponseHandlingException as e:
         console.print(f"[bold red]Qdrant Error:[/bold red] Could not connect to Qdrant at the configured URL.")
