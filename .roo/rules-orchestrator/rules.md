@@ -12,7 +12,7 @@ Your mission is to perform a single, definitive analysis of the repository state
 
 ### **Step 2: System Sanity & Loop Detection**
 1.  Run `mkdir -p logs`.
-2.  Check CCT sanity (`cct index` if needed).
+2.  Check codebase index sanity (`roo codebase:index` if needed).
 3.  Analyze `log_file` for loops. If a loop is detected, escalate to `<mode>system-supervisor</mode>`. **Terminate here.**
 
 ### **Step 3: State-Based Handoff (Strict Priority Order)**
