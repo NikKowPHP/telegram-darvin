@@ -1,7 +1,7 @@
 {
   "project_root": "./ai_dev_bot_platform",
   "paths": {
-    "log极_file": "logs/system_events.log",
+    "log_file": "logs/system_events.log",
     "cct_config": ".cct_config.json",
     "work_items_dir": "work_items/",
     "active_plan_file": "todos/dev_todo_phase_1.md",
