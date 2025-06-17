@@ -135,6 +135,32 @@ docker-compose exec app uvicorn main:app --reload
 
 Go to Telegram, find the bot you created with BotFather, and send the `/start` command. The application running in your terminal should log the interaction, and the bot should reply. You're all set!
 
+### 9. Running the Autonomous Loop
+
+To start the development workflow:
+```bash
+python run_autonomy.py
+```
+
+The system will continuously run the Orchestrator agent to manage development tasks.
+
+### 10. Installing Roo CLI Dependencies
+
+The autonomous loop requires the Roo CLI to be installed. If you encounter errors about the `roo` command not being found, follow these steps:
+
+1. **Install Roo CLI**:
+   ```bash
+   cd ai_dev_bot_platform
+   pip install -r requirements.txt
+   ```
+
+2. **Verify Installation**:
+   ```bash
+   ./venv/bin/roo -h
+   ```
+
+If you still encounter issues, ensure that the virtual environment is activated and that the `roo` command is accessible from the project root.
+
 ### Testing Stripe Webhooks Locally
  
 To test the full payment flow with Stripe, you need a way for Stripe's servers to send events to your local machine. We use `ngrok` for this.
