@@ -38,12 +38,20 @@ You will now execute the plan from `current_task.md`. The workflow depends entir
 3.  **Skip all testing steps.** You will not write or run unit/integration tests for this component.
 4.  Proceed to **Step 3: Finalize**.
 
-### **Step 3: Finalize and Commit**
+### **Step 3: Finalize and Commit (Success Only)**
 1.  Mark the original objective in the `active_plan_file` as complete `[x]`.
 2.  Delete `current_task.md`.
 3.  Commit all changes to the current branch: `cd [project_root] && git add . && git commit -m "feat: Complete task: [Task Description]"`.
 4.  Signal completion by creating the `commit_complete` signal file.
 5.  Handoff to `<mode>orchestrator</mode>`.
 
-### **Step 4: Failure & Escalation Protocol**
-If you encounter an unrecoverable error in any workflow, create a `NEEDS_ASSISTANCE.md` file with error details and then hand off to the orchestrator.
+### **Step 4: Failure & Escalation Protocol (CRITICAL)**
+If you encounter an unrecoverable error at any point, you MUST immediately HALT the current workflow.
+1.  **DO NOT** proceed to Step 3.
+2.  **DO NOT** mark the task as complete.
+3.  **DO NOT** commit any changes.
+4.  **DO NOT** use the `attempt_completion` tool.
+5.  Create a file named `NEEDS_ASSISTANCE.md`.
+6.  Write a detailed summary of the error and the steps you took into this file.
+7.  Announce & Log: "Encountered unrecoverable error. Creating distress signal and handing off."
+8.  Handoff to `<mode>orchestrator</mode>`. This is your only action.

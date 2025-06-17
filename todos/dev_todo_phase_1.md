@@ -1,0 +1,20 @@
+# Phase 1: Establish the Core Autonomous Loop & Project Manifest
+
+- [x] (LOGIC) Create `run_autonomy.py` with core loop functionality:
+    - Implement infinite `while True:` loop
+    - Add Orchestrator execution command: `subprocess.run(['roo', '-m', 'orchestrator'])`
+    - Include 10-second delay between iterations
+
+- [ ] (LOGIC) Implement Architect's "Blueprint Mode":
+    - Add manifest creation logic when `project_manifest.json` doesn't exist
+    - Create `logs/system_events.log` file
+    - Structure manifest according to Architect rules
+
+- [ ] (LOGIC) Add error handling in core loop:
+    - Implement try/except blocks for process execution
+    - Add logging for system events and errors
+    - Ensure graceful recovery from failures
+
+- [ ] (LOGIC) Update Orchestrator decision tree:
+    - Implement Project Init path when manifest doesn't exist
+    - Add handoff to Architect for blueprint mode
