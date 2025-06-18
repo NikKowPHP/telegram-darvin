@@ -461,6 +461,22 @@ class ModelOrchestrator:
                     ),
                 )
 
+                # Trigger Tech Lead after commit complete
+                try:
+                    result = subprocess.run(
+                        ['roo', '-m', 'tech-lead', '--command', 'review_commit'],
+                        capture_output=True,
+                        text=True,
+                        check=True
+                    )
+                    logger.info(f"Tech Lead triggered successfully:\n{result.stdout}")
+                except subprocess.CalledProcessError as e:
+                    logger.error(f"Tech Lead trigger failed with exit code {e.returncode}:\n{e.stderr}")
+                except FileNotFoundError as e:
+                    logger.error(f"Command not found: {e}")
+                except Exception as e:
+                    logger.error(f"Unexpected error triggering Tech Lead: {e}")
+
                 return {
                     "text": (
                         f"Task '{todo_item}' implemented AND VERIFIED!\n"
