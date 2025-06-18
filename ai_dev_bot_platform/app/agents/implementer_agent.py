@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import re
+import subprocess
 from app.utils.llm_client import LLMClient
 from typing import Dict, Any
 from app.core.config import settings
@@ -46,9 +47,15 @@ class ImplementerAgent:
 
         # Step 4: Commit changes
         logger.info("Committing changes...")
-        commit_message = f"feat: {task_description}"
-        subprocess.run(["git", "add", "."], cwd=project_root, check=True)
-        subprocess.run(["git", "commit", "-m", commit_message], cwd=project_root, check=True)
+        commit_message = f"feat: Complete task: {task_description}"
+        try:
+            # Add all changes to staging
+            subprocess.run(["git", "add", "."], cwd=project_root, check=True)
+            # Commit with the formatted message
+            subprocess.run(["git", "commit", "-m", commit_message], cwd=project_root, check=True)
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Git command failed: {e}")
+            return {"status": "error", "task": task_description, "error": str(e)}
 
         # Step 5: Create COMMIT_COMPLETE.md signal file
         with open(f"{project_root}/COMMIT_COMPLETE.md", "w") as f:
