@@ -34,10 +34,10 @@ if ! command -v python &> /dev/null; then
     exit 1
 fi
 
-# Install missing dependencies if requirements.txt exists
-if [ -f "requirements.txt" ]; then
+# Install missing dependencies from ai_dev_bot_platform/requirements.txt
+if [ -f "ai_dev_bot_platform/requirements.txt" ]; then
     echo "Installing dependencies..."
-    pip install -r requirements.txt
+    pip install -r ai_dev_bot_platform/requirements.txt
     if [ $? -ne 0 ]; then
         echo "Error: Failed to install dependencies. Exiting."
         exit 1

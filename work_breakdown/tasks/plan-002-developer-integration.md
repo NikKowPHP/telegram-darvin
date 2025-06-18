@@ -9,13 +9,13 @@
     - Mark task complete in active plan
     - Commit changes and create `COMMIT_COMPLETE.md`
 
-- [ ] (LOGIC) Implement version control commands:
+- [x] (LOGIC) Implement version control commands:
     - Add `git` commands for staging and committing
     - Commit message: "feat: Complete task: [Task Description]"
 
-- [ ] (LOGIC) Refactor existing ImplementerAgent code:
+- [x] (LOGIC) Refactor existing ImplementerAgent code:
     - Replace relevant parts with new TDD cycle logic
     - Remove obsolete functionality
 
-- [ ] (LOGIC) Update Orchestrator to handle Developer handoff:
+- [x] (LOGIC) Update Orchestrator to handle Developer handoff:
     - Add logic to trigger Tech Lead after commit complete

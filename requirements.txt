@@ -1,4 +1,4 @@
--e .
+-e ./ai_dev_bot_platform
 qdrant-client
 sentence-transformers
 tree-sitter

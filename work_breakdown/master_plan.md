@@ -4,18 +4,37 @@
 
 ---
 
-- [ ] **Phase 1: Establish the Core Autonomous Loop & Project Manifest**
-    - **Goal:** Replace the current reactive, Telegram-driven execution model with a persistent, proactive loop that runs the Roo `Orchestrator` agent. Implement the system's foundational state file, `project_manifest.json`.
+- [ ] **Phase 1: Establish Core Autonomous Loop & Project Manifest**
+    - **Goal:** Replace reactive Telegram-driven model with proactive Orchestrator agent loop
+    - Implement Orchestrator agent state machine
+    - Design and implement `project_manifest.json` schema
+    - Create signal file system (`PLANNING_COMPLETE.md`, `IMPLEMENTATION_COMPLETE.md`)
     - **(Creates `work_items/item-001-core-loop.md`)**
 
-- [ ] **Phase 2: Integrate TDD and Version Control into the Developer Agent**
-    - **Goal:** Empower the `Developer` agent to execute its TDD cycle, commit code to version control, and signal completion as per its rules, bridging the gap between the current Python `ImplementerAgent` logic and the required autonomous behavior.
-    - **(Creates `work_items/item-002-developer-integration.md`)**
+- [ ] **Phase 2: Implement Monetization & Core Services**
+    - **Goal:** Build credit system and foundational services
+    - Implement credit-based monetization system
+    - Create database schema implementation (users, projects, api_keys, etc.)
+    - Build codebase indexing service
+    - **(Creates `work_items/item-002-monetization-services.md`)**
 
-- [ ] **Phase 3: Implement the Full Code Review and QA Cycle**
-    - **Goal:** Activate the `TechLead` and `QAEngineer` agents by implementing their core review logic (static analysis, testing) and state-based signaling (`TECH_LEAD_APPROVED.md`, `NEEDS_REFACTOR.md`).
-    - **(Creates `work_items/item-003-review-cycle.md`)**
+- [ ] **Phase 3: Integrate TDD and Developer Workflow**
+    - **Goal:** Enable Developer agent TDD cycle and version control
+    - Implement TDD workflow for Implementer agent
+    - Add Git integration for autonomous commits
+    - Create automated signaling for implementation milestones
+    - **(Creates `work_items/item-003-developer-workflow.md`)**
 
-- [ ] **Phase 4: Finalize Autonomy and Simplify the Telegram Interface**
-    - **Goal:** Deprecate the complex logic in the current `ModelOrchestrator` and `handlers.py`. The Telegram bot will be simplified into a "dumb terminal" whose only job is to create new work items, thereby kicking off the autonomous factory.
-    - **(Creates `work_items/item-004-interface-simplification.md`)**
+- [ ] **Phase 4: Implement Review Cycle & QA Automation**
+    - **Goal:** Activate TechLead and QAEngineer agents
+    - Build static analysis and testing frameworks
+    - Implement automated review signaling (`TECH_LEAD_APPROVED.md`, `QA_APPROVED.md`)
+    - Create README generation system
+    - **(Creates `work_items/item-004-review-qa.md`)**
+
+- [ ] **Phase 5: Finalize Autonomy & Verification**
+    - **Goal:** Complete autonomous system and address audit gaps
+    - Simplify Telegram interface to work-item initiator
+    - Implement comprehensive audit verification
+    - Resolve all specification compliance gaps
+    - **(Creates `work_items/item-005-audit-verification.md`)**
