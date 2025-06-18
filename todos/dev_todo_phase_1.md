@@ -15,6 +15,6 @@
     - Add logging for system events and errors
     - Ensure graceful recovery from failures
 
-- [ ] (LOGIC) Update Orchestrator decision tree:
+- [x] (LOGIC) Update Orchestrator decision tree:
     - Implement Project Init path when manifest doesn't exist
     - Add handoff to Architect for blueprint mode

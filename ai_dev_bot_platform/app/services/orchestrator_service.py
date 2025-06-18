@@ -1,6 +1,8 @@
 import logging
 import re
 import uuid
+import os
+import subprocess
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.schemas.user import User
@@ -27,9 +29,7 @@ from decimal import Decimal
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import json
 
-
 logger = logging.getLogger(__name__)
-
 
 class ModelOrchestrator:
     def __init__(self, db: Session):
@@ -57,6 +57,40 @@ class ModelOrchestrator:
         logger.info(
             f"Orchestrator processing request for user {user.telegram_user_id}: '{user_input}'"
         )
+
+        # Check if project manifest exists, if not handoff to Architect for blueprint mode
+        if not os.path.exists('project_manifest.json'):
+            logger.info("Project manifest not found. Initializing blueprint mode...")
+            try:
+                result = subprocess.run(
+                    ['roo', '-m', 'architect', '--command', 'create_blueprint'],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+                logger.info(f"Architect blueprint creation successful:\n{result.stdout}")
+                return {
+                    "text": "Project manifest not found. Initialized blueprint mode and handed off to Architect.",
+                    "zip_buffer": None
+                }
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Architect blueprint creation failed with exit code {e.returncode}:\n{e.stderr}")
+                return {
+                    "text": f"Failed to initialize blueprint mode: {e.stderr}",
+                    "zip_buffer": None
+                }
+            except FileNotFoundError as e:
+                logger.error(f"Command not found: {e}")
+                return {
+                    "text": "Command not found. Please ensure the Architect agent is available.",
+                    "zip_buffer": None
+                }
+            except Exception as e:
+                logger.error(f"Unexpected error during Architect handoff: {e}")
+                return {
+                    "text": f"Unexpected error: {e}",
+                    "zip_buffer": None
+                }
 
         if self._is_long_running(user_input):
             await self.task_queue.add_task(
@@ -665,7 +699,6 @@ class ModelOrchestrator:
         logger.info(
             f"Deducted {credits_to_deduct} credits from user {user.id}. New balance: {updated_user.credit_balance}"
         )
-
 
 # Function to get orchestrator instance
 def get_orchestrator(db: Session) -> ModelOrchestrator:
