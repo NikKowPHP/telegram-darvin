@@ -1,5 +1,18 @@
 #!/bin/bash
-cd ai_dev_bot_platform
-source venv/bin/activate
-pip install -r requirements.txt --force-reinstall
-pytest --disable-warnings
+# Run test suite and generate audit report
+
+# Exit on any error
+set -e
+
+# Activate virtual environment
+source .venv/bin/activate
+
+# Run tests
+echo "Running test suite..."
+pytest --alluredir=allure-results
+
+# Generate audit report
+echo "Generating audit report..."
+allure generate allure-results -o allure-report --clean
+
+echo "Audit process complete. Report available in allure-report directory."
