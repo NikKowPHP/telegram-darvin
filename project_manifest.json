@@ -4,7 +4,7 @@
     "log_file": "logs/system_events.log",
     "cct_config": ".cct_config.json",
     "work_items_dir": "work_items/",
-    "active_plan_file": "todos/dev_todo_phase_1.md",
+    "active_plan_file": "todos/dev_todo_phase_2.md",
     "signal_files": {
       "needs_assistance": "NEEDS_ASSISTANCE.md",
       "needs_refactor": "NEEDS_REFACTOR.md",

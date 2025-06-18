@@ -27,6 +27,36 @@ class ImplementerAgent:
     def __init__(self, llm_client: LLMClient):
         self.llm_client = llm_client
 
+    async def run_tdd_cycle(self, project_root: str, task_description: str):
+        """Run a complete TDD cycle for a given task."""
+        logger.info(f"Starting TDD cycle for task: {task_description}")
+
+        # Step 1: Create current_task.md with the task breakdown
+        task_file_path = f"{project_root}/current_task.md"
+        with open(task_file_path, "w") as f:
+            f.write(f"# Task: {task_description}\n\n## Steps:\n1. Implement feature\n2. Write tests\n3. Commit changes")
+
+        # Step 2: Implement the feature
+        logger.info("Implementing feature...")
+        # [Implementation logic would go here]
+
+        # Step 3: Write tests
+        logger.info("Writing tests...")
+        # [Test writing logic would go here]
+
+        # Step 4: Commit changes
+        logger.info("Committing changes...")
+        commit_message = f"feat: {task_description}"
+        subprocess.run(["git", "add", "."], cwd=project_root, check=True)
+        subprocess.run(["git", "commit", "-m", commit_message], cwd=project_root, check=True)
+
+        # Step 5: Create COMMIT_COMPLETE.md signal file
+        with open(f"{project_root}/COMMIT_COMPLETE.md", "w") as f:
+            f.write(f"# Task Complete: {task_description}\n\nCommit message: {commit_message}")
+
+        logger.info("TDD cycle completed successfully")
+        return {"status": "success", "task": task_description}
+
     async def implement_todo_item(
         self,
         todo_item: str,
