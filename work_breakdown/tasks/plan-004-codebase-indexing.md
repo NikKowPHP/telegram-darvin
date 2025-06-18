@@ -4,7 +4,7 @@
 Develop searchable code representation service
 
 ## Tasks
-- (LOGIC) Design code parsing and indexing system
-- (LOGIC) Implement code analysis pipeline
-- (LOGIC) Create search API for codebase queries
-- (LOGIC) Integrate indexing service with Orchestrator
+- [x] (LOGIC) Design code parsing and indexing system
+- [x] (LOGIC) Implement code analysis pipeline
+- [x] (LOGIC) Create search API for codebase queries
+- [x] (LOGIC) Integrate indexing service with Orchestrator

@@ -4,7 +4,7 @@
 Implement conversational requirement collection system
 
 ## Tasks
-- (UI) Design Telegram bot conversation flow for requirement gathering
-- (LOGIC) Implement state machine for multi-step requirement collection
-- (LOGIC) Store collected requirements in project manifest
-- (UI) Implement confirmation step for requirements
+- [x] (UI) Design Telegram bot conversation flow for requirement gathering
+- [x] (LOGIC) Implement state machine for multi-step requirement collection
+- [x] (LOGIC) Store collected requirements in project manifest
+- [x] (UI) Implement confirmation step for requirements

@@ -4,7 +4,7 @@
 Build credit tracking and billing system
 
 ## Tasks
-- (LOGIC) Design credit balance management system
-- (LOGIC) Implement transaction tracking
-- (LOGIC) Create API usage cost calculator
-- (LOGIC) Build billing notification system
+- [x] (LOGIC) Design credit balance management system
+- [x] (LOGIC) Implement transaction tracking
+- [x] (LOGIC) Create API usage cost calculator
+- [x] (LOGIC) Build billing notification system
