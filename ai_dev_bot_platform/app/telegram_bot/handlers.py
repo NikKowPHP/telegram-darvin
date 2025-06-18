@@ -1,5 +1,5 @@
 import logging
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, CommandHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy.orm import Session
@@ -12,8 +12,15 @@ from app.services.payment_service import PaymentService
 from app.core.config import settings
 import json
 
-logger = logging.getLogger(__name__)
+from app.telegram_bot.requirement_gathering import (
+    start_requirement_gathering,
+    handle_project_name,
+    handle_project_description,
+    handle_confirmation,
+    is_in_requirement_gathering,
+)
 
+logger = logging.getLogger(__name__)
 
 def is_new_project_description(text: str) -> bool:
     """Heuristic to detect if a message is a new project description."""
@@ -23,7 +30,6 @@ def is_new_project_description(text: str) -> bool:
         not text.lower().strip().startswith(("implement task", "refine file", "/"))
     )
     return is_long_enough and is_not_a_command
-
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
@@ -39,6 +45,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             await update.message.reply_text(
                 f"Welcome, {user_tg.first_name}! Your account has been created with initial credits: {user_db.credit_balance:.2f}."
             )
+            # Start requirement gathering
+            await start_requirement_gathering(update, context)
         else:
             await update.message.reply_text(
                 f"Welcome back, {user_tg.first_name}! Your credit balance is: {user_db.credit_balance:.2f}."
@@ -57,7 +65,6 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "I am your AI Development Assistant! Describe your project or use /help for commands."
     )
 
-
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "Available commands:\n"
@@ -67,7 +74,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/status - Check your project status and credits (TODO)\n"
         # Add more commands as they are implemented
     )
-
 
 async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
@@ -102,15 +108,27 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     finally:
         db.close()
 
-
 # In app/telegram_bot/handlers.py
-
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
     text = update.message.text
 
     logger.info(f"Received message from {user_tg.id}: {text}")
+
+    # Check if user is in requirement gathering flow
+    if await is_in_requirement_gathering(context):
+        from app.telegram_bot.requirement_gathering import RequirementState
+        state = context.user_data.get("requirement_state")
+
+        if state == RequirementState.WAITING_FOR_PROJECT_NAME.value:
+            await handle_project_name(update, context)
+        elif state == RequirementState.WAITING_FOR_PROJECT_DESCRIPTION.value:
+            await handle_project_description(update, context)
+        elif state == RequirementState.WAITING_FOR_CONFIRMATION.value:
+            await handle_confirmation(update, context)
+
+        return
 
     db: Session = SessionLocal()
     try:
@@ -171,7 +189,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             )
     finally:
         db.close()
-
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query

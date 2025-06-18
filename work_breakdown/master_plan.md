@@ -1,40 +1,29 @@
-# Master Development Plan: Transition to Full Autonomy
+# Master Plan: AI-Powered Development Assistant Bot
 
-**Project Goal:** Refactor the AI Development Bot from a user-driven, reactive service into a fully autonomous, proactive agent-based system as defined by the `.roo/` rules. The system will manage the entire project lifecycle in the background, driven by file-system state changes (signal files), not direct user commands.
+This master plan implements the complete specification from `docs/canonical_spec.md`.
 
----
+## Core Features
+- [ ] **Requirement Gathering**: Implement conversational requirement collection
+- [ ] **Hierarchical AI Collaboration**: Build Model Orchestrator routing system
+- [ ] **Architectural Planning**: Create technical documentation and TODO system
+- [ ] **Codebase Indexing**: Develop searchable code representation service
+- [ ] **Iterative Implementation**: Build task execution system for Implementer LLMs
+- [ ] **Automated Verification**: Create Architect review and validation system
+- [ ] **README Generation**: Implement automatic documentation generator
+- [ ] **Credit-Based Monetization**: Build credit tracking and billing system
 
-- [ ] **Phase 1: Establish Core Autonomous Loop & Project Manifest**
-    - **Goal:** Replace reactive Telegram-driven model with proactive Orchestrator agent loop
-    - Implement Orchestrator agent state machine
-    - Design and implement `project_manifest.json` schema
-    - Create signal file system (`PLANNING_COMPLETE.md`, `IMPLEMENTATION_COMPLETE.md`)
-    - **(Creates `work_items/item-001-core-loop.md`)**
+## System Architecture Implementation
+- [ ] Implement FastAPI backend infrastructure
+- [ ] Set up Google Gemini and OpenRouter integrations
+- [ ] Configure PostgreSQL, Redis, and Celery services
+- [ ] Implement Docker and Kubernetes deployment pipeline
 
-- [ ] **Phase 2: Implement Monetization & Core Services**
-    - **Goal:** Build credit system and foundational services
-    - Implement credit-based monetization system
-    - Create database schema implementation (users, projects, api_keys, etc.)
-    - Build codebase indexing service
-    - **(Creates `work_items/item-002-monetization-services.md`)**
-
-- [ ] **Phase 3: Integrate TDD and Developer Workflow**
-    - **Goal:** Enable Developer agent TDD cycle and version control
-    - Implement TDD workflow for Implementer agent
-    - Add Git integration for autonomous commits
-    - Create automated signaling for implementation milestones
-    - **(Creates `work_items/item-003-developer-workflow.md`)**
-
-- [ ] **Phase 4: Implement Review Cycle & QA Automation**
-    - **Goal:** Activate TechLead and QAEngineer agents
-    - Build static analysis and testing frameworks
-    - Implement automated review signaling (`TECH_LEAD_APPROVED.md`, `QA_APPROVED.md`)
-    - Create README generation system
-    - **(Creates `work_items/item-004-review-qa.md`)**
-
-- [ ] **Phase 5: Finalize Autonomy & Verification**
-    - **Goal:** Complete autonomous system and address audit gaps
-    - Simplify Telegram interface to work-item initiator
-    - Implement comprehensive audit verification
-    - Resolve all specification compliance gaps
-    - **(Creates `work_items/item-005-audit-verification.md`)**
+## Database Implementation
+- [ ] Create users table schema
+- [ ] Implement projects table
+- [ ] Build api_keys management system
+- [ ] Create model_pricing tracking
+- [ ] Implement api_key_usage logging
+- [ ] Build credit_transactions system
+- [ ] Create conversations history storage
+- [ ] Implement project_files storage

@@ -14,6 +14,13 @@ from app.telegram_bot.handlers import (
     message_handler,
     button_handler,
 )
+from app.telegram_bot.requirement_gathering import (
+    start_requirement_gathering,
+    handle_project_name,
+    handle_project_description,
+    handle_confirmation,
+    is_in_requirement_gathering,
+)
 
 logger = logging.getLogger(__name__)
 
