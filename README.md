@@ -109,6 +109,26 @@ This command starts only the services the application depends on, leaving the ap
     pip install -r requirements.txt
     ```
 
+### 6. Test Environment Setup
+
+The test environment requires a virtual environment to be set up. The `run_tests.sh` script will automatically create the virtual environment if it doesn't exist:
+
+1.  To run the tests, simply execute:
+
+    ```bash
+    bash run_tests.sh
+    ```
+
+2.  The script will:
+    - Check if the `.venv` directory exists
+    - Create it using `setup_venv.sh` if missing
+    - Activate the virtual environment
+    - Install any missing dependencies from `requirements.txt`
+    - Run the test suite using `pytest`
+    - Generate an audit report using `allure`
+
+This ensures a consistent test environment across different development setups.
+
 ### 6. Run Database Migrations
 
 With the database running in Docker and your environment configured, apply the latest database schema using Alembic.
