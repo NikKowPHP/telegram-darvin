@@ -5,12 +5,12 @@
     - Add Orchestrator execution command: `subprocess.run(['roo', '-m', 'orchestrator'])`
     - Include 10-second delay between iterations
 
-- [ ] (LOGIC) Implement Architect's "Blueprint Mode":
+- [x] (LOGIC) Implement Architect's "Blueprint Mode":
     - Add manifest creation logic when `project_manifest.json` doesn't exist
     - Create `logs/system_events.log` file
     - Structure manifest according to Architect rules
 
-- [ ] (LOGIC) Add error handling in core loop:
+- [x] (LOGIC) Add error handling in core loop:
     - Implement try/except blocks for process execution
     - Add logging for system events and errors
     - Ensure graceful recovery from failures
