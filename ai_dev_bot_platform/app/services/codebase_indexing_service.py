@@ -20,8 +20,15 @@ class CodebaseIndexingService:
     async def initialize_index(self, project_id: str):
         """Initialize the vector database index for a project"""
         logger.info(f"Initializing codebase index for project {project_id}")
-        # Implementation would connect to vector DB (FAISS, Pinecone, etc.)
-        # For now, we'll just set a flag
+        # Get embedding dimension from model
+        embedding_dim = self.embedding_model.get_sentence_embedding_dimension()
+
+        # Create a new FAISS index for this project
+        index = faiss.IndexFlatL2(embedding_dim)
+        self.project_indexes[project_id] = index
+        self.project_metadata[project_id] = []
+
+        # Mark index as initialized
         self.index_initialized = True
         return {"status": "initialized", "project_id": project_id}
 
@@ -132,6 +139,11 @@ class CodebaseIndexingService:
             index = faiss.IndexFlatL2(embedding_dim)
             self.project_indexes[project_id] = index
             self.project_metadata[project_id] = []
+        elif not self.index_initialized:
+            logger.warning(
+                f"Index for project {project_id} exists but is not initialized. "
+                "This could lead to inconsistent search results."
+            )
         return self.project_indexes[project_id]
 
 
