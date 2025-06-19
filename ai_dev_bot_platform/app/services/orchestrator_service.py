@@ -106,55 +106,68 @@ class ModelOrchestrator:
                 }
 
         # Check for Developer handoff signal
-        # Check for Developer handoff signal
         if os.path.exists('COMMIT_COMPLETE.md'):
-            logger.info("Commit complete signal found. Handing off to Architect for verification...")
+            logger.info("Developer handoff signal detected - processing COMMIT_COMPLETE.md")
             try:
-                # Read commit details from file
                 with open('COMMIT_COMPLETE.md', 'r') as f:
                     commit_details = f.read()
                 
-                # Parse task description from commit details
+                # Parse commit information
                 task_match = re.search(r'# Task Complete: (.*?)\n', commit_details)
-                task_description = task_match.group(1) if task_match else "Unknown task"
+                commit_match = re.search(r'Commit message: (.*?)$', commit_details, re.MULTILINE)
                 
-                # Get project context (simplified for example)
-                project_context = "Current project implementation"  # Would normally get from DB
+                task_description = task_match.group(1).strip() if task_match else "Unknown task"
+                commit_message = commit_match.group(1).strip() if commit_match else "No commit message"
                 
-                # Have Architect verify the implementation
-                # Get the current project from DB (simplified example)
-                # In real implementation we would parse project ID from commit_details
-                sample_project = ProjectCreate(
-                    title="Verification Project",
-                    description="Temporary project for verification",
-                    user_id=uuid.uuid4()
-                )
+                logger.info(f"Handing off to Architect for task: {task_description}")
+                
+                # Get actual project from database (simplified example)
+                # In production this would come from the project manifest
+                current_project = self.project_service.get_current_project(self.db)
+                
                 verification_result = await self.architect_agent.verify_implementation_step(
-                    project=sample_project,
+                    project=current_project,
                     code_snippet=commit_details,
-                    relevant_docs=project_context,
+                    relevant_docs=current_project.description if current_project else "",
                     todo_item=task_description
                 )
                 
-                # Remove the signal file
-                os.remove('COMMIT_COMPLETE.md')
+                # Clean up signal file regardless of verification result
+                try:
+                    os.remove('COMMIT_COMPLETE.md')
+                except Exception as e:
+                    logger.error(f"Error removing COMMIT_COMPLETE.md: {e}")
                 
                 if verification_result.get('status') == 'APPROVED':
+                    logger.info(f"Task approved: {task_description}")
                     return {
-                        "text": f"Commit verified by Architect!\n\n{commit_details}\n\nFeedback: {verification_result.get('feedback', 'No feedback')}",
+                        "text": (f"✅ Task verified successfully!\n\n"
+                                f"Task: {task_description}\n"
+                                f"Commit: {commit_message}\n"
+                                f"Feedback: {verification_result.get('feedback', '')}"),
                         "zip_buffer": None,
                         "status": "verified"
                     }
                 else:
+                    logger.warning(f"Task rejected: {task_description}")
                     return {
-                        "text": f"Architect verification failed:\n{verification_result.get('feedback', 'No feedback')}",
+                        "text": (f"❌ Verification failed for task:\n\n"
+                                f"Task: {task_description}\n"
+                                f"Commit: {commit_message}\n"
+                                f"Feedback: {verification_result.get('feedback', 'No feedback provided')}\n\n"
+                                f"Please address the issues and try again."),
                         "zip_buffer": None
                     }
                 
             except Exception as e:
-                logger.error(f"Error during Architect verification: {e}")
+                logger.error(f"Developer handoff processing failed: {e}", exc_info=True)
+                # Attempt to clean up signal file even on error
+                try:
+                    os.remove('COMMIT_COMPLETE.md')
+                except:
+                    pass
                 return {
-                    "text": f"Error during verification: {e}",
+                    "text": f"Error processing developer handoff: {str(e)}",
                     "zip_buffer": None
                 }
         if self._is_long_running(user_input):
