@@ -12,9 +12,10 @@
   - Update tests to cover new verification flow
 
 ## 2. Implement Conversations Table
-- [ ] (LOGIC) Create Conversation model:
-  - Add `conversation_model.py` with SQLAlchemy schema
-  - Define fields: id, user_id, project_id, messages (JSONB), created_at, updated_at
+- [x] (LOGIC) Create Conversation model:
+    - Added `conversation_model.py` with SQLAlchemy schema
+    - Defined fields: id, user_id, project_id, messages (JSONB), created_at, updated_at
+    - Created Pydantic schemas in `conversation.py`
 - [ ] (LOGIC) Generate database migration:
   - Create new Alembic migration for conversations table
   - Test migration on sample database
