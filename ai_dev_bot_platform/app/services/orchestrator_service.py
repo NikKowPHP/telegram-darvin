@@ -7,6 +7,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from app.schemas.user import User
 from app.services.api_key_manager import APIKeyManager
+from app.services.conversation_service import ConversationService
+from app.schemas.conversation import ConversationCreate
 from app.utils.llm_client import LLMClient
 from app.utils.file_utils import create_project_zip
 from app.agents.architect_agent import ArchitectAgent
@@ -48,12 +50,23 @@ class ModelOrchestrator:
         self.user_service = UserService()
         self.task_queue = TaskQueue()
         self.notifier = NotificationService()
+        self.conversation_service = ConversationService(db)
 
     def _is_long_running(self, user_input: str) -> bool:
         """Determine if a request should be processed asynchronously"""
         return self._is_new_project(user_input) or user_input.lower().startswith("implement task")
 
     async def process_user_request(self, user: User, user_input: str) -> dict:
+        # Log the conversation
+        try:
+            conversation = ConversationCreate(
+                user_id=user.id,
+                messages={"request": user_input}
+            )
+            await self.conversation_service.create_conversation(conversation)
+        except Exception as e:
+            logger.error(f"Failed to log conversation: {e}", exc_info=True)
+
         logger.info(
             f"Orchestrator processing request for user {user.telegram_user_id}: '{user_input}'"
         )
