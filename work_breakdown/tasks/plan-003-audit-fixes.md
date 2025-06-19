@@ -21,9 +21,12 @@
 - [ ] (LOGIC) Update database session and schemas:
   - Add Conversation to __init__.py
   - Create Pydantic schemas for conversation operations
-- [ ] (LOGIC) Integrate with services:
-  - Update Orchestrator to store conversations
-  - Add conversation logging to user interactions
+- [x] (LOGIC) Implement conversation service:
+    - Created ConversationService with CRUD operations
+    - Added service to app/services/__init__.py
+- [ ] (LOGIC) Integrate with Orchestrator:
+    - Update Orchestrator to store conversations
+    - Add conversation logging to user interactions
 
 ## 3. Complete README Generation
 - [ ] (LOGIC) Finalize ArchitectAgent README generation:
