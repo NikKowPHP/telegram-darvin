@@ -6,10 +6,10 @@
     - Added metadata collection from project manifest
     - Updated prompt to generate comprehensive documentation
 
-- [ ] (LOGIC) Integrate README into project completion workflow:
-    - Call generate_readme() method after implementation completes
-    - Save README.md to project root directory
-    - Include README in final ZIP output package
+- [x] (LOGIC) Integrate README into project completion workflow:
+    - generate_readme() called automatically when all tasks complete
+    - README.md saved to project root and storage
+    - Included in final ZIP package
 
 - [ ] (LOGIC) Add integration tests:
     - Test README generation with sample projects
