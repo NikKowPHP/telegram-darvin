@@ -15,7 +15,8 @@
 - [x] (LOGIC) Add validation tests for README generation
 
 ## 3. Improve Test Coverage
-- [ ] (LOGIC) Add tests for error cases in critical paths
+- [x] (LOGIC) Add tests for error cases in critical paths
+    - Created test_project_service.py with error case tests
 - [ ] (LOGIC) Verify all API endpoints with tests
 - [ ] (LOGIC) Test credit deduction logic
 - [ ] (LOGIC) Validate file generation workflows with end-to-end tests
