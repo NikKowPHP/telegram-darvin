@@ -11,7 +11,8 @@
     - README.md saved to project root and storage
     - Included in final ZIP package
 
-- [ ] (LOGIC) Add integration tests:
-    - Test README generation with sample projects
-    - Verify content matches project specs
-    - Check for required sections and accuracy
+- [x] (LOGIC) Add integration tests:
+    - Created test_readme_generation.py
+    - Added tests for basic structure and content
+    - Verified tech stack inclusion
+    - Tested error handling scenarios
