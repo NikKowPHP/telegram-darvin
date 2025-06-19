@@ -9,7 +9,7 @@
     - Mark task complete in active plan
     - Commit changes and create `COMMIT_COMPLETE.md`
 
-- [ ] (LOGIC) Implement version control commands:
+- [x] (LOGIC) Implement version control commands:
     - Add `git` commands for staging and committing
     - Commit message: "feat: Complete task: [Task Description]"
 

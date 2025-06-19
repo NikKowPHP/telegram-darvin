@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import re
+import subprocess
 from app.utils.llm_client import LLMClient
 from typing import Dict, Any
 from app.core.config import settings
@@ -46,7 +47,7 @@ class ImplementerAgent:
 
         # Step 4: Commit changes
         logger.info("Committing changes...")
-        commit_message = f"feat: {task_description}"
+        commit_message = f"feat: Complete task: {task_description}"
         subprocess.run(["git", "add", "."], cwd=project_root, check=True)
         subprocess.run(["git", "commit", "-m", commit_message], cwd=project_root, check=True)
 
