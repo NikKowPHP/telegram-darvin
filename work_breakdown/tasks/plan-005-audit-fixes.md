@@ -3,7 +3,9 @@
 ## 1. Async Test Support
 - [x] (LOGIC) Add pytest-asyncio to dev dependencies
 - [x] (LOGIC) Configure pytest to handle async tests (update pytest.ini or conftest.py)
-- [ ] (LOGIC) Update test files to use async fixtures and mark async tests appropriately
+- [x] (LOGIC) Update test files to use async fixtures and mark async tests appropriately
+    - Note: test_readme_generation.py already properly uses async
+    - Could not find test_orchestrator.py or test_services.py
 
 ## 2. Complete README Generation
 - [ ] (LOGIC) Update ArchitectAgent to generate all required README sections (Overview, Setup, Usage, Configuration, Deployment)
