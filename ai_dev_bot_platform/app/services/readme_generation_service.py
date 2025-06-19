@@ -30,11 +30,31 @@ class ReadmeGenerationService:
 
 ### Prerequisites
 - Python 3.10+
-- PostgreSQL
-- Redis
+- PostgreSQL 14+ (with createdb privileges)
+- Redis 6.2+
+- Git
 
-### Installation
-1. Clone the repository
+### Database Setup
+1. Create PostgreSQL database and user:
+   ```bash
+   sudo -u postgres psql -c "CREATE USER ai_dev_bot WITH PASSWORD 'securepassword';"
+   sudo -u postgres psql -c "CREATE DATABASE ai_dev_bot WITH OWNER ai_dev_bot;"
+   ```
+
+### Redis Setup
+1. Install and start Redis server:
+   ```bash
+   sudo apt install redis-server
+   sudo systemctl enable redis-server
+   sudo systemctl start redis-server
+   ```
+
+### Application Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/ai-dev-bot-platform.git
+   cd ai-dev-bot-platform
+   ```
 2. Create and activate virtual environment:
    ```bash
    python -m venv venv
@@ -44,7 +64,21 @@ class ReadmeGenerationService:
    ```bash
    pip install -r requirements.txt
    ```
-4. Set up environment variables (see Configuration section)"""
+4. Run database migrations:
+   ```bash
+   alembic upgrade head
+   ```
+5. Set up environment variables (see Configuration section)
+
+### Verification
+1. Run tests to verify installation:
+   ```bash
+   pytest tests/
+   ```
+2. Start development server:
+   ```bash
+   python -m ai_dev_bot_platform.main
+   ```"""
 
     def _generate_configuration(self) -> str:
         return f"""## ⚙️ Configuration
