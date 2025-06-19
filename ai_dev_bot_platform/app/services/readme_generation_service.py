@@ -129,15 +129,46 @@ EMAIL_FROM=no-reply@example.com
     def _generate_usage(self) -> str:
         return """## 💻 Usage
 
-### Running the application
+### Development Mode
 ```bash
-python -m ai_dev_bot_platform.main
+# Start the development server with auto-reload
+uvicorn ai_dev_bot_platform.main:app --reload --port 8000
 ```
 
-### Running tests
+### Production Mode
 ```bash
+# Build production Docker image
+docker build -t ai-dev-bot-platform .
+
+# Run the production container
+docker run -d --name ai-dev-bot \
+  -p 8000:8000 \
+  -v ./data:/app/data \
+  --env-file .env \
+  ai-dev-bot-platform
+```
+
+### Common Operations
+```bash
+# Run all tests
 pytest tests/
-```"""
+
+# Run specific test file
+pytest tests/test_user_model.py
+
+# Start background worker for async tasks
+celery -A ai_dev_bot_platform.worker worker --loglevel=info
+
+# Database migrations
+alembic upgrade head  # Apply migrations
+alembic revision --autogenerate -m "description"  # Create new migration
+```
+
+### API Documentation
+After starting the server, access these endpoints:
+- Swagger UI: http://localhost:8000/docs
+- Redoc: http://localhost:8000/redoc
+- OpenAPI Schema: http://localhost:8000/openapi.json"""
 
     def _generate_contributing(self) -> str:
         return """## 🤝 Contributing
