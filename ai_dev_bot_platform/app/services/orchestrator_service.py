@@ -92,6 +92,49 @@ class ModelOrchestrator:
                     "zip_buffer": None
                 }
 
+        # Check for Developer handoff signal
+        if os.path.exists('COMMIT_COMPLETE.md'):
+            logger.info("Commit complete signal found. Handing off to Tech Lead...")
+            try:
+                # Read commit details from file
+                with open('COMMIT_COMPLETE.md', 'r') as f:
+                    commit_details = f.read()
+                
+                # Execute Tech Lead handoff
+                result = subprocess.run(
+                    ['roo', '-m', 'tech-lead', '--command', 'review_commit'],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+                logger.info(f"Tech Lead handoff successful:\n{result.stdout}")
+                
+                # Remove the signal file
+                os.remove('COMMIT_COMPLETE.md')
+                
+                return {
+                    "text": f"Commit complete. Handed off to Tech Lead for review.\n\n{commit_details}",
+                    "zip_buffer": None
+                }
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Tech Lead handoff failed with exit code {e.returncode}:\n{e.stderr}")
+                return {
+                    "text": f"Failed to hand off to Tech Lead: {e.stderr}",
+                    "zip_buffer": None
+                }
+            except FileNotFoundError as e:
+                logger.error(f"Command not found: {e}")
+                return {
+                    "text": "Command not found. Please ensure the Tech Lead agent is available.",
+                    "zip_buffer": None
+                }
+            except Exception as e:
+                logger.error(f"Unexpected error during Tech Lead handoff: {e}")
+                return {
+                    "text": f"Unexpected error: {e}",
+                    "zip_buffer": None
+                }
+
         if self._is_long_running(user_input):
             await self.task_queue.add_task(
                 lambda: self._handle_task_async(user, user_input)
