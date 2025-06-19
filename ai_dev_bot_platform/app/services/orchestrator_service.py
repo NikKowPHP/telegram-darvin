@@ -93,6 +93,7 @@ class ModelOrchestrator:
                 }
 
         # Check for Developer handoff signal
+        # Check for Developer handoff signal
         if os.path.exists('COMMIT_COMPLETE.md'):
             logger.info("Commit complete signal found. Handing off to Architect for verification...")
             try:
@@ -108,7 +109,8 @@ class ModelOrchestrator:
                 project_context = "Current project implementation"  # Would normally get from DB
                 
                 # Have Architect verify the implementation
-                # Get a sample project for verification (would normally come from DB)
+                # Get the current project from DB (simplified example)
+                # In real implementation we would parse project ID from commit_details
                 sample_project = ProjectCreate(
                     title="Verification Project",
                     description="Temporary project for verification",
@@ -142,7 +144,6 @@ class ModelOrchestrator:
                     "text": f"Error during verification: {e}",
                     "zip_buffer": None
                 }
-
         if self._is_long_running(user_input):
             await self.task_queue.add_task(
                 lambda: self._handle_task_async(user, user_input)
