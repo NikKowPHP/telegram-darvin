@@ -16,12 +16,12 @@
     - Added `conversation_model.py` with SQLAlchemy schema
     - Defined fields: id, user_id, project_id, messages (JSONB), created_at, updated_at
     - Created Pydantic schemas in `conversation.py`
-- [ ] (LOGIC) Generate database migration:
-  - Create new Alembic migration for conversations table
-  - Test migration on sample database
-- [ ] (LOGIC) Update database session and schemas:
-  - Add Conversation to __init__.py
-  - Create Pydantic schemas for conversation operations
+- [x] (LOGIC) Generate database migration:
+    - Created Alembic migration for conversations table
+    - Tested migration successfully
+- [x] (LOGIC) Update database session and schemas:
+    - Added Conversation to models/__init__.py
+    - Created Pydantic schemas in conversation.py
 - [x] (LOGIC) Implement conversation service:
     - Created ConversationService with CRUD operations
     - Added service to app/services/__init__.py
