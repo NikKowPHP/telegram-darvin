@@ -19,5 +19,7 @@
     - Created test_project_service.py with error case tests
 - [x] (LOGIC) Verify all API endpoints with tests
     - Created test_api_endpoints.py with basic endpoint tests
-- [ ] (LOGIC) Test credit deduction logic
+- [x] (LOGIC) Test credit deduction logic
+    - Created test_credit_transaction_service.py
+    - Covered sufficient/insufficient credit cases
 - [ ] (LOGIC) Validate file generation workflows with end-to-end tests
