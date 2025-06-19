@@ -94,44 +94,52 @@ class ModelOrchestrator:
 
         # Check for Developer handoff signal
         if os.path.exists('COMMIT_COMPLETE.md'):
-            logger.info("Commit complete signal found. Handing off to Tech Lead...")
+            logger.info("Commit complete signal found. Handing off to Architect for verification...")
             try:
                 # Read commit details from file
                 with open('COMMIT_COMPLETE.md', 'r') as f:
                     commit_details = f.read()
                 
-                # Execute Tech Lead handoff
-                result = subprocess.run(
-                    ['roo', '-m', 'tech-lead', '--command', 'review_commit'],
-                    capture_output=True,
-                    text=True,
-                    check=True
+                # Parse task description from commit details
+                task_match = re.search(r'# Task Complete: (.*?)\n', commit_details)
+                task_description = task_match.group(1) if task_match else "Unknown task"
+                
+                # Get project context (simplified for example)
+                project_context = "Current project implementation"  # Would normally get from DB
+                
+                # Have Architect verify the implementation
+                # Get a sample project for verification (would normally come from DB)
+                sample_project = ProjectCreate(
+                    title="Verification Project",
+                    description="Temporary project for verification",
+                    user_id=uuid.uuid4()
                 )
-                logger.info(f"Tech Lead handoff successful:\n{result.stdout}")
+                verification_result = await self.architect_agent.verify_implementation_step(
+                    project=sample_project,
+                    code_snippet=commit_details,
+                    relevant_docs=project_context,
+                    todo_item=task_description
+                )
                 
                 # Remove the signal file
                 os.remove('COMMIT_COMPLETE.md')
                 
-                return {
-                    "text": f"Commit complete. Handed off to Tech Lead for review.\n\n{commit_details}",
-                    "zip_buffer": None
-                }
-            except subprocess.CalledProcessError as e:
-                logger.error(f"Tech Lead handoff failed with exit code {e.returncode}:\n{e.stderr}")
-                return {
-                    "text": f"Failed to hand off to Tech Lead: {e.stderr}",
-                    "zip_buffer": None
-                }
-            except FileNotFoundError as e:
-                logger.error(f"Command not found: {e}")
-                return {
-                    "text": "Command not found. Please ensure the Tech Lead agent is available.",
-                    "zip_buffer": None
-                }
+                if verification_result.get('status') == 'APPROVED':
+                    return {
+                        "text": f"Commit verified by Architect!\n\n{commit_details}\n\nFeedback: {verification_result.get('feedback', 'No feedback')}",
+                        "zip_buffer": None,
+                        "status": "verified"
+                    }
+                else:
+                    return {
+                        "text": f"Architect verification failed:\n{verification_result.get('feedback', 'No feedback')}",
+                        "zip_buffer": None
+                    }
+                
             except Exception as e:
-                logger.error(f"Unexpected error during Tech Lead handoff: {e}")
+                logger.error(f"Error during Architect verification: {e}")
                 return {
-                    "text": f"Unexpected error: {e}",
+                    "text": f"Error during verification: {e}",
                     "zip_buffer": None
                 }
 
