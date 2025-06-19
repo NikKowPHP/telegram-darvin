@@ -109,24 +109,45 @@ If REJECTED, suggest updates to the code or the TODO list."""
 
     async def generate_readme(self, project: Project) -> str:
         logger.info(f"Architect Agent: Generating README for project {project.id}")
+        
+        # Collect metadata from project manifest
+        tech_stack = project.tech_stack or {}
+        dependencies = tech_stack.get('dependencies', [])
+        env_vars = tech_stack.get('environment_variables', {})
+        
         prompt = f"""You are an expert technical writer. Generate a comprehensive README.md for the project titled '{project.title}'.
-Include these sections with appropriate content:
-1. Overview - Brief description of the project
-2. Features - List of main functionalities
-3. Installation - Step-by-step setup instructions
-4. Configuration - Environment variables and settings
-5. Usage - How to run/use the application
-6. API Documentation - If applicable
-7. Contributing - Guidelines for contributors
-8. License - Project license information
+Include these REQUIRED sections with appropriate content:
+## Overview
+- Brief description of the project
+- Key features and capabilities
+
+## Setup
+- System requirements
+- Installation steps including package manager commands
+- Dependencies: {', '.join(dependencies) if dependencies else 'None'}
+
+## Configuration
+- Environment variables: {', '.join(env_vars.keys()) if env_vars else 'None'}
+- Configuration files and their locations
+- Deployment settings
+
+## Usage
+- How to run the application
+- Command line options
+- Examples of common use cases
+
+## Deployment
+- Containerization instructions (Docker)
+- Kubernetes deployment if applicable
+- Cloud deployment options
 
 Project Description:
 {project.description}
 
-Additional Context:
+Technical Documentation:
 {project.documentation}
 
-Use proper Markdown formatting with clear section headers and organization."""
+Use proper Markdown formatting with clear section headers and organization. Do not include placeholders - use actual values from the project context."""
 
         llm_response_dict = await self.llm_client.call_llm(
             prompt=prompt, model_name=settings.ARCHITECT_MODEL

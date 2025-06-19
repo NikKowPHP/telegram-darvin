@@ -1,45 +1,42 @@
-# Audit Failure: Multiple Specification Deviations
+# Audit Failure: README Generation Integration
 
 ## Description
 
-1. **Incorrect Tech Lead Handoff:**
-   The current implementation of the Orchestrator attempts to hand off commit reviews to a non-existent "tech-lead" mode.
-
-2. **Missing Conversations Table:**
-   The database schema is missing the conversations table required by the canonical specification to store user interaction history.
-
-3. **Incomplete README Generation:**
-   The README generation functionality exists but isn't properly integrated into the project completion workflow.
+The README generation functionality exists but isn't properly integrated into the project completion workflow as required by the canonical specification.
 
 ## Specification Deviation
 
-The canonical specification (`docs/canonical_spec.md`) outlines:
-- A hierarchical AI collaboration system with Architect LLM verification (section 2)
-- A complete database schema including conversations table (section 4)
-- Automated README generation upon project completion (section 2)
+The canonical specification (`docs/canonical_spec.md`) section 2 requires:
+- Comprehensive README.md generation upon project completion
+- Automatic inclusion in final project delivery
+- Detailed setup, configuration and execution instructions
 
-## Code Location
+## Current Status
 
-1. **Tech Lead Handoff:**
-   Located in `ai_dev_bot_platform/app/services/orchestrator_service.py` (lines 96-136)
+1. **Completed:**
+   - Tech Lead Handoff replaced with Architect verification
+   - Conversations table implemented with full CRUD operations
 
-2. **Conversations Table:**
-   Missing from both `ai_dev_bot_platform/app/models/` and migration files
+2. **Pending:**
+   - README template implementation in ArchitectAgent
+   - README generation workflow integration
+   - Final README inclusion in project output
+   - Integration tests for README content
 
-3. **README Generation:**
-   Partially implemented in `ai_dev_bot_platform/app/agents/architect_agent.py` but not properly called in completion workflow
+## Required Actions
 
-## Proposed Solution
+1. Implement full README template in ArchitectAgent with sections:
+   - Overview
+   - Setup
+   - Usage
+   - Configuration
+   - Deployment
 
-1. **Tech Lead Handoff Fix:**
-   Modify the Orchestrator to use Architect LLM for verification instead of non-existent tech-lead mode
+2. Integrate README generation into project completion workflow:
+   - Call generate_readme() after implementation completes
+   - Save README.md to project root
+   - Include in final ZIP output
 
-2. **Conversations Table Implementation:**
-   - Create conversation_model.py with proper SQLAlchemy schema
-   - Generate new migration
-   - Update database session and schemas
-
-3. **README Generation Integration:**
-   - Add proper invocation in project completion workflow
-   - Ensure all required project metadata is collected
-   - Add integration tests for README content
+3. Add integration tests:
+   - Verify README content matches project specs
+   - Test with multiple sample projects
