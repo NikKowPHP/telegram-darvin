@@ -83,13 +83,47 @@ class ReadmeGenerationService:
     def _generate_configuration(self) -> str:
         return f"""## ⚙️ Configuration
 
-Create `.env` file with these variables:
+The application uses environment variables for configuration. Create a `.env` file in the root directory with these settings:
+
+### Core Settings
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/dbname
 REDIS_URL=redis://localhost:6379
-TELEGRAM_BOT_TOKEN=your_bot_token
-OPENROUTER_API_KEY=your_api_key
-{settings.ENVIRONMENT}_MODE=true
+ENVIRONMENT=development  # or 'production'
+```
+
+### Telegram Integration
+```
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_ADMIN_ID=your_admin_user_id
+```
+
+### AI Services
+```
+OPENROUTER_API_KEY=your_api_key_here
+OPENROUTER_REFERRER=your_project_name
+GOOGLE_API_KEY=your_google_api_key  # Optional for some features
+```
+
+### Security & Rate Limiting
+```
+JWT_SECRET_KEY=your_jwt_secret_key
+API_RATE_LIMIT=100  # Requests per minute per user
+```
+
+### Monitoring & Analytics
+```
+SENTRY_DSN=your_sentry_dsn  # Optional error tracking
+GOOGLE_ANALYTICS_ID=UA-XXXXX-Y  # Optional analytics
+```
+
+### Email/SMTP Settings (Optional)
+```
+SMTP_SERVER=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=user@example.com
+SMTP_PASSWORD=your_email_password
+EMAIL_FROM=no-reply@example.com
 ```"""
 
     def _generate_usage(self) -> str:
