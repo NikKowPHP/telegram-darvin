@@ -22,4 +22,6 @@
 - [x] (LOGIC) Test credit deduction logic
     - Created test_credit_transaction_service.py
     - Covered sufficient/insufficient credit cases
-- [ ] (LOGIC) Validate file generation workflows with end-to-end tests
+- [x] (LOGIC) Validate file generation workflows with end-to-end tests
+    - Created test_file_generation_workflow.py
+    - Covered success and error scenarios
