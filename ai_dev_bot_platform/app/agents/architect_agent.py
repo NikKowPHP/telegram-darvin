@@ -117,29 +117,68 @@ If REJECTED, suggest updates to the code or the TODO list."""
         
         prompt = f"""You are an expert technical writer. Generate a comprehensive README.md for the project titled '{project.title}'.
 Include these REQUIRED sections with appropriate content:
+
+## Table of Contents
+- Quick navigation links to all sections
+
 ## Overview
 - Brief description of the project
 - Key features and capabilities
+- Project status/version
 
 ## Setup
+### Development
 - System requirements
-- Installation steps including package manager commands
+- Installation from source
+- Setting up development environment
 - Dependencies: {', '.join(dependencies) if dependencies else 'None'}
 
+### Production
+- Package manager installation
+- Container deployment (Docker)
+- One-line install commands
+
 ## Configuration
-- Environment variables: {', '.join(env_vars.keys()) if env_vars else 'None'}
+- Environment variables: {', '.join([f'{k}=[VALUE]' for k in env_vars.keys()]) if env_vars else 'None'}
 - Configuration files and their locations
-- Deployment settings
+- Security best practices
 
 ## Usage
 - How to run the application
-- Command line options
-- Examples of common use cases
+- Command line options/flags
+- Examples of common use cases with code samples
+- API documentation if applicable
 
 ## Deployment
-- Containerization instructions (Docker)
-- Kubernetes deployment if applicable
-- Cloud deployment options
+- Containerization (Docker)
+- Kubernetes manifests
+- Cloud deployment (AWS/GCP/Azure)
+- Scaling considerations
+
+## Contributing
+- How to submit issues
+- Pull request workflow
+- Coding standards
+- Testing requirements
+
+## Tests
+- How to run the test suite
+- Coverage reporting
+- Writing new tests
+
+## Support
+- How to get help
+- Community forums
+- Commercial support options
+
+## License
+- License type (e.g., MIT, Apache)
+- Copyright notice
+
+## Acknowledgments
+- Third-party libraries
+- Inspiration/credits
+- Team members
 
 Project Description:
 {project.description}
@@ -147,7 +186,13 @@ Project Description:
 Technical Documentation:
 {project.documentation}
 
-Use proper Markdown formatting with clear section headers and organization. Do not include placeholders - use actual values from the project context."""
+Use proper Markdown formatting with:
+- Clear section headers
+- Consistent indentation
+- Code blocks for commands
+- Tables where appropriate
+- Badges for build status/version (if available)
+- Actual values from project context (no placeholders)"""
 
         llm_response_dict = await self.llm_client.call_llm(
             prompt=prompt, model_name=settings.ARCHITECT_MODEL
