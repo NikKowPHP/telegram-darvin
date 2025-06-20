@@ -163,6 +163,31 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             context.user_data["last_project_id"] = project_id
             logger.info(f"Stored last_project_id for user {user_tg.id}: {project_id}")
 
+        # Determine if this is a planning or implementation task
+        if text.lower().startswith("plan task"):
+            # Extract task index and project ID from the message
+            import re
+            plan_match = re.match(
+                r"plan task (\d+) of project (.+)", text, re.IGNORECASE
+            )
+            if plan_match:
+                task_index = int(plan_match.group(1))
+                project_id = plan_match.group(2)
+                # Create a command string for the orchestrator
+                command_string = f"plan task {task_index} of project {project_id}"
+                # Use the orchestrator with the command string
+                response_data = await orchestrator.process_user_request(
+                    user=user_db, user_input=command_string
+                )
+                # Send the response
+                response_text = response_data.get("text")
+                if response_text:
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=response_text,
+                    )
+                return
+
         if response_text:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,

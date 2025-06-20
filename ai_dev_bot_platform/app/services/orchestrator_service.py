@@ -195,6 +195,15 @@ class ModelOrchestrator:
 
         # Basic routing logic for agent-specific requests
         if "plan" in user_input.lower() or "architect" in user_input.lower():
+            # Check if this is a command to implement a planning task
+            plan_match = re.match(
+                r"plan task (\d+) of project (.+)", user_input, re.IGNORECASE
+            )
+            if plan_match and user:
+                task_index = int(plan_match.group(1))
+                project_id = plan_match.group(2)
+                return await self._handle_plan_task(user, project_id, task_index)
+
             return await self._handle_architect_request(user_input)
         elif "implement" in user_input.lower() or "code" in user_input.lower():
             return await self._handle_implementer_request(user_input)
@@ -325,6 +334,112 @@ class ModelOrchestrator:
                 "project_id": None,
             }
 
+    async def _handle_plan_task(
+        self, user: User, project_id: str, task_index: int
+    ) -> str:
+        """Handle a planning task by routing it to the architect agent"""
+        try:
+            if user.credit_balance < 1.0:
+                return {
+                    "text": "Your credit balance is too low to start planning. Please /credits to top up.",
+                    "zip_buffer": None,
+                }
+
+            project = self.project_service.get_project(self.db, uuid.UUID(project_id))
+            if not project:
+                return {"text": "Project not found", "zip_buffer": None}
+
+            # Get the planning task from the TODO list
+            todo_lines = [
+                line
+                for line in project.current_todo_markdown.split("\n")
+                if line.strip().startswith(("[ ]", "- [ ]"))
+            ]
+
+            if task_index < 1 or task_index > len(todo_lines):
+                return {
+                    "text": f"Invalid task index. Please choose between 1 and {len(todo_lines)}",
+                    "zip_buffer": None,
+                }
+
+            # Get the task description
+            original_task_line = todo_lines[task_index - 1]
+            match = re.search(r"\[\s*\]\s*(.*)", original_task_line)
+            if not match:
+                logger.error(f"Could not parse task text from line: '{original_task_line}'")
+                return {
+                    "text": "Internal error: could not parse the task from the TODO list.",
+                    "zip_buffer": None,
+                }
+            planning_task = match.group(1).strip()
+
+            # Generate plan with architect agent
+            plan_result = await self.architect_agent.generate_plan(
+                task_description=planning_task,
+                project_context=project.description,
+                tech_stack=project.tech_stack or {},
+                project_id=str(project.id),
+            )
+
+            if plan_result.get("error"):
+                return {
+                    "text": f"Error generating plan: {plan_result['error']}",
+                    "zip_buffer": None,
+                }
+
+            # Deduct credits for LLM call if successful
+            if "llm_call_details" in plan_result:
+                await self._deduct_credits_for_llm_call(
+                    user=user,
+                    llm_response_data=plan_result["llm_call_details"],
+                    task_type="planning",
+                    project_id=project.id,
+                )
+
+            # Save the generated plan to the database
+            if plan_result.get("plan_filename") and plan_result.get("plan_content"):
+                self.project_file_service.create_project_file(
+                    self.db,
+                    project_id=project.id,
+                    file_path=plan_result["plan_filename"],
+                    content=plan_result["plan_content"],
+                )
+
+                # Also upload the plan to storage
+                self.storage_service.upload_file(
+                    bucket_name=str(project.id),
+                    file_path=plan_result["plan_filename"],
+                    file_content=plan_result["plan_content"],
+                )
+
+            # Update project status to indicate planning is complete
+            self.project_service.update_project(
+                self.db,
+                project.id,
+                ProjectUpdate(
+                    status="planning_complete",
+                    current_todo_markdown=project.current_todo_markdown.replace(
+                        original_task_line, original_task_line.replace("[ ]", "[x]", 1), 1
+                    ),
+                ),
+            )
+
+            return {
+                "text": (
+                    f"Planning task '{planning_task}' completed!\n"
+                    f"Plan file: {plan_result.get('plan_filename', 'N/A')}\n"
+                    f"Project status: planning_complete. Ready for implementation."
+                ),
+                "zip_buffer": None,
+            }
+
+        except Exception as e:
+            logger.error(f"Error handling planning task: {e}", exc_info=True)
+            return {
+                "text": "Failed to process planning task. Please try again.",
+                "zip_buffer": None,
+            }
+
     async def _handle_implement_task(
         self, user: User, project_id: str, task_index: int
     ) -> str:
@@ -452,28 +567,28 @@ class ModelOrchestrator:
             if verification_status == "APPROVED":
              # --- START OF FIX ---
 
-             # 4. Mark TODO as complete by safely replacing the checkbox in the original line
-             completed_task_line = original_task_line.replace("[ ]", "[x]", 1)
-             new_todo_markdown = project.current_todo_markdown.replace(
-                 original_task_line, completed_task_line, 1
-             )
+            # 4. Mark TODO as complete by safely replacing the checkbox in the original line
+            completed_task_line = original_task_line.replace("[ ]", "[x]", 1)
+            new_todo_markdown = project.current_todo_markdown.replace(
+                original_task_line, completed_task_line, 1
+            )
 
-             # --- END OF FIX ---
+            # --- END OF FIX ---
 
-             updated_project_status = "implementing"
+            updated_project_status = "implementing"
 
-             if "[ ]" not in new_todo_markdown:
-                 updated_project_status = "verification_complete"
-                 logger.info(f"All tasks completed for project {project.id}")
+            if "[ ]" not in new_todo_markdown:
+                updated_project_status = "verification_complete"
+                logger.info(f"All tasks completed for project {project.id}")
 
-             self.project_service.update_project(
-                 self.db,
-                 project.id,
-                 ProjectUpdate(
-                     current_todo_markdown=new_todo_markdown,
-                     status=updated_project_status,
-                 ),
-             )
+            self.project_service.update_project(
+                self.db,
+                project.id,
+                ProjectUpdate(
+                    current_todo_markdown=new_todo_markdown,
+                    status=updated_project_status,
+                ),
+            )
 
                 # Trigger Tech Lead after commit complete
                 try:
