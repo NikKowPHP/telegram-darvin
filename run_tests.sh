@@ -46,7 +46,7 @@ fi
 
 # Run tests
 echo "Running test suite..."
-pytest --alluredir=allure-results
+pytest ai_dev_bot_platform/tests/ --alluredir=allure-results
 
 # Generate audit report
 echo "Generating audit report..."

@@ -565,30 +565,30 @@ class ModelOrchestrator:
             )
 
             if verification_status == "APPROVED":
-             # --- START OF FIX ---
+                # --- START OF FIX ---
 
-            # 4. Mark TODO as complete by safely replacing the checkbox in the original line
-            completed_task_line = original_task_line.replace("[ ]", "[x]", 1)
-            new_todo_markdown = project.current_todo_markdown.replace(
-                original_task_line, completed_task_line, 1
-            )
+                # 4. Mark TODO as complete by safely replacing the checkbox in the original line
+                completed_task_line = original_task_line.replace("[ ]", "[x]", 1)
+                new_todo_markdown = project.current_todo_markdown.replace(
+                    original_task_line, completed_task_line, 1
+                )
 
-            # --- END OF FIX ---
+                # --- END OF FIX ---
 
-            updated_project_status = "implementing"
+                updated_project_status = "implementing"
 
-            if "[ ]" not in new_todo_markdown:
-                updated_project_status = "verification_complete"
-                logger.info(f"All tasks completed for project {project.id}")
+                if "[ ]" not in new_todo_markdown:
+                    updated_project_status = "verification_complete"
+                    logger.info(f"All tasks completed for project {project.id}")
 
-            self.project_service.update_project(
-                self.db,
-                project.id,
-                ProjectUpdate(
-                    current_todo_markdown=new_todo_markdown,
-                    status=updated_project_status,
-                ),
-            )
+                self.project_service.update_project(
+                    self.db,
+                    project.id,
+                    ProjectUpdate(
+                        current_todo_markdown=new_todo_markdown,
+                        status=updated_project_status,
+                    ),
+                )
 
                 # Trigger Tech Lead after commit complete
                 try:
