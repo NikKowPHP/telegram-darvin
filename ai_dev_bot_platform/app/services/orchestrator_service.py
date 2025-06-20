@@ -450,94 +450,30 @@ class ModelOrchestrator:
             )
 
             if verification_status == "APPROVED":
-                # --- START OF FIX ---
+             # --- START OF FIX ---
 
-                # 4. Mark TODO as complete by safely replacing the checkbox in the original line
-                completed_task_line = original_task_line.replace("[ ]", "[x]", 1)
-                new_todo_markdown = project.current_todo_markdown.replace(
-                    original_task_line, completed_task_line, 1
-                )
+             # 4. Mark TODO as complete by safely replacing the checkbox in the original line
+             completed_task_line = original_task_line.replace("[ ]", "[x]", 1)
+             new_todo_markdown = project.current_todo_markdown.replace(
+                 original_task_line, completed_task_line, 1
+             )
 
-                # --- END OF FIX ---
+             # --- END OF FIX ---
 
-                updated_project_status = "implementing"
+             updated_project_status = "implementing"
 
-                if "[ ]" not in new_todo_markdown:
-                    updated_project_status = "verification_complete"
-                    logger.info(f"All tasks completed for project {project.id}")
+             if "[ ]" not in new_todo_markdown:
+                 updated_project_status = "verification_complete"
+                 logger.info(f"All tasks completed for project {project.id}")
 
-                    logger.info(
-                        f"Project {project.id} tasks complete. Generating README.md..."
-                    )
-                    self.project_service.update_project(
-                        self.db, project.id, ProjectUpdate(status="readme_generation")
-                    )
-
-                    bucket_name = str(project.id)
-                    storage_files = self.storage_service.list_files(bucket_name)
-                    project_files_for_readme = []
-                    for storage_file in storage_files:
-                        file_content = self.storage_service.download_file(
-                            bucket_name, storage_file["name"]
-                        )
-                        if file_content is not None:
-                            project_files_for_readme.append(
-                                {
-                                    "file_path": storage_file["name"],
-                                    "content": file_content,
-                                }
-                            )
-
-                    readme_content = await self.architect_agent.generate_readme(project)
-
-                    if "Error" in readme_content:  # Simplified check
-                        self.project_service.update_project(
-                            self.db, project.id, ProjectUpdate(status="readme_failed")
-                        )
-                        return {
-                            "text": f"All tasks implemented and verified, but failed to generate README.md: {readme_content}",
-                            "zip_buffer": None,
-                        }
-                    else:
-                        self.project_file_service.create_project_file(
-                            db=self.db,
-                            project_id=project.id,
-                            file_path="README.md",
-                            content=readme_content,
-                        )
-                        self.storage_service.upload_file(
-                            bucket_name, "README.md", readme_content
-                        )
-                        self.project_service.update_project(
-                            self.db,
-                            project.id,
-                            ProjectUpdate(
-                                status="completed", completed_at=datetime.utcnow()
-                            ),
-                        )
-                        logger.info(
-                            f"README.md generated and project {project.id} marked as completed."
-                        )
-
-                        project_files_for_readme.append(
-                            {"file_path": "README.md", "content": readme_content}
-                        )
-                        zip_buffer = create_project_zip(project_files_for_readme)
-
-                        return {
-                            "text": f"Project '{project.title}' is complete! All tasks implemented and verified. Project is ready for delivery.",
-                            "zip_buffer": zip_buffer,
-                            "project_title": project.title,
-                        }
-
-                self.project_service.update_project(
-                    self.db,
-                    project.id,
-                    ProjectUpdate(
-                        current_todo_markdown=new_todo_markdown,
-                        status=updated_project_status,
-                    ),
-                )
+             self.project_service.update_project(
+                 self.db,
+                 project.id,
+                 ProjectUpdate(
+                     current_todo_markdown=new_todo_markdown,
+                     status=updated_project_status,
+                 ),
+             )
 
                 # Trigger Tech Lead after commit complete
                 try:
