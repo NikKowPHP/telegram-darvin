@@ -28,40 +28,19 @@ class ImplementerAgent:
         self.llm_client = llm_client
 
     async def run_tdd_cycle(self, project_root: str, task_description: str):
-        """Run a complete TDD cycle for a given task."""
-        logger.info(f"Starting TDD cycle for task: {task_description}")
+        """Implement the feature for a given task and return the filename and code."""
+        logger.info(f"Implementing task: {task_description}")
 
-        try:
-            # Step 1: Create current_task.md with the task breakdown
-            task_file_path = f"{project_root}/current_task.md"
-            with open(task_file_path, "w") as f:
-                f.write(f"# Task: {task_description}\n\n## Steps:\n1. Implement feature\n2. Write tests\n3. Commit changes")
+        # Implement the feature
+        implementation_result = await self._implement_feature(project_root, task_description)
+        if not implementation_result.get("success"):
+            return implementation_result
 
-            # Step 2: Implement the feature
-            logger.info("Implementing feature...")
-            implementation_result = await self._implement_feature(project_root, task_description)
-            if not implementation_result.get("success"):
-                return implementation_result
-
-            # Step 3: Write tests
-            logger.info("Writing tests...")
-            test_result = await self._write_tests(project_root, task_description)
-            if not test_result.get("success"):
-                return test_result
-
-            # Step 4: Commit changes
-            logger.info("Committing changes...")
-            commit_result = await self._commit_changes(project_root, task_description)
-            if not commit_result.get("success"):
-                return commit_result
-
-            # Step 5: Create COMMIT_COMPLETE.md signal file
-            with open(f"{project_root}/COMMIT_COMPLETE.md", "w") as f:
-                f.write(f"# Task Complete: {task_description}\n\nCommit message: {commit_result['commit_message']}")
-
-
-            logger.info("TDD cycle and documentation completed successfully")
-            return {"status": "success", "task": task_description}
+        # Return only the filename and code
+        return {
+            "filename": implementation_result.get("filename", ""),
+            "code": implementation_result.get("code", "")
+        }
 
     async def implement_todo_item(
         self,
@@ -71,25 +50,16 @@ class ImplementerAgent:
         project_id: str,
         codebase_indexer: Any,
     ) -> dict:
-        """Implement a TODO item using the TDD cycle."""
-        logger.info(
-            f"Implementer Agent: Implementing TODO: '{todo_item}' for project {project_id}"
-        )
+        """Implement a TODO item and return the filename and code."""
+        logger.info(f"Implementing TODO: '{todo_item}' for project {project_id}")
 
-        # Run the TDD cycle with the todo_item as the task description
+        # Run the implementation and get the filename and code
         result = await self.run_tdd_cycle(project_root=f"/home/kasjer/projects/{project_id}", task_description=todo_item)
 
-        # Check if the TDD cycle was successful
-        if result["status"] == "error":
-            return {
-                "error": f"TDD cycle failed for task: {todo_item}. Error: {result.get('error', 'Unknown error')}",
-                "llm_call_details": {},
-            }
-
+        # Return only the filename and code
         return {
-            "status": "success",
-            "task": todo_item,
-            "message": "Task implemented successfully using TDD cycle",
+            "filename": result.get("filename", ""),
+            "code": result.get("code", "")
         }
 
 async def apply_changes_with_aider(
