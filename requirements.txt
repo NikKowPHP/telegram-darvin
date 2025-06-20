@@ -1,7 +1,3 @@
-<<<<<<< HEAD
--e ./ai_dev_bot_platform
-qdrant-client
-=======
 fastapi
 uvicorn[standard]
 sqlalchemy
@@ -13,13 +9,13 @@ pydantic-settings
 httpx
 google-generativeai
 python-dotenv
->>>>>>> 7562785d720fe058f884cf1325a40b9b8352d8c8
 sentence-transformers
 faiss-cpu
 numpy==1.26.4
 alembic
 pytest
 pytest-mock
+pytest-asyncio
 aider-chat
 stripe
 supabase
