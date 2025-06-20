@@ -102,6 +102,11 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
                 reply_markup=ReplyKeyboardRemove()
             )
 
+            # Handoff to Orchestrator with the confirmed project description
+            from app.services.orchestrator_service import get_orchestrator
+            orchestrator = get_orchestrator(db)
+            await orchestrator.start_planning_phase(project_id, project_data.description)
+
             # Reset state
             context.user_data["requirement_state"] = RequirementState.COMPLETED.value
         finally:

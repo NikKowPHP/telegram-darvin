@@ -730,6 +730,43 @@ class ModelOrchestrator:
             f"Deducted {credits_to_deduct} credits from user {user.id}. New balance: {updated_user.credit_balance}"
         )
 
+async def start_planning_phase(self, project_id: str, project_description: str) -> None:
+    """Start the planning phase for a new project."""
+    try:
+        # Get the project from the database
+        project = self.project_service.get_project(self.db, uuid.UUID(project_id))
+        if not project:
+            logger.error(f"Project not found for ID: {project_id}")
+            return
+
+        # Generate initial plan and docs
+        plan_result = await self.architect_agent.generate_initial_plan_and_docs(
+            project_requirements=project_description,
+            project_title=project.title
+        )
+
+        if "error" in plan_result:
+            logger.error(f"Error generating project plan: {plan_result['error']}")
+            return
+
+        # Update project with the plan
+        update_data = ProjectUpdate(
+            status="planning",
+            current_todo_markdown=plan_result.get("todo_list_markdown", ""),
+            tech_stack=plan_result.get("tech_stack_suggestion", {})
+        )
+        self.project_service.update_project(self.db, project.id, update_data)
+
+        # Notify user that planning is complete and implementation can begin
+        user = self.user_service.get_user_by_id(self.db, project.user_id)
+        if user:
+            await self.notifier.send_update(
+                user.telegram_user_id,
+                f"Planning complete for project '{project.title}'. You can now start implementing tasks."
+            )
+    except Exception as e:
+        logger.error(f"Error starting planning phase: {e}", exc_info=True)
+
 # Function to get orchestrator instance
 def get_orchestrator(db: Session) -> ModelOrchestrator:
     return ModelOrchestrator(db)

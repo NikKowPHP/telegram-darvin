@@ -46,3 +46,14 @@ class APIKeyUsage(Base):
     actual_cost_usd = Column(DECIMAL(10, 6), nullable=True)
     response_time_ms = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=func.now())
+
+class APIKey(Base):
+    __tablename__ = "api_keys"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    provider = Column(String(100), nullable=False)
+    encrypted_key = Column(TEXT, nullable=False)
+    is_active = Column(Boolean, default=True)
+    last_used = Column(DateTime, nullable=True)
+    usage_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
