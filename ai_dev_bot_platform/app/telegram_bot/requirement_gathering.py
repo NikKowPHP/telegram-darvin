@@ -4,6 +4,7 @@ from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ContextTypes
 from app.schemas.project import ProjectCreate
 from app.services.project_service import ProjectService
+from app.services.orchestrator_service import OrchestratorService
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 
@@ -24,7 +25,7 @@ async def start_requirement_gathering(update: Update, context: ContextTypes.DEFA
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
     await update.message.reply_text(
-        "Let's start by naming your project:",
+        "Let's start by giving your project a name. This could be something like 'E-commerce Platform' or 'Task Management App':",
         reply_markup=reply_markup
     )
 
@@ -42,7 +43,12 @@ async def handle_project_name(update: Update, context: ContextTypes.DEFAULT_TYPE
     context.user_data["requirement_state"] = RequirementState.WAITING_FOR_PROJECT_DESCRIPTION.value
 
     await update.message.reply_text(
-        "Great! Now please provide a brief description of your project:",
+        "Great! Now please describe your project in detail. Include:\n"
+        "- The main purpose or goal\n"
+        "- Target audience/users\n"
+        "- Key features/functionality\n"
+        "- Any specific technologies or frameworks you prefer\n\n"
+        "Example: 'I want to build a task management app for small teams with features like task assignments, due dates, and progress tracking. Preferably using Python and React.'",
         reply_markup=ReplyKeyboardRemove()
     )
 
