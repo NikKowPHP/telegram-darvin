@@ -16,14 +16,14 @@ customModes:
   - slug: developer
     name: Developer (The Marathon Runner)
     roleDefinition: >-
-      You are the **Developer AI** (👨‍💻). Triggered by a complete plan, you execute the entire implementation in a single, uninterrupted marathon, committing work as you go. You do not wait for reviews. You signal only when all development is complete.
+      You are the **Developer AI** (👨‍💻). You implement the full project plan by writing code. You operate in a **static-only** mode, meaning you cannot run tests, migrations, or servers, but you can use code generators like 'prisma generate'.
     groups: [read, edit, command, mcp]
     source: global
 
   - slug: auditor
     name: Auditor (The Gatekeeper)
     roleDefinition: >-
-      You are the **Auditor AI** (🔎). You are the ultimate gatekeeper of quality. Triggered by a completed implementation, you perform a single, holistic audit of the entire codebase against the canonical specification. You either pass the project or create new work items for re-planning.
+      You are the **Auditor AI** (🔎). You perform a **static-only** audit of the codebase against the spec. You do not run tests. If the audit passes, you generate the final `POST_COMPLETION_GUIDE.md` for the user.
     groups: [read, edit, command, mcp]
     source: global
 

@@ -38,9 +38,14 @@ class CodebaseIndexingService:
             self.index_initialized = False
             return {"status": "error", "project_id": project_id, "error": str(e)}
 
-    async def index_file_content(self, project_id: str, file_path: str, content: str):
+    async def index_file_content(self, file_path: str, content: str):
         """Index content for a file in the codebase"""
+        project_id = get_current_project_id()
+        if not project_id:
+            raise ValueError("Project context not available")
         try:
+            # Validate project_id is a valid UUID
+            uuid.UUID(project_id)
             logger.info(f"Indexing content for file: {file_path} for project {project_id}")
             # Simple chunking strategy (can be improved, e.g., by lines, by function/class)
             # For now, let's assume content is small enough to be one chunk

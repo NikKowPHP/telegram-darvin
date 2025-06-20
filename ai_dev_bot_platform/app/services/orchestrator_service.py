@@ -27,6 +27,7 @@ from app.services.task_queue import TaskQueue
 from app.services.notification_service import NotificationService
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.core.config import settings
+from app.core.context import get_current_project_id, set_current_project_id
 from decimal import Decimal
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import json
@@ -204,9 +205,18 @@ class ModelOrchestrator:
                 project_id = plan_match.group(2)
                 return await self._handle_plan_task(user, project_id, task_index)
 
-            return await self._handle_architect_request(user_input)
+            # Get current project ID from context
+            project_id = get_current_project_id()
+            if not project_id:
+                return {"text": "Project context not available", "zip_buffer": None}
+            return await self._handle_architect_request(user_input, project_id)
         elif "implement" in user_input.lower() or "code" in user_input.lower():
-            return await self._handle_implementer_request(user_input)
+            # Get current project ID from context
+            project_id = get_current_project_id()
+            if not project_id:
+                return {"text": "Project context not available", "zip_buffer": None}
+            project = self.project_service.get_project(self.db, uuid.UUID(project_id))
+            return await self._handle_implementer_request(user_input, project_id)
 
         return {
             "text": "I'm not sure how to handle that yet. Try describing a project or 'implement task X of project Y'",
@@ -262,6 +272,7 @@ class ModelOrchestrator:
             project = self.project_service.create_project(
                 self.db, project_in, user_id=user.id
             )
+            set_current_project_id(str(project.id))  # Set project context
 
             self.storage_service.create_bucket(str(project.id))
 
@@ -641,12 +652,12 @@ class ModelOrchestrator:
                 "zip_buffer": None,
             }
 
-    async def _handle_architect_request(self, user_input: str) -> str:
+    async def _handle_architect_request(self, user_input: str, project_id: str) -> str:
         """Handle architect-specific requests with codebase context"""
         try:
             # Get relevant context from codebase index
-            # For now, we'll use a placeholder project ID since we don't have a real project context
-            project_id = "placeholder_project_id"
+            if not project_id:
+                return {"text": "Project context not available", "zip_buffer": None}
             context_results = await self.codebase_indexing_service.query_codebase(
                 project_id, user_input
             )
@@ -728,12 +739,12 @@ class ModelOrchestrator:
                     "zip_buffer": None,
                 }
 
-    async def _handle_implementer_request(self, user_input: str) -> str:
+    async def _handle_implementer_request(self, user_input: str, project_id: str) -> str:
         """Handle implementer-specific requests with codebase context"""
         try:
             # Get relevant context from codebase index
-            # For now, we'll use a placeholder project ID since we don't have a real project context
-            project_id = "placeholder_project_id"
+            if not project_id:
+                return {"text": "Project context not available", "zip_buffer": None}
             context_results = await self.codebase_indexing_service.query_codebase(
                 project_id, user_input
             )
