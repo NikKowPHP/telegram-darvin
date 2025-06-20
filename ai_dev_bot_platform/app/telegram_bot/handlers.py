@@ -1,4 +1,6 @@
 import logging
+import uuid
+import os
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, CommandHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -146,63 +148,23 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             )
             return
 
-        from app.services.orchestrator_service import get_orchestrator
+        # ROO-AUDIT-TAG :: refactoring-epic-001-architectural-conflict.md :: Decouple Telegram Bot from Python Orchestration
+        # Create project directory
+        project_id = str(uuid.uuid4())
+        project_dir = os.path.join("projects", project_id)
+        os.makedirs(project_dir, exist_ok=True)
 
-        orchestrator = get_orchestrator(db)
-        response_data = await orchestrator.process_user_request(
-            user=user_db, user_input=text
-        )
+        # Write requirements to app_description.md
+        with open(os.path.join(project_dir, "app_description.md"), "w") as f:
+            f.write(text)
 
-        response_text = response_data.get("text")
-        zip_buffer = response_data.get("zip_buffer")
-        reply_markup = response_data.get("reply_markup")
-        project_id = response_data.get("project_id")
+        # Store project ID in context
+        context.user_data["last_project_id"] = project_id
+        logger.info(f"Stored last_project_id for user {user_tg.id}: {project_id}")
 
-        # If a new project was created, store its ID in the user's context data
-        if project_id and is_new_project_description(text):
-            context.user_data["last_project_id"] = project_id
-            logger.info(f"Stored last_project_id for user {user_tg.id}: {project_id}")
-
-        # Determine if this is a planning or implementation task
-        if text.lower().startswith("plan task"):
-            # Extract task index and project ID from the message
-            import re
-            plan_match = re.match(
-                r"plan task (\d+) of project (.+)", text, re.IGNORECASE
-            )
-            if plan_match:
-                task_index = int(plan_match.group(1))
-                project_id = plan_match.group(2)
-                # Create a command string for the orchestrator
-                command_string = f"plan task {task_index} of project {project_id}"
-                # Use the orchestrator with the command string
-                response_data = await orchestrator.process_user_request(
-                    user=user_db, user_input=command_string
-                )
-                # Send the response
-                response_text = response_data.get("text")
-                if response_text:
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text=response_text,
-                    )
-                return
-
-        if response_text:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=response_text,
-                reply_markup=reply_markup,
-            )
-
-        if zip_buffer:
-            project_title = response_data.get("project_title", "project")
-            file_name = f"{project_title.replace(' ', '_')}.zip"
-            await context.bot.send_document(
-                chat_id=update.effective_chat.id,
-                document=zip_buffer,
-                filename=file_name,
-            )
+        # Confirm receipt
+        await update.message.reply_text("✅ Requirements received. The architect will review them shortly.")
+        # ROO-AUDIT-TAG :: refactoring-epic-001-architectural-conflict.md :: END
 
     except Exception as e:
         logger.error(
