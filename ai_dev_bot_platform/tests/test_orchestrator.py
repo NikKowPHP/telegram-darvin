@@ -1,6 +1,7 @@
 import pytest
 import uuid
 from unittest.mock import MagicMock, AsyncMock
+from datetime import datetime
 from app.services.orchestrator_service import ModelOrchestrator
 from app.schemas.user import User
 
@@ -48,7 +49,11 @@ async def test_handle_new_project_flow(mocker):
 
     # 2. Action
     test_user = User(
-        id=1, telegram_user_id=123, credit_balance=100, created_at=None, updated_at=None
+        id=1,
+        telegram_user_id=123,
+        credit_balance=100,
+        created_at=datetime(2024, 1, 1),
+        updated_at=datetime(2024, 1, 1)
     )
     result = await orchestrator._handle_new_project(test_user, "create a new web app")
 
@@ -98,7 +103,11 @@ async def test_handle_refine_request_flow(mocker):
 
     # 2. Action
     test_user = User(
-        id=1, telegram_user_id=123, credit_balance=100, created_at=None, updated_at=None
+        id=1,
+        telegram_user_id=123,
+        credit_balance=100,
+        created_at=datetime(2024, 1, 1),
+        updated_at=datetime(2024, 1, 1)
     )
     await orchestrator._handle_refine_request(
         test_user, str(fake_project_id), "src/main.py", "add a comment"
