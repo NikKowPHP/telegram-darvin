@@ -7,6 +7,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from app.schemas.user import User
 from app.services.api_key_manager import APIKeyManager
+from app.services.conversation_service import ConversationService
+from app.schemas.conversation import ConversationCreate
 from app.utils.llm_client import LLMClient
 from app.utils.file_utils import create_project_zip
 from app.agents.architect_agent import ArchitectAgent
@@ -48,12 +50,23 @@ class ModelOrchestrator:
         self.user_service = UserService()
         self.task_queue = TaskQueue()
         self.notifier = NotificationService()
+        self.conversation_service = ConversationService(db)
 
     def _is_long_running(self, user_input: str) -> bool:
         """Determine if a request should be processed asynchronously"""
         return self._is_new_project(user_input) or user_input.lower().startswith("implement task")
 
     async def process_user_request(self, user: User, user_input: str) -> dict:
+        # Log the conversation
+        try:
+            conversation = ConversationCreate(
+                user_id=user.id,
+                messages={"request": user_input}
+            )
+            await self.conversation_service.create_conversation(conversation)
+        except Exception as e:
+            logger.error(f"Failed to log conversation: {e}", exc_info=True)
+
         logger.info(
             f"Orchestrator processing request for user {user.telegram_user_id}: '{user_input}'"
         )
@@ -92,6 +105,71 @@ class ModelOrchestrator:
                     "zip_buffer": None
                 }
 
+        # Check for Developer handoff signal
+        if os.path.exists('COMMIT_COMPLETE.md'):
+            logger.info("Developer handoff signal detected - processing COMMIT_COMPLETE.md")
+            try:
+                with open('COMMIT_COMPLETE.md', 'r') as f:
+                    commit_details = f.read()
+                
+                # Parse commit information
+                task_match = re.search(r'# Task Complete: (.*?)\n', commit_details)
+                commit_match = re.search(r'Commit message: (.*?)$', commit_details, re.MULTILINE)
+                
+                task_description = task_match.group(1).strip() if task_match else "Unknown task"
+                commit_message = commit_match.group(1).strip() if commit_match else "No commit message"
+                
+                logger.info(f"Handing off to Architect for task: {task_description}")
+                
+                # Get actual project from database (simplified example)
+                # In production this would come from the project manifest
+                current_project = self.project_service.get_current_project(self.db)
+                
+                verification_result = await self.architect_agent.verify_implementation_step(
+                    project=current_project,
+                    code_snippet=commit_details,
+                    relevant_docs=current_project.description if current_project else "",
+                    todo_item=task_description
+                )
+                
+                # Clean up signal file regardless of verification result
+                try:
+                    os.remove('COMMIT_COMPLETE.md')
+                except Exception as e:
+                    logger.error(f"Error removing COMMIT_COMPLETE.md: {e}")
+                
+                if verification_result.get('status') == 'APPROVED':
+                    logger.info(f"Task approved: {task_description}")
+                    return {
+                        "text": (f"✅ Task verified successfully!\n\n"
+                                f"Task: {task_description}\n"
+                                f"Commit: {commit_message}\n"
+                                f"Feedback: {verification_result.get('feedback', '')}"),
+                        "zip_buffer": None,
+                        "status": "verified"
+                    }
+                else:
+                    logger.warning(f"Task rejected: {task_description}")
+                    return {
+                        "text": (f"❌ Verification failed for task:\n\n"
+                                f"Task: {task_description}\n"
+                                f"Commit: {commit_message}\n"
+                                f"Feedback: {verification_result.get('feedback', 'No feedback provided')}\n\n"
+                                f"Please address the issues and try again."),
+                        "zip_buffer": None
+                    }
+                
+            except Exception as e:
+                logger.error(f"Developer handoff processing failed: {e}", exc_info=True)
+                # Attempt to clean up signal file even on error
+                try:
+                    os.remove('COMMIT_COMPLETE.md')
+                except:
+                    pass
+                return {
+                    "text": f"Error processing developer handoff: {str(e)}",
+                    "zip_buffer": None
+                }
         if self._is_long_running(user_input):
             await self.task_queue.add_task(
                 lambda: self._handle_task_async(user, user_input)

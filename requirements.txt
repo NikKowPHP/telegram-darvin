@@ -1,4 +1,29 @@
+<<<<<<< HEAD
 -e ./ai_dev_bot_platform
 qdrant-client
+=======
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+redis
+python-telegram-bot
+pydantic
+pydantic-settings
+httpx
+google-generativeai
+python-dotenv
+>>>>>>> 7562785d720fe058f884cf1325a40b9b8352d8c8
 sentence-transformers
-tree-sitter
+faiss-cpu
+numpy==1.26.4
+alembic
+pytest
+pytest-mock
+aider-chat
+stripe
+supabase
+email-validator
+prometheus-client
+qdrant-client
+celery[redis]

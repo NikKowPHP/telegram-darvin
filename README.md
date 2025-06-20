@@ -12,8 +12,42 @@ This repository contains the source code for an autonomous AI software developme
 -   **Aider Integration:** Capable of in-place code refinement and editing.
 -   **Automated Verification:** The Architect agent reviews implemented code against project goals.
 -   **Credit-Based System:** Users operate on a credit balance, with costs deducted for LLM usage.
+-   **Conversation Logging:** All user interactions are stored in the database for quality assurance and continuous improvement.
 -   **Project Delivery:** Completed projects, including a generated `README.md`, are delivered as a ZIP file.
 -   **Production-Ready:** Built with FastAPI, SQLAlchemy, Alembic for migrations, and includes Docker/Kubernetes configurations.
+
+## 💬 Conversation Logging
+
+The system automatically logs all user interactions with the following details:
+- User ID
+- Timestamp
+- Full message history
+- Project context (when available)
+
+This helps with:
+- Debugging user issues
+- Improving AI responses through analysis
+- Maintaining audit trails
+
+### Example Usage
+```python
+from app.services.conversation_service import ConversationService
+from app.db.session import SessionLocal
+
+db = SessionLocal()
+conversation_service = ConversationService(db)
+
+# Get last 10 conversations for a user
+recent_convs = conversation_service.get_conversations_by_user(
+    user_id=123,
+    limit=10
+)
+
+# Get conversations containing specific keywords
+search_results = conversation_service.search_conversations(
+    search_text="API error"
+)
+```
 
 ## ⚙️ Technology Stack
 

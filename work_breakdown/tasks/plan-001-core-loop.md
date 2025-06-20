@@ -18,3 +18,8 @@
 - [x] (LOGIC) Update Orchestrator decision tree:
     - Implement Project Init path when manifest doesn't exist
     - Add handoff to Architect for blueprint mode
+
+- [x] (LOGIC) Fix Orchestrator's Developer handoff:
+    - Remove handoff to non-existent "tech-lead" mode
+    - Instead, hand off commit reviews to the Architect
+    - Update the Orchestrator's `process_user_request` method to call the Architect for verification

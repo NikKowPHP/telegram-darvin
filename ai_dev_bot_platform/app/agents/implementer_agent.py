@@ -5,6 +5,7 @@ import subprocess
 from app.utils.llm_client import LLMClient
 from typing import Dict, Any
 from app.core.config import settings
+from app.services.readme_generation_service import ReadmeGenerationService
 
 logger = logging.getLogger(__name__)
 
@@ -30,37 +31,49 @@ class ImplementerAgent:
         """Run a complete TDD cycle for a given task."""
         logger.info(f"Starting TDD cycle for task: {task_description}")
 
-        # Step 1: Create current_task.md with the task breakdown
-        task_file_path = f"{project_root}/current_task.md"
-        with open(task_file_path, "w") as f:
-            f.write(f"# Task: {task_description}\n\n## Steps:\n1. Implement feature\n2. Write tests\n3. Commit changes")
-
-        # Step 2: Implement the feature
-        logger.info("Implementing feature...")
-        # [Implementation logic would go here]
-
-        # Step 3: Write tests
-        logger.info("Writing tests...")
-        # [Test writing logic would go here]
-
-        # Step 4: Commit changes
-        logger.info("Committing changes...")
-        commit_message = f"feat: Complete task: {task_description}"
         try:
-            # Add all changes to staging
-            subprocess.run(["git", "add", "."], cwd=project_root, check=True)
-            # Commit with the formatted message
-            subprocess.run(["git", "commit", "-m", commit_message], cwd=project_root, check=True)
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Git command failed: {e}")
-            return {"status": "error", "task": task_description, "error": str(e)}
+            # Step 1: Create current_task.md with the task breakdown
+            task_file_path = f"{project_root}/current_task.md"
+            with open(task_file_path, "w") as f:
+                f.write(f"# Task: {task_description}\n\n## Steps:\n1. Implement feature\n2. Write tests\n3. Commit changes")
 
-        # Step 5: Create COMMIT_COMPLETE.md signal file
-        with open(f"{project_root}/COMMIT_COMPLETE.md", "w") as f:
-            f.write(f"# Task Complete: {task_description}\n\nCommit message: {commit_message}")
+            # Step 2: Implement the feature
+            logger.info("Implementing feature...")
+            implementation_result = await self._implement_feature(project_root, task_description)
+            if not implementation_result.get("success"):
+                return implementation_result
 
-        logger.info("TDD cycle completed successfully")
-        return {"status": "success", "task": task_description}
+            # Step 3: Write tests
+            logger.info("Writing tests...")
+            test_result = await self._write_tests(project_root, task_description)
+            if not test_result.get("success"):
+                return test_result
+
+            # Step 4: Commit changes
+            logger.info("Committing changes...")
+            commit_result = await self._commit_changes(project_root, task_description)
+            if not commit_result.get("success"):
+                return commit_result
+
+            # Step 5: Create COMMIT_COMPLETE.md signal file
+            with open(f"{project_root}/COMMIT_COMPLETE.md", "w") as f:
+                f.write(f"# Task Complete: {task_description}\n\nCommit message: {commit_result['commit_message']}")
+
+            # Step 6: Generate README
+            readme_service = ReadmeGenerationService({
+                "name": "AI Developer Bot Platform",
+                "description": "Autonomous AI-powered development platform with TDD workflow"
+            })
+            readme_content = readme_service.generate_readme()
+            with open(f"{project_root}/README.md", "w") as f:
+                f.write(readme_content)
+            
+            # Commit the generated README
+            subprocess.run(["git", "add", "README.md"], cwd=project_root, check=True)
+            subprocess.run(["git", "commit", "-m", "docs: Add project README"], cwd=project_root, check=True)
+
+            logger.info("TDD cycle and documentation completed successfully")
+            return {"status": "success", "task": task_description}
 
     async def implement_todo_item(
         self,
