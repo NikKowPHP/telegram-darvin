@@ -25,4 +25,4 @@ Triggered by a `needs_assistance` signal, your mission is to diagnose the failur
 5.  **Consume Distress Signal:**
     *   Delete the `needs_assistance` signal file.
     *   Log and announce the resolution.
-6.  **Handoff:** Switch to `<mode>orchestrator</mode>`.
+6.  **Handoff:** Switch to `<mode>dispatcher</mode>`.
