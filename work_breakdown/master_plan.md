@@ -25,6 +25,6 @@
 - [x] Docker, Kubernetes
 
 ## Phase 5: Audit Fixes
-- [ ] Async Test Support
-- [ ] Complete README Generation
-- [ ] Improve Test Coverage
+- [ ] Agent Responsibility and Workflow Correction
+- [ ] Database Schema Mismatches
+- [ ] Incomplete Requirement Gathering Flow

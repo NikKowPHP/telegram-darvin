@@ -59,18 +59,6 @@ class ImplementerAgent:
             with open(f"{project_root}/COMMIT_COMPLETE.md", "w") as f:
                 f.write(f"# Task Complete: {task_description}\n\nCommit message: {commit_result['commit_message']}")
 
-            # Step 6: Generate README
-            readme_service = ReadmeGenerationService({
-                "name": "AI Developer Bot Platform",
-                "description": "Autonomous AI-powered development platform with TDD workflow"
-            })
-            readme_content = readme_service.generate_readme()
-            with open(f"{project_root}/README.md", "w") as f:
-                f.write(readme_content)
-            
-            # Commit the generated README
-            subprocess.run(["git", "add", "README.md"], cwd=project_root, check=True)
-            subprocess.run(["git", "commit", "-m", "docs: Add project README"], cwd=project_root, check=True)
 
             logger.info("TDD cycle and documentation completed successfully")
             return {"status": "success", "task": task_description}
