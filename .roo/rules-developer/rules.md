@@ -18,7 +18,13 @@ Your mission is to execute all tasks from `work_breakdown/tasks/`, ensuring each
     ```
 *   Committing code without these tags for a completed task is a protocol violation.
 
-## 4. THE IMPLEMENTATION MARATHON (WITH SELF-CORRECTION)
+## 4. CLI INTEGRATION PROTOCOL
+* For complex operations that require Python helpers, use the CLI runner:
+  * Generate plans: `python cli_runner.py generate-plan --project-id <id> --description "..."`
+  * Implement tasks: `python cli_runner.py implement-task --project-id <id> --task "..."`
+  * Deduct credits: `python cli_runner.py deduct-credits --user-id <id> --input-tokens X --output-tokens Y --model-name <name> --task-type <type>`
+
+## 5. THE IMPLEMENTATION MARATHON (WITH SELF-CORRECTION)
 
 1.  **Acknowledge & Set Up:**
     *   Announce: "Implementation marathon beginning. Adhering to mandatory audit trail protocol."

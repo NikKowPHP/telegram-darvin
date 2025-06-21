@@ -132,9 +132,14 @@ This command starts only the services the application depends on, leaving the ap
     python3 -m venv venv
     source venv/bin/activate
 
-    # For Windows
-    python -m venv venv
+    # For Windows (using py command)
+    py -m venv venv
     .\venv\Scripts\activate
+    ```
+
+    Alternatively, use the Windows batch script:
+    ```batch
+    setup_venv.bat
     ```
 
 2.  Install all the required Python packages:
@@ -153,9 +158,15 @@ The test environment requires a virtual environment to be set up. The `run_tests
     bash run_tests.sh
     ```
 
+    On Windows, you can also use the batch script:
+    ```batch
+    setup_venv.bat
+    pytest
+    ```
+
 2.  The script will:
-    - Check if the `.venv` directory exists
-    - Create it using `setup_venv.sh` if missing
+    - Check if the virtual environment exists
+    - Create it if missing
     - Activate the virtual environment
     - Install any missing dependencies from `requirements.txt`
     - Run the test suite using `pytest`
@@ -163,10 +174,9 @@ The test environment requires a virtual environment to be set up. The `run_tests
 
 This ensures a consistent test environment across different development setups.
 
-### 6. Run Database Migrations
+### 7. Run Database Migrations
 
 With the database running in Docker and your environment configured, apply the latest database schema using Alembic.
-
 
 alembic upgrade head
 

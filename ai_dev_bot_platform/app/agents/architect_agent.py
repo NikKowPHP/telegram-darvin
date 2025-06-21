@@ -41,6 +41,24 @@ Start the TODO list with '### Implementation TODO List'"""
             todo_list_md = ""
             tech_stack = {}
 
+            # Extract tech stack from response
+            if "Technology Stack:" in response_text:
+                tech_part = response_text.split("Technology Stack:", 1)[1].split("\n\n", 1)[0]
+                tech_lines = [line.strip() for line in tech_part.split('\n') if line.strip()]
+                tech_stack = {
+                    "frontend": [],
+                    "backend": [],
+                    "database": [],
+                    "infrastructure": []
+                }
+                for line in tech_lines:
+                    if ":" in line:
+                        category, items = line.split(":", 1)
+                        category = category.strip().lower()
+                        if category in tech_stack:
+                            tech_stack[category] = [i.strip() for i in items.split(",")]
+
+            # Extract TODO list
             if "### Implementation TODO List" in response_text:
                 parts = response_text.split("### Implementation TODO List", 1)
                 doc_content = parts[0].strip()
@@ -52,7 +70,7 @@ Start the TODO list with '### Implementation TODO List'"""
 
             return {
                 "documentation": doc_content,
-                "tech_stack_suggestion": tech_stack,  # NEW: Return the dict
+                "tech_stack_suggestion": tech_stack,
                 "todo_list_markdown": todo_list_md,
                 "llm_call_details": llm_response_dict,
             }
@@ -65,6 +83,7 @@ Start the TODO list with '### Implementation TODO List'"""
     async def verify_implementation_step(
         self, project: Project, code_snippet: str, relevant_docs: str, todo_item: str
     ) -> dict:
+        """Verify a single implementation step against project requirements"""
         logger.info(
             f"Architect Agent: Verifying step for project {project.id}: '{todo_item}'"
         )
@@ -106,6 +125,31 @@ If REJECTED, suggest updates to the code or the TODO list."""
                 "feedback": response_text,
                 "llm_call_details": llm_response_dict,
             }
+
+    async def validate_architecture(self, project: Project) -> dict:
+        """Validate the overall project architecture"""
+        prompt = f"""As an expert architect, validate this project's technical design:
+        
+Project: {project.title}
+Description: {project.description}
+Current Tech Stack: {project.tech_stack}
+
+Identify any:
+1. Architectural anti-patterns
+2. Technology mismatches
+3. Scaling limitations
+4. Security concerns
+5. Deployment challenges
+
+Provide specific recommendations for improvement."""
+
+        llm_response_dict = await self.llm_client.call_llm(
+            prompt=prompt, model_name=settings.VERIFICATION_MODEL
+        )
+        return {
+            "analysis": llm_response_dict.get("text_response", ""),
+            "llm_call_details": llm_response_dict
+        }
 
     async def generate_readme(self, project: Project) -> str:
         logger.info(f"Architect Agent: Generating README for project {project.id}")

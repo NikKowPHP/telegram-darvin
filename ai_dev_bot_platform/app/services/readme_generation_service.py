@@ -8,17 +8,76 @@ class ReadmeGenerationService:
         self.project_info = project_info
         self.current_year = datetime.now().year
         
-    def generate_readme(self) -> str:
-        """Generate complete README.md content"""
+    def generate_readme(self, format: str = "markdown") -> str:
+        """Generate complete README content in specified format"""
+        if format not in ["markdown", "html", "rst"]:
+            raise ValueError(f"Unsupported format: {format}")
+
         sections = [
             self._generate_header(),
+            self._generate_badges(),
             self._generate_setup_instructions(),
             self._generate_configuration(),
             self._generate_usage(),
+            self._generate_api_docs(),
             self._generate_contributing(),
             self._generate_license()
         ]
-        return "\n\n".join(filter(None, sections))
+        
+        content = "\n\n".join(filter(None, sections))
+        
+        if format == "html":
+            from markdown import markdown
+            content = markdown(content)
+        elif format == "rst":
+            from m2r import convert
+            content = convert(content)
+            
+        return content
+
+    def _generate_badges(self) -> str:
+        """Generate status badges for the project"""
+        badges = []
+        if self.project_info.get("ci_url"):
+            badges.append(f"[![CI Status]({self.project_info['ci_url']}/badge.svg)]"
+                         f"({self.project_info['ci_url']})")
+        if self.project_info.get("coverage_url"):
+            badges.append(f"[![Coverage]({self.project_info['coverage_url']}/badge.svg)]"
+                         f"({self.project_info['coverage_url']})")
+        if self.project_info.get("pypi_version"):
+            badges.append(f"[![PyPI Version](https://img.shields.io/pypi/v/"
+                         f"{self.project_info['name']}.svg)]"
+                         f"(https://pypi.org/project/{self.project_info['name']}/)")
+        
+        return "\n".join(badges) + "\n" if badges else ""
+
+    def _generate_api_docs(self) -> str:
+        """Generate API documentation section"""
+        if not self.project_info.get("api_docs"):
+            return ""
+            
+        return f"""## API Documentation
+
+The following API endpoints are available:
+
+{self._format_endpoints(self.project_info['api_docs'])}
+
+For interactive documentation, visit:
+- Swagger UI: {self.project_info.get('swagger_url', '/docs')}
+- ReDoc: {self.project_info.get('redoc_url', '/redoc')}"""
+
+    def _format_endpoints(self, endpoints: list) -> str:
+        """Format API endpoints as a markdown table"""
+        if not endpoints:
+            return ""
+            
+        table = "| Method | Path | Description |\n"
+        table += "|--------|------|-------------|\n"
+        for endpoint in endpoints:
+            table += f"| {endpoint.get('method', 'GET')} "
+            table += f"| `{endpoint.get('path', '')}` "
+            table += f"| {endpoint.get('description', '')} |\n"
+        return table
     
     def _generate_header(self) -> str:
         return f"""# {self.project_info.get('name', 'Project Name')}

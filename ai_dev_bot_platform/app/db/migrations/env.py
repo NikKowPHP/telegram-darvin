@@ -19,6 +19,7 @@ from app.models.project import Project
 from app.models.project_file import ProjectFile
 from app.models.api_key_models import ModelPricing, APIKeyUsage
 from app.models.transaction import CreditTransaction
+from app.models.embedding import ProjectEmbedding
 
 target_metadata = Base.metadata
 

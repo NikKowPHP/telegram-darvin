@@ -1,50 +1,7 @@
-# Master Plan
+# Master Plan: Unification & Completion
 
-## Features to Implement
-
-1. [ ] **Requirement Gathering System**
-   - Implement conversational interface for requirement collection
-   - Design state machine for requirement gathering workflow
-   - Create database schema for storing conversations
-
-2. [ ] **Model Orchestrator**
-   - Implement routing logic for Architect vs Implementer tasks
-   - Create API endpoints for task routing
-   - Develop cost-aware routing algorithm
-
-3. [ ] **Architect Agent**
-   - Implement technical documentation generation
-   - Create TODO list generation functionality
-   - Develop technology stack selection algorithm
-
-4. [ ] **Codebase Indexing Service**
-   - Implement code parsing and indexing
-   - Create search API for code context
-   - Develop indexing update triggers
-
-5. [ ] **Implementer Agent**
-   - Create task execution system
-   - Implement code generation and modification
-   - Develop commit and progress tracking
-
-6. [ ] **Verification System**
-   - Implement cross-referencing between TODO, requirements, and code
-   - Create validation reports
-   - Develop automated testing integration
-
-7. [ ] **README Generator**
-   - Implement setup instruction generation
-   - Create configuration documentation
-   - Develop usage examples generator
-
-8. [ ] **Credit Management**
-   - Implement credit tracking system
-   - Create API usage metering
-   - Develop payment processing integration
-   - Implement credit purchase flow
-
-## Non-Functional Requirements
-- [ ] Scalability for multiple concurrent users
-- [ ] Security for API key storage
-- [ ] Performance optimization for large codebases
-- [ ] Comprehensive error handling
+- [x] Epic 1: Resolve the "Two Brains" Architectural Conflict (see [tasks/refactoring-epic-001-architectural-conflict.md](work_breakdown/tasks/refactoring-epic-001-architectural-conflict.md))
+- [ ] Epic 2: Implement Persistent Codebase Indexing (see [tasks/refactoring-epic-002-persistent-indexing.md](work_breakdown/tasks/refactoring-epic-002-persistent-indexing.md))
+- [ ] Epic 3: Complete the Credit Purchase Web Flow (see [tasks/refactoring-epic-003-credit-purchase.md](work_breakdown/tasks/refactoring-epic-003-credit-purchase.md))
+- [ ] Epic 4: Unify Documentation and Entry Points (see [tasks/refactoring-epic-004-documentation-entry.md](work_breakdown/tasks/refactoring-epic-004-documentation-entry.md))
+- [ ] Epic 5: Resolve Audit Failures (see [tasks/refactoring-epic-005-audit-fixes.md](work_breakdown/tasks/refactoring-epic-005-audit-fixes.md))

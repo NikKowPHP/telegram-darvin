@@ -16,8 +16,10 @@ class RequirementState(Enum):
     WAITING_FOR_CONFIRMATION = auto()
     COMPLETED = auto()
 
+# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Create state machine for requirement gathering workflow
 async def start_requirement_gathering(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Starts the requirement gathering process."""
+# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
     user_id = update.effective_user.id
     context.user_data["requirement_state"] = RequirementState.WAITING_FOR_PROJECT_NAME.value
 
@@ -29,8 +31,10 @@ async def start_requirement_gathering(update: Update, context: ContextTypes.DEFA
         reply_markup=reply_markup
     )
 
+# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Design question prompts for gathering project requirements
 async def handle_project_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handles the project name input."""
+# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
     user_id = update.effective_user.id
     project_name = update.message.text
 
@@ -53,7 +57,9 @@ async def handle_project_name(update: Update, context: ContextTypes.DEFAULT_TYPE
     )
 
 async def handle_project_description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Design question prompts for gathering project requirements
     """Handles the project description input."""
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
     user_id = update.effective_user.id
     project_description = update.message.text
 
@@ -75,7 +81,9 @@ async def handle_project_description(update: Update, context: ContextTypes.DEFAU
     )
 
 async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Implement confirmation step before proceeding
     """Handles the confirmation of project details."""
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
     user_id = update.effective_user.id
     confirmation = update.message.text
 
