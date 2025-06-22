@@ -6,9 +6,10 @@
 
   # Use https://search.nixos.org/packages to find packages
   packages = [
-    pkgs.postgresql_17
-    pkgs.postgresql17Tools
+    pkgs.postgresql_16
     pkgs.git
+    pkgs.docker
+    pkgs.docker-compose
   ];
 
   # Sets environment variables in the workspace
@@ -24,6 +25,7 @@
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
       # "vscodevim.vim"
+      
     ];
 
     # Enable previews
@@ -49,7 +51,7 @@
       onCreate = {
         # Initialize PostgreSQL database
         init-postgres = ''
-          export PGDATA=${pkgs.postgresql_17}/share/postgresql-17
+          export PGDATA=${pkgs.postgresql_16}/share/postgresql-16
           initdb -D $PGDATA
           pg_ctl -D $PGDATA start
           createuser -s $POSTGRES_USER
@@ -61,8 +63,11 @@
       onStart = {
         # Start PostgreSQL server
         start-postgres = ''
-          export PGDATA=${pkgs.postgresql_17}/share/postgresql-17
+          export PGDATA=${pkgs.postgresql_16}/share/postgresql-16
           pg_ctl -D $PGDATA start
+        '';
+        start-docker = ''
+          dockerd > dockerd.log 2>&1 &
         '';
       };
     };
