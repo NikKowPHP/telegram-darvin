@@ -13,8 +13,8 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install dependencies
-RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip --default-timeout=100 --retries 5 --index-url https://pypi.org/simple && \
+    pip install --no-cache-dir -r requirements.txt --default-timeout=100 --retries 5 --index-url https://pypi.org/simple
 
 # Copy the rest of the application code
 COPY . .
