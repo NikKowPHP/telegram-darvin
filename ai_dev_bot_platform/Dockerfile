@@ -11,11 +11,12 @@ WORKDIR /app
 
 # Copy the requirements file
 COPY requirements.txt .
+COPY .venv .venv
 
 # Install dependencies
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
-
+# RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 

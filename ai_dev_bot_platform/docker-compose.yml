@@ -13,8 +13,11 @@ services:
       - "8345:8000"
     volumes:
       - ./:/app
+      - ./.venv:/app/.venv
+      - ./.env:/app/.env
     env_file:
       - .env
+     
     environment:
      
       - HTTP_PROXY=${HTTP_PROXY}
