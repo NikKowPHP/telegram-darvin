@@ -1,4 +1,5 @@
 # ROO-AUDIT-TAG :: plan-002-model-orchestrator.md :: Implement model orchestrator service
+import json
 import logging
 import uuid
 import os
