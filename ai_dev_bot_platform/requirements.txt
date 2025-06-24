@@ -13,9 +13,7 @@ google-generativeai # For Gemini
 python-dotenv # For local .env file loading
 # Add other common utilities like 'requests' if needed later
 # For Codebase Indexing
-sentence-transformers
-faiss-cpu
-numpy==1.26.4
+pgvector
 alembic
 pytest
 pytest-mock
@@ -24,3 +22,5 @@ stripe
 supabase
 email-validator
 prometheus-client
+qdrant-client
+cryptography

@@ -93,7 +93,9 @@ from app.services.payment_service import PaymentService
 def test_create_checkout_session(mocker):
     # 1. Setup
     mock_stripe_session = mocker.patch("stripe.checkout.Session.create")
-    mock_stripe_session.return_value = {"url": "https://fake.stripe.url/session123"}
+    mock_session = MagicMock()
+    mock_session.url = "https://fake.stripe.url/session123"
+    mock_stripe_session.return_value = mock_session
 
     payment_service = PaymentService()
     # This user object is simplified for testing purposes

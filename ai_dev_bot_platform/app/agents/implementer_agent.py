@@ -1,9 +1,11 @@
 import logging
 import asyncio
 import re
+import subprocess
 from app.utils.llm_client import LLMClient
 from typing import Dict, Any
 from app.core.config import settings
+from app.services.readme_generation_service import ReadmeGenerationService
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +29,23 @@ class ImplementerAgent:
     def __init__(self, llm_client: LLMClient):
         self.llm_client = llm_client
 
+    async def run_tdd_cycle(self, project_root: str, task_description: str):
+        """Implement the feature for a given task and return the filename and code."""
+        logger.info(f"Implementing task: {task_description}")
+
+        # Implement the feature
+        implementation_result = await self._implement_feature(
+            project_root, task_description
+        )
+        if not implementation_result.get("success"):
+            return implementation_result
+
+        # Return only the filename and code
+        return {
+            "filename": implementation_result.get("filename", ""),
+            "code": implementation_result.get("code", ""),
+        }
+
     async def implement_todo_item(
         self,
         todo_item: str,
@@ -35,142 +54,107 @@ class ImplementerAgent:
         project_id: str,
         codebase_indexer: Any,
     ) -> dict:
-        logger.info(
-            f"Implementer Agent: Implementing TODO: '{todo_item}' for project {project_id}"
-        )
-        tech_stack_str = (
-            ", ".join([f"{k}: {v}" for k, v in tech_stack.items()])
-            if tech_stack
-            else "Not specified"
-        )
+        """Implement a TODO item and return the filename and code."""
+        logger.info(f"Implementing TODO: '{todo_item}' for project {project_id}")
 
-        # Get relevant code context
-        relevant_code = (
-            "No specific relevant code snippets found in the current codebase."
-        )
-        if codebase_indexer:
-            logger.debug(
-                f"Implementer querying codebase for context related to: {todo_item}"
+        try:
+            # Get relevant context from codebase index
+            relevant_code = await codebase_indexer.query_codebase(
+                project_id=project_id, query=todo_item
             )
-            context_snippets = await codebase_indexer.query_codebase(
-                project_id=project_id, query=todo_item, top_k=2
+
+            # Build full context for implementation
+            implementation_context = f"""
+            Project Context: {project_context}
+            Tech Stack: {tech_stack}
+            Relevant Code: {relevant_code}
+            Task: {todo_item}
+            """
+
+            # Run the implementation
+            result = await self.run_tdd_cycle(
+                project_root=f"/home/kasjer/projects/{project_id}",
+                task_description=implementation_context,
             )
-            if context_snippets:
-                relevant_code = "\n---\n".join(
-                    [
-                        f"File: {s['file_path']}\n```\n{s['content_chunk']}\n```"
-                        for s in context_snippets
-                    ]
+
+            if not result.get("success"):
+                raise Exception(
+                    result.get("error", "Unknown error during implementation")
                 )
 
-        system_prompt = f"""You are an expert, non-conversational file-generating AI. Your SOLE purpose is to generate the full content of a single file based on a given task.
+            # Validate the generated filename
+            filename = result.get("filename", "")
+            if not is_valid_filename(filename):
+                raise Exception(f"Invalid filename generated: {filename}")
 
-Tech Stack: {tech_stack_str}
-Project Context: {project_context}
-
-**CRITICAL INSTRUCTIONS:**
-1.  Your entire response will be for a SINGLE file.
-2.  The VERY FIRST line of your output MUST be the relative file path (e.g., `src/components/Button.js`).
-3.  The SECOND line MUST begin the raw code for that file.
-4.  DO NOT include any other text, explanations, apologies, or conversational filler.
-5.  ABSOLUTELY NO markdown formatting like ```python or ``` around the code.
-6.  If you cannot complete the task or it is ambiguous, respond with only the single word: ERROR
-
-**CORRECT Response Format Example:**
-src/utils/helpers.py
-def new_helper_function(param1, param2):
-    # function logic here
-    return param1 + param2
-
-**INCORRECT Response Format Example (DO NOT DO THIS):**
-Of course! Here is the file you requested:
-```python
-src/utils/helpers.py
-def new_helper_function(param1, param2):
-    # function logic here
-    return param1 + param2
-
-"""
-
-        model_name = settings.IMPLEMENTER_MODEL
-        llm_response_dict = await self.llm_client.call_openrouter(
-            model_name=model_name, prompt=todo_item, system_prompt=system_prompt
-        )
-        code_response = llm_response_dict.get("text_response", "").strip()
-
-        # --- START OF FIX ---
-        # 2. Defensive parsing and validation of the LLM response
-        if not code_response or code_response == "ERROR":
-            logger.error(
-                f"ImplementerAgent: LLM returned an error or empty response for task: {todo_item}"
-            )
             return {
-                "error": "The AI model could not generate a file for this task. The task may be too ambiguous or complex. Please try refining the TODO list.",
-                "llm_call_details": llm_response_dict,
+                "status": "success",
+                "filename": filename,
+                "code": result.get("code", ""),
+                "context_used": implementation_context,
             }
 
-        # Parse the response
-        if "\n" not in code_response:
-            # If there's no newline, it's likely a malformed response (e.g., just a filename, or just conversation)
-            logger.warning(
-                f"ImplementerAgent: LLM response has no newline, likely malformed. Response: '{code_response[:100]}...'"
-            )
-            return {
-                "error": "AI returned a malformed response (not a file). Please try the task again or refine the plan.",
-                "llm_call_details": llm_response_dict,
-            }
+        except Exception as e:
+            logger.error(f"Failed to implement TODO item: {e}", exc_info=True)
+            return {"status": "error", "error": str(e), "todo_item": todo_item}
 
-        lines = code_response.split("\n", 1)
-        filename = lines[0].strip()
-        code_content = lines[1] if len(lines) > 1 else ""
+    async def apply_changes_with_aider(
+        self,
+        project_root_path: str,
+        files_to_edit: list[str],
+        instruction: str,
+        max_retries: int = 3,
+    ) -> Dict[str, str]:
+        logger.info(f"Applying changes to {files_to_edit} with Aider: {instruction}")
 
-        # Validate the parsed filename
-        if not is_valid_filename(filename):
-            logger.error(
-                f"ImplementerAgent: LLM returned an invalid filename: '{filename}'. Full response: '{code_response[:200]}...'"
-            )
-            return {
-                "error": f"The AI model generated an invalid file path: '{filename}'. This often happens if the AI becomes conversational. Please try the task again.",
-                "llm_call_details": llm_response_dict,
-            }
+        # Validate all files exist and are valid
+        for file_path in files_to_edit:
+            if not is_valid_filename(file_path):
+                return {"status": "error", "output": f"Invalid filename: {file_path}"}
+            if not os.path.exists(os.path.join(project_root_path, file_path)):
+                return {"status": "error", "output": f"File not found: {file_path}"}
+
+        # Command structure: aider --yes --message "instruction" file1 file2 ...
+        command = ["aider", "--yes", "--message", instruction] + files_to_edit
+
+        attempt = 0
+        while attempt < max_retries:
+            attempt += 1
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    *command,
+                    cwd=project_root_path,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+
+                stdout, stderr = await process.communicate()
+
+                if process.returncode == 0:
+                    logger.info(f"Aider command successful. Output: {stdout.decode()}")
+                    return {
+                        "status": "success",
+                        "output": stdout.decode(),
+                        "attempts": attempt,
+                    }
+                else:
+                    logger.warning(
+                        f"Aider attempt {attempt} failed. Error: {stderr.decode()}"
+                    )
+                    if attempt >= max_retries:
+                        raise Exception(stderr.decode())
+                    await asyncio.sleep(1)  # Brief delay before retry
+
+            except FileNotFoundError:
+                logger.error("Aider command not found. Is 'aider-chat' installed?")
+                return {"status": "error", "output": "Aider command not found."}
+            except Exception as e:
+                logger.error(f"Exception running Aider: {e}", exc_info=True)
+                if attempt >= max_retries:
+                    return {"status": "error", "output": str(e), "attempts": attempt}
 
         return {
-            "filename": filename,
-            "code": code_content.strip(),
-            "llm_call_details": llm_response_dict,
+            "status": "error",
+            "output": "Max retries exceeded",
+            "attempts": max_retries,
         }
-        # --- END OF FIX ---
-
-
-async def apply_changes_with_aider(
-    self, project_root_path: str, files_to_edit: list[str], instruction: str
-) -> Dict[str, str]:
-    logger.info(f"Applying changes to {files_to_edit} with Aider: {instruction}")
-
-    # Command structure: aider --yes --message "instruction" file1 file2 ...
-    command = ["aider", "--yes", "--message", instruction] + files_to_edit
-
-    try:
-        process = await asyncio.create_subprocess_exec(
-            *command,
-            cwd=project_root_path,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-
-        stdout, stderr = await process.communicate()
-
-        if process.returncode == 0:
-            logger.info(f"Aider command successful. Output: {stdout.decode()}")
-            return {"status": "success", "output": stdout.decode()}
-        else:
-            logger.error(f"Aider command failed. Error: {stderr.decode()}")
-            return {"status": "error", "output": stderr.decode()}
-    except FileNotFoundError:
-        logger.error(
-            "Aider command not found. Is 'aider-chat' installed in the environment?"
-        )
-        return {"status": "error", "output": "Aider command not found."}
-    except Exception as e:
-        logger.error(f"Exception running Aider: {e}", exc_info=True)
-        return {"status": "error", "output": str(e)}

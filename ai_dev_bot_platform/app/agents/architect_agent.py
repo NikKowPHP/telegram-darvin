@@ -41,6 +41,28 @@ Start the TODO list with '### Implementation TODO List'"""
             todo_list_md = ""
             tech_stack = {}
 
+            # Extract tech stack from response
+            if "Technology Stack:" in response_text:
+                tech_part = response_text.split("Technology Stack:", 1)[1].split(
+                    "\n\n", 1
+                )[0]
+                tech_lines = [
+                    line.strip() for line in tech_part.split("\n") if line.strip()
+                ]
+                tech_stack = {
+                    "frontend": [],
+                    "backend": [],
+                    "database": [],
+                    "infrastructure": [],
+                }
+                for line in tech_lines:
+                    if ":" in line:
+                        category, items = line.split(":", 1)
+                        category = category.strip().lower()
+                        if category in tech_stack:
+                            tech_stack[category] = [i.strip() for i in items.split(",")]
+
+            # Extract TODO list
             if "### Implementation TODO List" in response_text:
                 parts = response_text.split("### Implementation TODO List", 1)
                 doc_content = parts[0].strip()
@@ -52,7 +74,7 @@ Start the TODO list with '### Implementation TODO List'"""
 
             return {
                 "documentation": doc_content,
-                "tech_stack_suggestion": tech_stack,  # NEW: Return the dict
+                "tech_stack_suggestion": tech_stack,
                 "todo_list_markdown": todo_list_md,
                 "llm_call_details": llm_response_dict,
             }
@@ -65,6 +87,7 @@ Start the TODO list with '### Implementation TODO List'"""
     async def verify_implementation_step(
         self, project: Project, code_snippet: str, relevant_docs: str, todo_item: str
     ) -> dict:
+        """Verify a single implementation step against project requirements"""
         logger.info(
             f"Architect Agent: Verifying step for project {project.id}: '{todo_item}'"
         )
@@ -107,26 +130,117 @@ If REJECTED, suggest updates to the code or the TODO list."""
                 "llm_call_details": llm_response_dict,
             }
 
+    async def validate_architecture(self, project: Project) -> dict:
+        """Validate the overall project architecture"""
+        prompt = f"""As an expert architect, validate this project's technical design:
+        
+Project: {project.title}
+Description: {project.description}
+Current Tech Stack: {project.tech_stack}
+
+Identify any:
+1. Architectural anti-patterns
+2. Technology mismatches
+3. Scaling limitations
+4. Security concerns
+5. Deployment challenges
+
+Provide specific recommendations for improvement."""
+
+        llm_response_dict = await self.llm_client.call_llm(
+            prompt=prompt, model_name=settings.VERIFICATION_MODEL
+        )
+        return {
+            "analysis": llm_response_dict.get("text_response", ""),
+            "llm_call_details": llm_response_dict,
+        }
+
     async def generate_readme(self, project: Project) -> str:
         logger.info(f"Architect Agent: Generating README for project {project.id}")
+
+        # Collect metadata from project manifest
+        tech_stack = project.tech_stack or {}
+        dependencies = tech_stack.get("dependencies", [])
+        env_vars = tech_stack.get("environment_variables", {})
+
         prompt = f"""You are an expert technical writer. Generate a comprehensive README.md for the project titled '{project.title}'.
-Include these sections with appropriate content:
-1. Overview - Brief description of the project
-2. Features - List of main functionalities
-3. Installation - Step-by-step setup instructions
-4. Configuration - Environment variables and settings
-5. Usage - How to run/use the application
-6. API Documentation - If applicable
-7. Contributing - Guidelines for contributors
-8. License - Project license information
+Include these REQUIRED sections with appropriate content:
+
+## Table of Contents
+- Quick navigation links to all sections
+
+## Overview
+- Brief description of the project
+- Key features and capabilities
+- Project status/version
+
+## Setup
+### Development
+- System requirements
+- Installation from source
+- Setting up development environment
+- Dependencies: {', '.join(dependencies) if dependencies else 'None'}
+
+### Production
+- Package manager installation
+- Container deployment (Docker)
+- One-line install commands
+
+## Configuration
+- Environment variables: {', '.join([f'{k}=[VALUE]' for k in env_vars.keys()]) if env_vars else 'None'}
+- Configuration files and their locations
+- Security best practices
+
+## Usage
+- How to run the application
+- Command line options/flags
+- Examples of common use cases with code samples
+- API documentation if applicable
+
+## Deployment
+- Containerization (Docker)
+- Kubernetes manifests
+- Cloud deployment (AWS/GCP/Azure)
+- Scaling considerations
+
+## Contributing
+- How to submit issues
+- Pull request workflow
+- Coding standards
+- Testing requirements
+
+## Tests
+- How to run the test suite
+- Coverage reporting
+- Writing new tests
+
+## Support
+- How to get help
+- Community forums
+- Commercial support options
+
+## License
+- License type (e.g., MIT, Apache)
+- Copyright notice
+
+## Acknowledgments
+- Third-party libraries
+- Inspiration/credits
+- Team members
 
 Project Description:
 {project.description}
 
-Additional Context:
+Technical Documentation:
 {project.documentation}
 
-Use proper Markdown formatting with clear section headers and organization."""
+Use proper Markdown formatting with:
+- Clear section headers
+- Consistent indentation
+- Code blocks for commands
+- Tables where appropriate
+- Badges for build status/version (if available)
+- Actual values from project context (no placeholders)"""
 
         llm_response_dict = await self.llm_client.call_llm(
             prompt=prompt, model_name=settings.ARCHITECT_MODEL

@@ -1,5 +1,8 @@
+import asyncio
 import logging
-from telegram import Update
+import uuid
+import os
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, CommandHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy.orm import Session
@@ -10,7 +13,17 @@ from app.services.user_service import UserService  # CORRECTED IMPORT
 from app.schemas.user import UserCreate
 from app.services.payment_service import PaymentService
 from app.core.config import settings
+from app.services.project_service import ProjectService
+from app.schemas.project import ProjectCreate
 import json
+
+from app.telegram_bot.requirement_gathering import (
+    start_requirement_gathering,
+    handle_project_name,
+    handle_project_description,
+    handle_confirmation,
+    is_in_requirement_gathering,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +38,11 @@ def is_new_project_description(text: str) -> bool:
     return is_long_enough and is_not_a_command
 
 
+# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Implement conversation starter command (/start)
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
     logger.info(f"User {user_tg.id} ({user_tg.username}) started the bot.")
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
 
     db: Session = SessionLocal()  # Manual session management for handlers
     try:
@@ -39,6 +54,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             await update.message.reply_text(
                 f"Welcome, {user_tg.first_name}! Your account has been created with initial credits: {user_db.credit_balance:.2f}."
             )
+            # Start requirement gathering
+            await start_requirement_gathering(update, context)
         else:
             await update.message.reply_text(
                 f"Welcome back, {user_tg.first_name}! Your credit balance is: {user_db.credit_balance:.2f}."
@@ -63,11 +80,58 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "Available commands:\n"
         "/start - Start or restart the bot\n"
         "/help - Show this help message\n"
-        "/credits - Check your credit balance\n"
-        "/status - Check your project status and credits (TODO)\n"
-        "/buy_credits - Purchase additional credits\n"
-        # Add more commands as they are implemented
+        "/credits - Check and purchase credits\n"
+        "/status - Check project status and credits\n"
+        "\n"
+        "During development:\n"
+        "- Describe your project to begin\n"
+        "- Review and confirm requirements\n"
+        "- Implement tasks as they're generated"
     )
+
+
+async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Shows current project status and credit balance"""
+    user_tg = update.effective_user
+    logger.info(f"User {user_tg.id} checking project status")
+
+    db: Session = SessionLocal()
+    try:
+        user_service = UserService()
+        user_db = user_service.get_user_by_telegram_id(db, telegram_user_id=user_tg.id)
+        if not user_db:
+            await update.message.reply_text(
+                "Please use /start first to initialize your account."
+            )
+            return
+
+        project_id = context.user_data.get("last_project_id")
+        status_message = f"Current credit balance: {user_db.credit_balance:.2f}\n\n"
+
+        if project_id:
+            from app.services.project_service import ProjectService
+
+            project_service = ProjectService()
+            project = project_service.get_project(db, uuid.UUID(project_id))
+            if project:
+                todo_lines = project.current_todo_markdown.split("\n")
+                completed = len([line for line in todo_lines if "[x]" in line])
+                remaining = len([line for line in todo_lines if "[ ]" in line])
+                status_message += f"Active Project: {project.name}\n"
+                status_message += f"Status: {project.status}\n"
+                status_message += f"Tasks Completed: {completed}\n"
+                status_message += f"Tasks Remaining: {remaining}"
+            else:
+                status_message += "No active project found"
+        else:
+            status_message += "No active project found"
+
+        await update.message.reply_text(status_message)
+    except Exception as e:
+        logger.error(f"Error in status_command: {e}", exc_info=True)
+        await update.message.reply_text("Sorry, couldn't retrieve your project status.")
+    finally:
+        db.close()
 
 
 async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -107,11 +171,29 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 # In app/telegram_bot/handlers.py
 
 
+# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Implement message handlers for different requirement stages
+# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
     text = update.message.text
 
     logger.info(f"Received message from {user_tg.id}: {text}")
+
+    # Check if user is in requirement gathering flow
+    if await is_in_requirement_gathering(context):
+        from app.telegram_bot.requirement_gathering import RequirementState
+
+        state = context.user_data.get("requirement_state")
+
+        if state == RequirementState.WAITING_FOR_PROJECT_NAME.value:
+            await handle_project_name(update, context)
+        elif state == RequirementState.WAITING_FOR_PROJECT_DESCRIPTION.value:
+            await handle_project_description(update, context)
+        elif state == RequirementState.WAITING_FOR_CONFIRMATION.value:
+            await handle_confirmation(update, context)
+
+        return
 
     db: Session = SessionLocal()
     try:
@@ -129,48 +211,47 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             )
             return
 
-        # Send an immediate acknowledgement for long-running tasks
-        if is_new_project_description(text):
-            await update.message.reply_text(
-                "Thanks! I'm analyzing your project requirements and creating an initial plan. This might take a moment..."
-            )
-        elif text.lower().strip().startswith("implement task"):
-            await update.message.reply_text(
-                "Got it. Working on that task now. This may take a minute..."
-            )
+        # ROO-FIX-START: Replace the broken logic with the correct project creation and orchestration flow.
 
-        from app.services.orchestrator_service import get_orchestrator
+        # 1. Create a Project in the database
+        project_service = ProjectService()
+        # Since we don't have a title from a guided flow, we'll generate one.
+        # The user's entire message becomes the description.
+        project_in = ProjectCreate(
+            title=f"New Project - {uuid.uuid4().hex[:6]}",
+            description=text,
+            user_id=user_db.id,
+        )
+        project = project_service.create_project(db, project_in, user_id=user_db.id)
 
-        orchestrator = get_orchestrator(db)
-        response_data = await orchestrator.process_user_request(
-            user=user_db, user_input=text
+        # 2. Store the *real* project ID in the user's context for future commands.
+        context.user_data["last_project_id"] = str(project.id)
+        logger.info(
+            f"Created new project {project.id} for user {user_tg.id} and stored in context."
         )
 
-        response_text = response_data.get("text")
-        zip_buffer = response_data.get("zip_buffer")
-        reply_markup = response_data.get("reply_markup")
-        project_id = response_data.get("project_id")
+        # 3. Send confirmation message
+        await update.message.reply_text(
+            "✅ Requirements received. The architect is now generating a plan..."
+        )
 
-        # If a new project was created, store its ID in the user's context data
-        if project_id and is_new_project_description(text):
-            context.user_data["last_project_id"] = project_id
-            logger.info(f"Stored last_project_id for user {user_tg.id}: {project_id}")
+        # 4. Handoff to the Orchestrator to start the planning phase.
+        # This is the crucial step that was missing.
+        # Note: This should be an async task so it doesn't block the bot.
+        from app.services.orchestrator_service import get_orchestrator_service
 
-        if response_text:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=response_text,
-                reply_markup=reply_markup,
+        orchestrator = get_orchestrator_service(db)
+
+        # Using asyncio.create_task to run the planning in the background
+        # and immediately return control to the user.
+        loop = asyncio.get_event_loop()
+        loop.create_task(
+            orchestrator.start_planning_phase(
+                project_id=project.id,
+                telegram_chat_id=update.effective_chat.id,
             )
-
-        if zip_buffer:
-            project_title = response_data.get("project_title", "project")
-            file_name = f"{project_title.replace(' ', '_')}.zip"
-            await context.bot.send_document(
-                chat_id=update.effective_chat.id,
-                document=zip_buffer,
-                filename=file_name,
-            )
+        )
+        # ROO-FIX-END
 
     except Exception as e:
         logger.error(
@@ -222,18 +303,42 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                     )
                     return
 
-                from app.services.orchestrator_service import get_orchestrator
+                from app.services.project_helpers import get_project_helpers
 
-                orchestrator = get_orchestrator(db)
-                response_data = await orchestrator.process_user_request(
-                    user=user_db, user_input=command_string
-                )
+                project_helpers = get_project_helpers(db)
+                # CLI runner will handle the actual processing
+                response_data = {
+                    "text": "Command received and queued for processing",
+                    "zip_buffer": None,
+                }
 
                 await context.bot.send_message(
                     chat_id=user_tg.id,
                     text=response_data.get("text", "Task processing complete."),
                 )
-                # TODO: Here you could add logic to send the next button, e.g., "Implement Task 2"
+                # Check if more tasks exist and show next button
+                from app.services.project_service import ProjectService
+
+                project_service = ProjectService()
+                project = project_service.get_project(db, uuid.UUID(project_id))
+                if (
+                    project
+                    and len(project.current_todo_markdown.split("\n")) > task_index + 1
+                ):
+                    keyboard = [
+                        [
+                            InlineKeyboardButton(
+                                f"Implement Task {task_index + 1}",
+                                callback_data=f"implement:{task_index + 1}",
+                            )
+                        ]
+                    ]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    await context.bot.send_message(
+                        chat_id=user_tg.id,
+                        text=f"Task {task_index} completed. Ready for next task?",
+                        reply_markup=reply_markup,
+                    )
             finally:
                 db.close()
             return

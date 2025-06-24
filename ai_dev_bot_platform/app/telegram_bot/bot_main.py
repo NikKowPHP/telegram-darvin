@@ -11,8 +11,16 @@ from app.telegram_bot.handlers import (
     start_command,
     help_command,
     credits_command,
+    status_command,
     message_handler,
     button_handler,
+)
+from app.telegram_bot.requirement_gathering import (
+    start_requirement_gathering,
+    handle_project_name,
+    handle_project_description,
+    handle_confirmation,
+    is_in_requirement_gathering,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,6 +35,7 @@ async def run_bot():
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("credits", credits_command))
+    application.add_handler(CommandHandler("status", status_command))
 
     # Register message and button handlers
     application.add_handler(

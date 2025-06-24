@@ -12,8 +12,42 @@ This repository contains the source code for an autonomous AI software developme
 -   **Aider Integration:** Capable of in-place code refinement and editing.
 -   **Automated Verification:** The Architect agent reviews implemented code against project goals.
 -   **Credit-Based System:** Users operate on a credit balance, with costs deducted for LLM usage.
+-   **Conversation Logging:** All user interactions are stored in the database for quality assurance and continuous improvement.
 -   **Project Delivery:** Completed projects, including a generated `README.md`, are delivered as a ZIP file.
 -   **Production-Ready:** Built with FastAPI, SQLAlchemy, Alembic for migrations, and includes Docker/Kubernetes configurations.
+
+## 💬 Conversation Logging
+
+The system automatically logs all user interactions with the following details:
+- User ID
+- Timestamp
+- Full message history
+- Project context (when available)
+
+This helps with:
+- Debugging user issues
+- Improving AI responses through analysis
+- Maintaining audit trails
+
+### Example Usage
+```python
+from app.services.conversation_service import ConversationService
+from app.db.session import SessionLocal
+
+db = SessionLocal()
+conversation_service = ConversationService(db)
+
+# Get last 10 conversations for a user
+recent_convs = conversation_service.get_conversations_by_user(
+    user_id=123,
+    limit=10
+)
+
+# Get conversations containing specific keywords
+search_results = conversation_service.search_conversations(
+    search_text="API error"
+)
+```
 
 ## ⚙️ Technology Stack
 
@@ -98,9 +132,14 @@ This command starts only the services the application depends on, leaving the ap
     python3 -m venv venv
     source venv/bin/activate
 
-    # For Windows
-    python -m venv venv
+    # For Windows (using py command)
+    py -m venv venv
     .\venv\Scripts\activate
+    ```
+
+    Alternatively, use the Windows batch script:
+    ```batch
+    setup_venv.bat
     ```
 
 2.  Install all the required Python packages:
@@ -109,10 +148,35 @@ This command starts only the services the application depends on, leaving the ap
     pip install -r requirements.txt
     ```
 
-### 6. Run Database Migrations
+### 6. Test Environment Setup
+
+The test environment requires a virtual environment to be set up. The `run_tests.sh` script will automatically create the virtual environment if it doesn't exist:
+
+1.  To run the tests, simply execute:
+
+    ```bash
+    bash run_tests.sh
+    ```
+
+    On Windows, you can also use the batch script:
+    ```batch
+    setup_venv.bat
+    pytest
+    ```
+
+2.  The script will:
+    - Check if the virtual environment exists
+    - Create it if missing
+    - Activate the virtual environment
+    - Install any missing dependencies from `requirements.txt`
+    - Run the test suite using `pytest`
+    - Generate an audit report using `allure`
+
+This ensures a consistent test environment across different development setups.
+
+### 7. Run Database Migrations
 
 With the database running in Docker and your environment configured, apply the latest database schema using Alembic.
-
 
 alembic upgrade head
 
@@ -134,6 +198,32 @@ docker-compose exec app uvicorn main:app --reload
 ### 8. Interact with Your Bot
 
 Go to Telegram, find the bot you created with BotFather, and send the `/start` command. The application running in your terminal should log the interaction, and the bot should reply. You're all set!
+
+### 9. Running the Autonomous Loop
+
+To start the development workflow:
+```bash
+python run_autonomy.py
+```
+
+The system will continuously run the Orchestrator agent to manage development tasks.
+
+### 10. Installing Roo CLI Dependencies
+
+The autonomous loop requires the Roo CLI to be installed. If you encounter errors about the `roo` command not being found, follow these steps:
+
+1. **Install Roo CLI**:
+   ```bash
+   cd ai_dev_bot_platform
+   pip install -r requirements.txt
+   ```
+
+2. **Verify Installation**:
+   ```bash
+   ./venv/bin/roo -h
+   ```
+
+If you still encounter issues, ensure that the virtual environment is activated and that the `roo` command is accessible from the project root.
 
 ### Testing Stripe Webhooks Locally
  
