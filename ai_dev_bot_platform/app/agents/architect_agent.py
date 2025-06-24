@@ -3,6 +3,12 @@ from typing import Dict, Any
 from app.utils.llm_client import LLMClient
 from app.schemas.project import Project
 from app.core.config import settings
+from app.prompts import (
+    architect_initial_plan,
+    architect_code_verification,
+    architect_readme_generation,
+    architect_architecture_validation,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -15,17 +21,10 @@ class ArchitectAgent:
         self, project_requirements: str, project_title: str
     ) -> dict:
         logger.info(f"Architect Agent: Generating plan for '{project_title}'")
-        prompt = f"""You are an expert software architect. Based on the following project requirements for a project titled '{project_title}',
-generate:
-1. A brief technical overview/architecture document (Markdown)
-2. A preliminary technology stack suggestion (list form)
-3. A detailed TODO list in Markdown task list format (using '- [ ]' for each item) for a small LLM (4B model) to implement the project.
-
-Project Requirements:
-{project_requirements}
-
-Output format should be structured clearly with headings for each section.
-Start the TODO list with '### Implementation TODO List'"""
+        prompt = architect_initial_plan.PROMPT.format(
+            project_title=project_title,
+            project_requirements=project_requirements,
+        )
 
         llm_response_dict = await self.llm_client.call_llm(
             prompt=prompt, model_name=settings.ARCHITECT_MODEL
@@ -91,19 +90,13 @@ Start the TODO list with '### Implementation TODO List'"""
         logger.info(
             f"Architect Agent: Verifying step for project {project.id}: '{todo_item}'"
         )
-        prompt = f"""You are an expert code reviewer and software architect.
-Project Title: {project.title}
-Project Description: {project.description}
-Relevant Documentation/Architecture:
-{relevant_docs}
-
-The task was: '{todo_item}'
-The implemented code is:
-{code_snippet}
-
-Does this code correctly implement the task according to the project context and best practices?
-Provide feedback: 'APPROVED' or 'REJECTED: [detailed reasons and suggestions]'.
-If REJECTED, suggest updates to the code or the TODO list."""
+        prompt = architect_code_verification.PROMPT.format(
+            project_title=project.title,
+            project_description=project.description,
+            relevant_docs=relevant_docs,
+            todo_item=todo_item,
+            code_snippet=code_snippet,
+        )
 
         llm_response_dict = await self.llm_client.call_llm(
             prompt=prompt, model_name=settings.VERIFICATION_MODEL
@@ -132,20 +125,11 @@ If REJECTED, suggest updates to the code or the TODO list."""
 
     async def validate_architecture(self, project: Project) -> dict:
         """Validate the overall project architecture"""
-        prompt = f"""As an expert architect, validate this project's technical design:
-        
-Project: {project.title}
-Description: {project.description}
-Current Tech Stack: {project.tech_stack}
-
-Identify any:
-1. Architectural anti-patterns
-2. Technology mismatches
-3. Scaling limitations
-4. Security concerns
-5. Deployment challenges
-
-Provide specific recommendations for improvement."""
+        prompt = architect_architecture_validation.PROMPT.format(
+            project_title=project.title,
+            project_description=project.description,
+            tech_stack=project.tech_stack,
+        )
 
         llm_response_dict = await self.llm_client.call_llm(
             prompt=prompt, model_name=settings.VERIFICATION_MODEL
@@ -163,84 +147,17 @@ Provide specific recommendations for improvement."""
         dependencies = tech_stack.get("dependencies", [])
         env_vars = tech_stack.get("environment_variables", {})
 
-        prompt = f"""You are an expert technical writer. Generate a comprehensive README.md for the project titled '{project.title}'.
-Include these REQUIRED sections with appropriate content:
-
-## Table of Contents
-- Quick navigation links to all sections
-
-## Overview
-- Brief description of the project
-- Key features and capabilities
-- Project status/version
-
-## Setup
-### Development
-- System requirements
-- Installation from source
-- Setting up development environment
-- Dependencies: {', '.join(dependencies) if dependencies else 'None'}
-
-### Production
-- Package manager installation
-- Container deployment (Docker)
-- One-line install commands
-
-## Configuration
-- Environment variables: {', '.join([f'{k}=[VALUE]' for k in env_vars.keys()]) if env_vars else 'None'}
-- Configuration files and their locations
-- Security best practices
-
-## Usage
-- How to run the application
-- Command line options/flags
-- Examples of common use cases with code samples
-- API documentation if applicable
-
-## Deployment
-- Containerization (Docker)
-- Kubernetes manifests
-- Cloud deployment (AWS/GCP/Azure)
-- Scaling considerations
-
-## Contributing
-- How to submit issues
-- Pull request workflow
-- Coding standards
-- Testing requirements
-
-## Tests
-- How to run the test suite
-- Coverage reporting
-- Writing new tests
-
-## Support
-- How to get help
-- Community forums
-- Commercial support options
-
-## License
-- License type (e.g., MIT, Apache)
-- Copyright notice
-
-## Acknowledgments
-- Third-party libraries
-- Inspiration/credits
-- Team members
-
-Project Description:
-{project.description}
-
-Technical Documentation:
-{project.documentation}
-
-Use proper Markdown formatting with:
-- Clear section headers
-- Consistent indentation
-- Code blocks for commands
-- Tables where appropriate
-- Badges for build status/version (if available)
-- Actual values from project context (no placeholders)"""
+        prompt = architect_readme_generation.PROMPT.format(
+            project_title=project.title,
+            dependencies=", ".join(dependencies) if dependencies else "None",
+            env_vars=(
+                ", ".join([f"{k}=[VALUE]" for k in env_vars.keys()])
+                if env_vars
+                else "None"
+            ),
+            project_description=project.description,
+            documentation=project.documentation,
+        )
 
         llm_response_dict = await self.llm_client.call_llm(
             prompt=prompt, model_name=settings.ARCHITECT_MODEL
