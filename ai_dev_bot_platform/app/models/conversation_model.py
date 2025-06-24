@@ -4,6 +4,7 @@ from sqlalchemy import Column, DateTime, ForeignKey, JSON, String, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from app.db.session import Base
 
+
 class Conversation(Base):
     __tablename__ = "conversations"
 

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 import os
@@ -12,6 +13,8 @@ from app.services.user_service import UserService  # CORRECTED IMPORT
 from app.schemas.user import UserCreate
 from app.services.payment_service import PaymentService
 from app.core.config import settings
+from app.services.project_service import ProjectService
+from app.schemas.project import ProjectCreate
 import json
 
 from app.telegram_bot.requirement_gathering import (
@@ -24,6 +27,7 @@ from app.telegram_bot.requirement_gathering import (
 
 logger = logging.getLogger(__name__)
 
+
 def is_new_project_description(text: str) -> bool:
     """Heuristic to detect if a message is a new project description."""
     # It's a project description if it's long and doesn't start with a known command.
@@ -33,11 +37,12 @@ def is_new_project_description(text: str) -> bool:
     )
     return is_long_enough and is_not_a_command
 
+
 # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Implement conversation starter command (/start)
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
     logger.info(f"User {user_tg.id} ({user_tg.username}) started the bot.")
-# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
 
     db: Session = SessionLocal()  # Manual session management for handlers
     try:
@@ -69,6 +74,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "I am your AI Development Assistant! Describe your project or use /help for commands."
     )
 
+
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "Available commands:\n"
@@ -82,6 +88,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "- Review and confirm requirements\n"
         "- Implement tasks as they're generated"
     )
+
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Shows current project status and credit balance"""
@@ -103,12 +110,13 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         if project_id:
             from app.services.project_service import ProjectService
+
             project_service = ProjectService()
             project = project_service.get_project(db, uuid.UUID(project_id))
             if project:
-                todo_lines = project.current_todo_markdown.split('\n')
-                completed = len([line for line in todo_lines if '[x]' in line])
-                remaining = len([line for line in todo_lines if '[ ]' in line])
+                todo_lines = project.current_todo_markdown.split("\n")
+                completed = len([line for line in todo_lines if "[x]" in line])
+                remaining = len([line for line in todo_lines if "[ ]" in line])
                 status_message += f"Active Project: {project.name}\n"
                 status_message += f"Status: {project.status}\n"
                 status_message += f"Tasks Completed: {completed}\n"
@@ -124,6 +132,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await update.message.reply_text("Sorry, couldn't retrieve your project status.")
     finally:
         db.close()
+
 
 async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
@@ -158,13 +167,15 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     finally:
         db.close()
 
+
 # In app/telegram_bot/handlers.py
+
 
 # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Implement message handlers for different requirement stages
 # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_tg = update.effective_user
-# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
     text = update.message.text
 
     logger.info(f"Received message from {user_tg.id}: {text}")
@@ -172,6 +183,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # Check if user is in requirement gathering flow
     if await is_in_requirement_gathering(context):
         from app.telegram_bot.requirement_gathering import RequirementState
+
         state = context.user_data.get("requirement_state")
 
         if state == RequirementState.WAITING_FOR_PROJECT_NAME.value:
@@ -199,23 +211,47 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             )
             return
 
-        # ROO-AUDIT-TAG :: refactoring-epic-001-architectural-conflict.md :: Decouple Telegram Bot from Python Orchestration
-        # Create project directory
-        project_id = str(uuid.uuid4())
-        project_dir = os.path.join("projects", project_id)
-        os.makedirs(project_dir, exist_ok=True)
+        # ROO-FIX-START: Replace the broken logic with the correct project creation and orchestration flow.
 
-        # Write requirements to app_description.md
-        with open(os.path.join(project_dir, "app_description.md"), "w") as f:
-            f.write(text)
+        # 1. Create a Project in the database
+        project_service = ProjectService()
+        # Since we don't have a title from a guided flow, we'll generate one.
+        # The user's entire message becomes the description.
+        project_in = ProjectCreate(
+            title=f"New Project - {uuid.uuid4().hex[:6]}",
+            description=text,
+            user_id=user_db.id,
+        )
+        project = project_service.create_project(db, project_in, user_id=user_db.id)
 
-        # Store project ID in context
-        context.user_data["last_project_id"] = project_id
-        logger.info(f"Stored last_project_id for user {user_tg.id}: {project_id}")
+        # 2. Store the *real* project ID in the user's context for future commands.
+        context.user_data["last_project_id"] = str(project.id)
+        logger.info(
+            f"Created new project {project.id} for user {user_tg.id} and stored in context."
+        )
 
-        # Confirm receipt
-        await update.message.reply_text("✅ Requirements received. The architect will review them shortly.")
-        # ROO-AUDIT-TAG :: refactoring-epic-001-architectural-conflict.md :: END
+        # 3. Send confirmation message
+        await update.message.reply_text(
+            "✅ Requirements received. The architect is now generating a plan..."
+        )
+
+        # 4. Handoff to the Orchestrator to start the planning phase.
+        # This is the crucial step that was missing.
+        # Note: This should be an async task so it doesn't block the bot.
+        from app.services.orchestrator_service import get_orchestrator_service
+
+        orchestrator = get_orchestrator_service(db)
+
+        # Using asyncio.create_task to run the planning in the background
+        # and immediately return control to the user.
+        loop = asyncio.get_event_loop()
+        loop.create_task(
+            orchestrator.start_planning_phase(
+                project_id=project.id,
+                telegram_chat_id=update.effective_chat.id,
+            )
+        )
+        # ROO-FIX-END
 
     except Exception as e:
         logger.error(
@@ -227,6 +263,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             )
     finally:
         db.close()
+
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
@@ -272,7 +309,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 # CLI runner will handle the actual processing
                 response_data = {
                     "text": "Command received and queued for processing",
-                    "zip_buffer": None
+                    "zip_buffer": None,
                 }
 
                 await context.bot.send_message(
@@ -281,20 +318,26 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 )
                 # Check if more tasks exist and show next button
                 from app.services.project_service import ProjectService
+
                 project_service = ProjectService()
                 project = project_service.get_project(db, uuid.UUID(project_id))
-                if project and len(project.current_todo_markdown.split('\n')) > task_index + 1:
+                if (
+                    project
+                    and len(project.current_todo_markdown.split("\n")) > task_index + 1
+                ):
                     keyboard = [
-                        [InlineKeyboardButton(
-                            f"Implement Task {task_index + 1}",
-                            callback_data=f"implement:{task_index + 1}"
-                        )]
+                        [
+                            InlineKeyboardButton(
+                                f"Implement Task {task_index + 1}",
+                                callback_data=f"implement:{task_index + 1}",
+                            )
+                        ]
                     ]
                     reply_markup = InlineKeyboardMarkup(keyboard)
                     await context.bot.send_message(
                         chat_id=user_tg.id,
                         text=f"Task {task_index} completed. Ready for next task?",
-                        reply_markup=reply_markup
+                        reply_markup=reply_markup,
                     )
             finally:
                 db.close()

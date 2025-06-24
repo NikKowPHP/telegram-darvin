@@ -93,7 +93,7 @@ class CreditTransactionService:
         user_id: int,
         amount: float,
         payment_method: str,
-        payment_reference: str
+        payment_reference: str,
     ) -> CreditTransaction:
         """Process a new credit purchase"""
         try:
@@ -102,7 +102,7 @@ class CreditTransactionService:
                 transaction_type="purchase",
                 credits_amount=amount,
                 payment_method=payment_method,
-                payment_reference=payment_reference
+                payment_reference=payment_reference,
             )
             return self.record_transaction(db, transaction)
         except Exception as e:
@@ -112,22 +112,18 @@ class CreditTransactionService:
     def get_user_balance(self, db: Session, user_id: int) -> float:
         """Calculate current credit balance for a user"""
         try:
-            credits = db.query(
-                func.sum(CreditTransaction.credits_amount)
-            ).filter(
-                CreditTransaction.user_id == user_id
-            ).scalar()
+            credits = (
+                db.query(func.sum(CreditTransaction.credits_amount))
+                .filter(CreditTransaction.user_id == user_id)
+                .scalar()
+            )
             return credits or 0.0
         except Exception as e:
             logger.error(f"Failed to get user balance: {e}", exc_info=True)
             raise
 
     def deduct_credits(
-        self,
-        db: Session,
-        user_id: int,
-        amount: float,
-        description: str
+        self, db: Session, user_id: int, amount: float, description: str
     ) -> CreditTransaction:
         """Deduct credits from user balance"""
         try:
@@ -139,7 +135,7 @@ class CreditTransactionService:
                 user_id=user_id,
                 transaction_type="usage",
                 credits_amount=-amount,
-                description=description
+                description=description,
             )
             return self.record_transaction(db, transaction)
         except Exception as e:
@@ -147,11 +143,7 @@ class CreditTransactionService:
             raise
 
     def process_refund(
-        self,
-        db: Session,
-        user_id: int,
-        original_transaction_id: int,
-        amount: float
+        self, db: Session, user_id: int, original_transaction_id: int, amount: float
     ) -> CreditTransaction:
         """Process a credit refund"""
         try:
@@ -160,7 +152,7 @@ class CreditTransactionService:
                 transaction_type="refund",
                 credits_amount=amount,
                 related_transaction_id=original_transaction_id,
-                description=f"Refund for transaction {original_transaction_id}"
+                description=f"Refund for transaction {original_transaction_id}",
             )
             return self.record_transaction(db, transaction)
         except Exception as e:

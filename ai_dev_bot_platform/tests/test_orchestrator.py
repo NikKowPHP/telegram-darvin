@@ -53,7 +53,7 @@ async def test_handle_new_project_flow(mocker):
         telegram_user_id=123,
         credit_balance=100,
         created_at=datetime(2024, 1, 1),
-        updated_at=datetime(2024, 1, 1)
+        updated_at=datetime(2024, 1, 1),
     )
     result = await orchestrator._handle_new_project(test_user, "create a new web app")
 
@@ -107,7 +107,7 @@ async def test_handle_refine_request_flow(mocker):
         telegram_user_id=123,
         credit_balance=100,
         created_at=datetime(2024, 1, 1),
-        updated_at=datetime(2024, 1, 1)
+        updated_at=datetime(2024, 1, 1),
     )
     await orchestrator._handle_refine_request(
         test_user, str(fake_project_id), "src/main.py", "add a comment"

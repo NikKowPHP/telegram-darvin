@@ -9,6 +9,7 @@ from app.services.codebase_indexing_service import CodebaseIndexingService
 
 logger = logging.getLogger(__name__)
 
+
 class VerificationService:
     def __init__(self, codebase_indexer: CodebaseIndexingService):
         self.codebase_indexer = codebase_indexer
@@ -16,19 +17,17 @@ class VerificationService:
     async def verify_project(self, project_path: str) -> Dict[str, Any]:
         """Run comprehensive verification checks on a project"""
         logger.info(f"Starting verification for project at {project_path}")
-        
+
         results = {
             "static_analysis": await self.run_static_analysis(project_path),
             "tests": await self.run_tests(project_path),
             "security_scan": await self.run_security_scan(project_path),
-            "architecture_check": await self.check_architecture(project_path)
+            "architecture_check": await self.check_architecture(project_path),
         }
 
         # Calculate overall status
         results["passed"] = all(
-            result["passed"] 
-            for result in results.values() 
-            if isinstance(result, dict)
+            result["passed"] for result in results.values() if isinstance(result, dict)
         )
 
         return results
@@ -44,21 +43,18 @@ class VerificationService:
                 ".",
                 cwd=project_path,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await proc.communicate()
 
             return {
                 "passed": proc.returncode == 0,
                 "output": stdout.decode(),
-                "errors": stderr.decode()
+                "errors": stderr.decode(),
             }
         except Exception as e:
             logger.error(f"Static analysis failed: {e}")
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
 
     async def run_tests(self, project_path: str) -> Dict[str, Any]:
         """Run project test suite"""
@@ -68,7 +64,7 @@ class VerificationService:
                 "pytest",
                 cwd=project_path,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await proc.communicate()
 
@@ -76,14 +72,11 @@ class VerificationService:
                 "passed": proc.returncode == 0,
                 "output": stdout.decode(),
                 "errors": stderr.decode(),
-                "coverage": await self.get_test_coverage(project_path)
+                "coverage": await self.get_test_coverage(project_path),
             }
         except Exception as e:
             logger.error(f"Test execution failed: {e}")
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
 
     async def get_test_coverage(self, project_path: str) -> Dict[str, Any]:
         """Get test coverage metrics"""
@@ -93,17 +86,17 @@ class VerificationService:
                 "--cov=.",
                 cwd=project_path,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await proc.communicate()
-            
+
             # Parse coverage from output
             coverage = {}
-            for line in stdout.decode().split('\n'):
+            for line in stdout.decode().split("\n"):
                 if "TOTAL" in line:
                     parts = line.split()
                     coverage["total"] = parts[-1]
-            
+
             return coverage
         except Exception as e:
             logger.error(f"Failed to get coverage: {e}")
@@ -119,21 +112,18 @@ class VerificationService:
                 ".",
                 cwd=project_path,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await proc.communicate()
 
             return {
                 "passed": proc.returncode == 0,
                 "output": stdout.decode(),
-                "errors": stderr.decode()
+                "errors": stderr.decode(),
             }
         except Exception as e:
             logger.error(f"Security scan failed: {e}")
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
 
     async def check_architecture(self, project_path: str) -> Dict[str, Any]:
         """Verify architectural compliance"""
@@ -141,18 +131,13 @@ class VerificationService:
         try:
             # Query codebase index for architectural patterns
             results = await self.codebase_indexer.query_codebase(
-                project_id=str(Path(project_path).name),
-                query="architectural patterns"
+                project_id=str(Path(project_path).name), query="architectural patterns"
             )
-            
-            return {
-                "passed": len(results) > 0,
-                "findings": results
-            }
+
+            return {"passed": len(results) > 0, "findings": results}
         except Exception as e:
             logger.error(f"Architecture check failed: {e}")
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
+
+
 # ROO-AUDIT-TAG :: plan-006-verification-system.md :: END

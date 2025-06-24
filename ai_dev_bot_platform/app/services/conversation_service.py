@@ -4,11 +4,14 @@ from sqlalchemy.orm import Session
 from app.models.conversation_model import Conversation
 from app.schemas.conversation import ConversationCreate, ConversationUpdate
 
+
 class ConversationService:
     def __init__(self, db: Session):
         self.db = db
 
-    async def create_conversation(self, conversation: ConversationCreate) -> Conversation:
+    async def create_conversation(
+        self, conversation: ConversationCreate
+    ) -> Conversation:
         db_conversation = Conversation(**conversation.dict())
         self.db.add(db_conversation)
         self.db.commit()
@@ -16,7 +19,11 @@ class ConversationService:
         return db_conversation
 
     async def get_by_id(self, conversation_id: UUID) -> Optional[Conversation]:
-        return self.db.query(Conversation).filter(Conversation.id == conversation_id).first()
+        return (
+            self.db.query(Conversation)
+            .filter(Conversation.id == conversation_id)
+            .first()
+        )
 
     async def get_by_user(self, user_id: UUID) -> List[Conversation]:
         return self.db.query(Conversation).filter(Conversation.user_id == user_id).all()

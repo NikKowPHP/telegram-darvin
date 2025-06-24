@@ -10,41 +10,54 @@ from app.db.session import SessionLocal
 
 logger = logging.getLogger(__name__)
 
+
 class RequirementState(Enum):
     WAITING_FOR_PROJECT_NAME = auto()
     WAITING_FOR_PROJECT_DESCRIPTION = auto()
     WAITING_FOR_CONFIRMATION = auto()
     COMPLETED = auto()
 
-# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Create state machine for requirement gathering workflow
-async def start_requirement_gathering(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Starts the requirement gathering process."""
-# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
-    user_id = update.effective_user.id
-    context.user_data["requirement_state"] = RequirementState.WAITING_FOR_PROJECT_NAME.value
 
-    keyboard = [[ "Cancel" ]]
+# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Create state machine for requirement gathering workflow
+async def start_requirement_gathering(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Starts the requirement gathering process."""
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
+    user_id = update.effective_user.id
+    context.user_data["requirement_state"] = (
+        RequirementState.WAITING_FOR_PROJECT_NAME.value
+    )
+
+    keyboard = [["Cancel"]]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
     await update.message.reply_text(
         "Let's start by giving your project a name. This could be something like 'E-commerce Platform' or 'Task Management App':",
-        reply_markup=reply_markup
+        reply_markup=reply_markup,
     )
 
+
 # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Design question prompts for gathering project requirements
-async def handle_project_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_project_name(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handles the project name input."""
-# ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
+    # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
     user_id = update.effective_user.id
     project_name = update.message.text
 
     if project_name.lower() == "cancel":
-        await update.message.reply_text("Project creation cancelled.", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text(
+            "Project creation cancelled.", reply_markup=ReplyKeyboardRemove()
+        )
         context.user_data.pop("requirement_state", None)
         return
 
     context.user_data["project_name"] = project_name
-    context.user_data["requirement_state"] = RequirementState.WAITING_FOR_PROJECT_DESCRIPTION.value
+    context.user_data["requirement_state"] = (
+        RequirementState.WAITING_FOR_PROJECT_DESCRIPTION.value
+    )
 
     await update.message.reply_text(
         "Great! Now please describe your project in detail. Include:\n"
@@ -53,10 +66,13 @@ async def handle_project_name(update: Update, context: ContextTypes.DEFAULT_TYPE
         "- Key features/functionality\n"
         "- Any specific technologies or frameworks you prefer\n\n"
         "Example: 'I want to build a task management app for small teams with features like task assignments, due dates, and progress tracking. Preferably using Python and React.'",
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=ReplyKeyboardRemove(),
     )
 
-async def handle_project_description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+async def handle_project_description(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Design question prompts for gathering project requirements
     """Handles the project description input."""
     # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
@@ -64,7 +80,9 @@ async def handle_project_description(update: Update, context: ContextTypes.DEFAU
     project_description = update.message.text
 
     context.user_data["project_description"] = project_description
-    context.user_data["requirement_state"] = RequirementState.WAITING_FOR_CONFIRMATION.value
+    context.user_data["requirement_state"] = (
+        RequirementState.WAITING_FOR_CONFIRMATION.value
+    )
 
     project_summary = (
         f"Project Name: {context.user_data['project_name']}\n\n"
@@ -75,12 +93,12 @@ async def handle_project_description(update: Update, context: ContextTypes.DEFAU
     keyboard = [["Yes", "No"]]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
-    await update.message.reply_text(
-        project_summary,
-        reply_markup=reply_markup
-    )
+    await update.message.reply_text(project_summary, reply_markup=reply_markup)
 
-async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+async def handle_confirmation(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Implement confirmation step before proceeding
     """Handles the confirmation of project details."""
     # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
@@ -90,9 +108,11 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
     if confirmation.lower() == "no":
         await update.message.reply_text(
             "Let's start over. What would you like to name your project?",
-            reply_markup=ReplyKeyboardRemove()
+            reply_markup=ReplyKeyboardRemove(),
         )
-        context.user_data["requirement_state"] = RequirementState.WAITING_FOR_PROJECT_NAME.value
+        context.user_data["requirement_state"] = (
+            RequirementState.WAITING_FOR_PROJECT_NAME.value
+        )
         return
 
     if confirmation.lower() == "yes":
@@ -100,26 +120,33 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
         db: Session = SessionLocal()
         try:
             project_service = ProjectService()
+            # ROO-FIX-START
             project_data = ProjectCreate(
-                name=context.user_data["project_name"],
+                title=context.user_data["project_name"],  # Change 'name' to 'title'
                 description=context.user_data["project_description"],
-                user_id=user_id  # This should be the actual user ID from your auth system
+                user_id=user_id,
             )
-            project = project_service.create_project(db, project_data)
+            # ROO-FIX-END
+            project = project_service.create_project(
+                db, project_data, user_id=user_id
+            )  # Ensure user_id is passed here too
             project_id = project.id
 
             # Store project ID in context for future reference
             context.user_data["last_project_id"] = project_id
 
             await update.message.reply_text(
-                f"Project '{project_data.name}' has been created successfully!",
-                reply_markup=ReplyKeyboardRemove()
+                f"Project '{project_data.title}' has been created successfully!",  # Also good to update this to .title
+                reply_markup=ReplyKeyboardRemove(),
             )
 
             # Handoff to Orchestrator with the confirmed project description
             from app.services.orchestrator_service import get_orchestrator
+
             orchestrator = get_orchestrator(db)
-            await orchestrator.start_planning_phase(project_id, project_data.description)
+            await orchestrator.start_planning_phase(
+                project_id, project_data.description
+            )
 
             # Reset state
             context.user_data["requirement_state"] = RequirementState.COMPLETED.value
@@ -127,6 +154,7 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
             db.close()
     else:
         await update.message.reply_text("Please respond with 'Yes' or 'No'.")
+
 
 async def is_in_requirement_gathering(context: ContextTypes.DEFAULT_TYPE) -> bool:
     """Checks if the user is in the requirement gathering process."""

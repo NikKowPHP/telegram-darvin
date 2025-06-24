@@ -9,6 +9,7 @@ from sqlalchemy.sql import func
 
 logger = logging.getLogger(__name__)
 
+
 class APIKeyManager:
     def __init__(self):
         # Load encryption key from settings

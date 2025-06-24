@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models.user import User
 from app.db.session import SessionLocal
 
+
 def test_user_model_timestamp_fields():
     """Test that User model correctly handles timestamp fields."""
     db = SessionLocal()
@@ -14,7 +15,7 @@ def test_user_model_timestamp_fields():
             telegram_user_id=12345,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            credit_balance=10.0
+            credit_balance=10.0,
         )
         db.add(user)
         db.commit()
@@ -46,6 +47,7 @@ def test_user_model_timestamp_fields():
         db.commit()
         db.close()
 
+
 def test_user_model_timestamp_validation():
     """Test that User model rejects invalid timestamp values."""
     db = SessionLocal()
@@ -57,7 +59,7 @@ def test_user_model_timestamp_validation():
                 telegram_user_id=67890,
                 created_at=None,
                 updated_at=None,
-                credit_balance=10.0
+                credit_balance=10.0,
             )
             db.add(user)
             db.commit()

@@ -12,7 +12,7 @@ from app.services.codebase_indexing_service import CodebaseIndexingService
 from app.services.billing_service import (
     ModelPricingService,
     APIKeyUsageService,
-    CreditTransactionService
+    CreditTransactionService,
 )
 from app.services.user_service import UserService
 from app.services.storage_service import StorageService
@@ -23,6 +23,7 @@ from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
+
 class ProjectHelpers:
     def __init__(self, db: Session):
         self.db = db
@@ -30,7 +31,7 @@ class ProjectHelpers:
         self.llm_client = LLMClient(self.api_key_manager)
         self.project_service = ProjectService()
         self.project_file_service = ProjectFileService()
-        self.codebase_indexing_service = CodebaseIndexingService(self.api_key_manager)
+        self.codebase_indexing_service = CodebaseIndexingService()
         self.model_pricing_service = ModelPricingService()
         self.api_key_usage_service = APIKeyUsageService()
         self.credit_transaction_service = CreditTransactionService()
@@ -110,9 +111,7 @@ class ProjectHelpers:
         credits_to_deduct = (
             actual_cost_usd / Decimal(str(settings.PLATFORM_CREDIT_VALUE_USD))
         ) * Decimal(str(settings.MARKUP_FACTOR))
-        credits_to_deduct = credits_to_deduct.quantize(
-            Decimal("0.01")
-        )
+        credits_to_deduct = credits_to_deduct.quantize(Decimal("0.01"))
 
         if credits_to_deduct <= 0:
             logger.info(
@@ -149,20 +148,16 @@ class ProjectHelpers:
     async def index_file_content(self, project_id: str, file_path: str, content: str):
         """Index file content in codebase"""
         return await self.codebase_indexing_service.index_file_content(
-            db=self.db,
-            project_id=project_id,
-            file_path=file_path,
-            content=content
+            db=self.db, project_id=project_id, file_path=file_path, content=content
         )
 
     async def upload_project_file(self, project_id: str, file_path: str, content: str):
         """Upload file to project storage"""
         self.storage_service.upload_file(
-            bucket_name=project_id,
-            file_path=file_path,
-            file_content=content
+            bucket_name=project_id, file_path=file_path, file_content=content
         )
         return {"status": "success"}
+
 
 def get_project_helpers(db: Session) -> ProjectHelpers:
     return ProjectHelpers(db)

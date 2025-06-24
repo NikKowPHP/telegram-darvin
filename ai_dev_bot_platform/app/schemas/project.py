@@ -7,8 +7,12 @@ import datetime
 
 class ProjectBase(BaseModel):
     # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: Implement validation for requirement inputs
-    title: str = Field(..., min_length=3, max_length=100, description="Name of the project")
-    description: str = Field(..., min_length=10, description="Detailed description of the project")
+    title: str = Field(
+        ..., min_length=3, max_length=100, description="Name of the project"
+    )
+    description: str = Field(
+        ..., min_length=10, description="Detailed description of the project"
+    )
     # ROO-AUDIT-TAG :: plan-001-requirement-gathering.md :: END
     tech_stack: Optional[Dict[str, Any]] = None
 

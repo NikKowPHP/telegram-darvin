@@ -43,13 +43,17 @@ Start the TODO list with '### Implementation TODO List'"""
 
             # Extract tech stack from response
             if "Technology Stack:" in response_text:
-                tech_part = response_text.split("Technology Stack:", 1)[1].split("\n\n", 1)[0]
-                tech_lines = [line.strip() for line in tech_part.split('\n') if line.strip()]
+                tech_part = response_text.split("Technology Stack:", 1)[1].split(
+                    "\n\n", 1
+                )[0]
+                tech_lines = [
+                    line.strip() for line in tech_part.split("\n") if line.strip()
+                ]
                 tech_stack = {
                     "frontend": [],
                     "backend": [],
                     "database": [],
-                    "infrastructure": []
+                    "infrastructure": [],
                 }
                 for line in tech_lines:
                     if ":" in line:
@@ -148,17 +152,17 @@ Provide specific recommendations for improvement."""
         )
         return {
             "analysis": llm_response_dict.get("text_response", ""),
-            "llm_call_details": llm_response_dict
+            "llm_call_details": llm_response_dict,
         }
 
     async def generate_readme(self, project: Project) -> str:
         logger.info(f"Architect Agent: Generating README for project {project.id}")
-        
+
         # Collect metadata from project manifest
         tech_stack = project.tech_stack or {}
-        dependencies = tech_stack.get('dependencies', [])
-        env_vars = tech_stack.get('environment_variables', {})
-        
+        dependencies = tech_stack.get("dependencies", [])
+        env_vars = tech_stack.get("environment_variables", {})
+
         prompt = f"""You are an expert technical writer. Generate a comprehensive README.md for the project titled '{project.title}'.
 Include these REQUIRED sections with appropriate content:
 

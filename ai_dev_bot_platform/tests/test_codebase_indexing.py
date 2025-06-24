@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from app.services.codebase_indexing_service import CodebaseIndexingService
 from app.services.api_key_manager import APIKeyManager
 
+
 @pytest.mark.asyncio
 async def test_indexing_service_integration():
     """Test the integration of the indexing service with other components."""
@@ -12,7 +13,7 @@ async def test_indexing_service_integration():
     indexing_service = CodebaseIndexingService(api_key_manager)
 
     # Mock the LLM client
-    with patch.object(indexing_service, 'llm_client', autospec=True) as mock_llm:
+    with patch.object(indexing_service, "llm_client", autospec=True) as mock_llm:
         # Mock the LLM response
         mock_llm.generate_response.return_value = {
             "choices": [{"message": {"content": "Indexed content"}}]
@@ -22,7 +23,7 @@ async def test_indexing_service_integration():
         result = await indexing_service.index_file_content(
             project_id="test_project",
             file_path="src/main.py",
-            content="print('Hello, world!')"
+            content="print('Hello, world!')",
         )
 
         # Verify the LLM was called with the correct parameters
@@ -35,6 +36,7 @@ async def test_indexing_service_integration():
         assert result is not None
         assert "Indexed content" in result
 
+
 @pytest.mark.asyncio
 async def test_search_functionality():
     """Test the search functionality across the codebase."""
@@ -43,16 +45,21 @@ async def test_search_functionality():
     indexing_service = CodebaseIndexingService(api_key_manager)
 
     # Mock the LLM client
-    with patch.object(indexing_service, 'llm_client', autospec=True) as mock_llm:
+    with patch.object(indexing_service, "llm_client", autospec=True) as mock_llm:
         # Mock the LLM response with search results
         mock_llm.generate_response.return_value = {
-            "choices": [{"message": {"content": "File: src/main.py\nLine 10: print('Hello, world!')"}}]
+            "choices": [
+                {
+                    "message": {
+                        "content": "File: src/main.py\nLine 10: print('Hello, world!')"
+                    }
+                }
+            ]
         }
 
         # Test searching the codebase
         results = await indexing_service.query_codebase(
-            project_id="test_project",
-            query="print('Hello'"
+            project_id="test_project", query="print('Hello'"
         )
 
         # Verify the LLM was called with the correct parameters
@@ -65,6 +72,7 @@ async def test_search_functionality():
         assert "src/main.py" in results[0]["file_path"]
         assert "print('Hello, world!')" in results[0]["content"]
 
+
 @pytest.mark.asyncio
 async def test_context_preservation():
     """Test that context is preserved in search results."""
@@ -73,22 +81,27 @@ async def test_context_preservation():
     indexing_service = CodebaseIndexingService(api_key_manager)
 
     # Mock the LLM client
-    with patch.object(indexing_service, 'llm_client', autospec=True) as mock_llm:
+    with patch.object(indexing_service, "llm_client", autospec=True) as mock_llm:
         # Mock the LLM response with context
         mock_llm.generate_response.return_value = {
-            "choices": [{"message": {"content": (
-                "File: src/utils.py\n"
-                "Line 5: def format_date(date):\n"
-                "Line 6:    return date.strftime('%Y-%m-%d')\n"
-                "Line 7: def add(a, b):\n"
-                "Line 8:    return a + b"
-            )}}]
+            "choices": [
+                {
+                    "message": {
+                        "content": (
+                            "File: src/utils.py\n"
+                            "Line 5: def format_date(date):\n"
+                            "Line 6:    return date.strftime('%Y-%m-%d')\n"
+                            "Line 7: def add(a, b):\n"
+                            "Line 8:    return a + b"
+                        )
+                    }
+                }
+            ]
         }
 
         # Test searching with context preservation
         results = await indexing_service.query_codebase(
-            project_id="test_project",
-            query="format_date"
+            project_id="test_project", query="format_date"
         )
 
         # Verify the results include proper context
@@ -98,6 +111,7 @@ async def test_context_preservation():
         assert "def add(a, b):" in results[0]["content"]
         assert results[0]["content"].count("\n") >= 2  # Multiple lines of context
 
+
 @pytest.mark.asyncio
 async def test_integration_with_storage():
     """Test the integration between indexing service and storage service."""
@@ -106,26 +120,26 @@ async def test_integration_with_storage():
     indexing_service = CodebaseIndexingService(api_key_manager)
 
     # Mock the storage service
-    with patch.object(indexing_service, 'storage_service', autospec=True) as mock_storage:
+    with patch.object(
+        indexing_service, "storage_service", autospec=True
+    ) as mock_storage:
         # Mock downloading a file
         mock_storage.download_file.return_value = "print('Hello, world!')"
 
         # Mock the LLM client
-        with patch.object(indexing_service, 'llm_client', autospec=True) as mock_llm:
+        with patch.object(indexing_service, "llm_client", autospec=True) as mock_llm:
             mock_llm.generate_response.return_value = {
                 "choices": [{"message": {"content": "Indexed content"}}]
             }
 
             # Test indexing a file from storage
             result = await indexing_service.index_file_from_storage(
-                project_id="test_project",
-                file_path="src/main.py"
+                project_id="test_project", file_path="src/main.py"
             )
 
             # Verify storage was called
             mock_storage.download_file.assert_called_once_with(
-                bucket_name="test_project",
-                file_path="src/main.py"
+                bucket_name="test_project", file_path="src/main.py"
             )
 
             # Verify indexing was performed

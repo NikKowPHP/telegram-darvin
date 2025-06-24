@@ -47,6 +47,7 @@ class APIKeyUsage(Base):
     response_time_ms = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=func.now())
 
+
 class APIKey(Base):
     __tablename__ = "api_keys"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
