@@ -27,7 +27,7 @@ from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
-class ModelOrchestrator:
+class OrchestratorService:
     def __init__(self, db: Session):
         self.db = db
         self.api_key_manager = APIKeyManager()
@@ -160,6 +160,6 @@ class ModelOrchestrator:
             user.id
         )
 
-def get_orchestrator(db: Session) -> ModelOrchestrator:
-    return ModelOrchestrator(db)
+def get_orchestrator_service(db: Session) -> OrchestratorService:
+    return OrchestratorService(db)
 # ROO-AUDIT-TAG :: plan-002-model-orchestrator.md :: END

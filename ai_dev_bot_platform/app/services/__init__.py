@@ -6,7 +6,7 @@ from .billing_service import (
 )
 from .codebase_indexing_service import CodebaseIndexingService
 from .notification_service import NotificationService
-from .orchestrator_service import ModelOrchestrator
+from .orchestrator_service import OrchestratorService
 from .payment_service import PaymentService
 from .project_file_service import ProjectFileService
 from .project_service import ProjectService

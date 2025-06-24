@@ -3,7 +3,7 @@ import logging
 import httpx
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
-from pgvector.sqlalchemy import L2Distance
+from pgvector.sqlalchemy import Vector
 from app.models.embedding import ProjectEmbedding
 from app.core.config import settings
 
@@ -75,7 +75,7 @@ class CodebaseIndexingService:
         results = db.query(ProjectEmbedding).filter(
             ProjectEmbedding.project_id == project_id
         ).order_by(
-            L2Distance(ProjectEmbedding.embedding, query_embedding)
+            ProjectEmbedding.embedding.l2_distance(query_embedding)
         ).limit(top_k).all()
         
         return [
@@ -84,7 +84,7 @@ class CodebaseIndexingService:
                 "content_chunk": r.content_chunk,
                 "chunk_index": r.chunk_index,
                 "total_chunks": r.total_chunks,
-                "similarity_score": float(L2Distance(ProjectEmbedding.embedding, query_embedding))
+                "similarity_score": float(ProjectEmbedding.embedding.l2_distance(query_embedding))
             }
             for r in results
         ]

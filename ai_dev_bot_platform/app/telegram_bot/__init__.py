@@ -1,4 +1,4 @@
-// Telegram bot package initialization
+
 
 from .requirement_gathering import (
     start_requirement_gathering,

@@ -106,12 +106,13 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             project_service = ProjectService()
             project = project_service.get_project(db, uuid.UUID(project_id))
             if project:
-                status_message += (
-                    f"Active Project: {project.name}\n"
-                    f"Status: {project.status}\n"
-                    f"Tasks Completed: {len([line for line in project.current_todo_markdown.split('\n') if '[x]' in line])}\n"
-                    f"Tasks Remaining: {len([line for line in project.current_todo_markdown.split('\n') if '[ ]' in line])}"
-                )
+                todo_lines = project.current_todo_markdown.split('\n')
+                completed = len([line for line in todo_lines if '[x]' in line])
+                remaining = len([line for line in todo_lines if '[ ]' in line])
+                status_message += f"Active Project: {project.name}\n"
+                status_message += f"Status: {project.status}\n"
+                status_message += f"Tasks Completed: {completed}\n"
+                status_message += f"Tasks Remaining: {remaining}"
             else:
                 status_message += "No active project found"
         else:
