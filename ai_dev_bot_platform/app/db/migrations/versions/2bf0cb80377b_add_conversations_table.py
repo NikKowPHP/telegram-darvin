@@ -18,7 +18,7 @@ def upgrade() -> None:
     op.create_table(
         'conversations',
         sa.Column('id', sa.UUID(), nullable=False),
-        sa.Column('user_id', sa.UUID(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('project_id', sa.UUID(), nullable=True),
         sa.Column('messages', sa.JSON(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
