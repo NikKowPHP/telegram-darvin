@@ -10,9 +10,10 @@ class ArchitectAgent:
         self.llm_client = llm_client
         self.index_service = index_service
         
-    def verify_implementation(self, code: str, requirements: Dict[str, Any], todo_list: List[str]) -> Dict[str, Any]:
-        """Verify code implementation against project requirements and TODO list with codebase context."""
-        # ROO-AUDIT-TAG :: feature-006-automated-verification.md :: Add codebase index integration
+    def verify_implementation(self, code: str, requirements: Dict[str, Any], todo_list: List[str],
+                            task_description: str, master_plan: Dict[str, Any]) -> Dict[str, Any]:
+        """Verify code implementation for autonomous loop with extended checks."""
+        # ROO-AUDIT-TAG :: feature-009-autonomous-loop.md :: Extend verification for autonomous workflow
         # Get more context with higher similarity threshold
         context = self.index_service.search_codebase(code, k=10, threshold=0.7)
         # Filter and format relevant context
@@ -21,7 +22,8 @@ class ArchitectAgent:
             for item in context
             if item['score'] > 0.5
         ]
-        verification_prompt = self._build_verification_prompt(code, requirements, todo_list, filtered_context)
+        verification_prompt = self._build_verification_prompt(
+            code, requirements, todo_list, filtered_context, task_description, master_plan)
         verification_result = self.llm_client.generate(verification_prompt)
         
         return {
@@ -63,11 +65,12 @@ class ArchitectAgent:
         """
         return self.llm_client.generate(report_prompt)
         
-    def _build_verification_prompt(self, code: str, requirements: Dict[str, Any], todo_list: List[str], context: List[str]) -> str:
-        """Build context-aware verification prompt for LLM."""
+    def _build_verification_prompt(self, code: str, requirements: Dict[str, Any], todo_list: List[str],
+                                 context: List[str], task_description: str, master_plan: Dict[str, Any]) -> str:
+        """Build enhanced verification prompt for autonomous loop."""
         context_str = '\n'.join(context) or "No relevant context found"
         return f"""
-        Analyze this code implementation considering the project context:
+        Analyze this code implementation for the autonomous development loop:
         
         Implementation Code:
         {code}
@@ -81,14 +84,20 @@ class ArchitectAgent:
         Relevant Codebase Context:
         {context_str}
         
-        Verification Checklist:
-        1. Does the code fulfill all specified requirements?
-        2. Are all relevant TODO items addressed?
-        3. Does the code integrate well with existing patterns?
-        4. Are there any inconsistencies with the codebase?
-        5. Does it follow project conventions and style?
+        Verification Checklist for Autonomous Development:
+        1. Does the code directly address the specific task? ({task_description})
+        2. Does it fulfill all specified requirements?
+        3. Are all relevant TODO items addressed?
+        4. Does it align with the master plan? ({master_plan.get('summary', '')})
+        5. Does it integrate well with existing patterns?
+        6. Are there any inconsistencies with the codebase?
+        7. Does it follow project conventions and style?
+        8. Does it move the project closer to completion?
         
-        Provide detailed feedback on any issues found.
+        Provide detailed feedback on any issues found, specifically assessing:
+        - How well the code addresses the specific task
+        - Progress made toward project completion
+        - Any architectural drift introduced
         """
         
     def _format_requirements(self, requirements: Dict[str, Any]) -> str:
@@ -164,4 +173,14 @@ class ArchitectAgent:
         return README_TEMPLATE
     # ROO-AUDIT-TAG :: feature-007-readme-generation.md :: END
 
-# ROO-AUDIT-TAG :: feature-006-automated-verification.md :: END
+    def assess_progress(self, completed_tasks: List[Dict[str, Any]], total_tasks: int) -> Dict[str, Any]:
+        """Assess project progress based on completed tasks."""
+        # ROO-AUDIT-TAG :: feature-009-autonomous-loop.md :: Implement progress assessment
+        progress_percent = (len(completed_tasks) / total_tasks) * 100
+        return {
+            'completed': len(completed_tasks),
+            'total': total_tasks,
+            'progress': f"{progress_percent:.1f}%",
+            'on_track': progress_percent >= (completed_tasks[-1]['timestamp'] - completed_tasks[0]['timestamp']).days
+        }
+# ROO-AUDIT-TAG :: feature-009-autonomous-loop.md :: END
