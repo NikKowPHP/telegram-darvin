@@ -48,4 +48,18 @@ class ArchitectAgent:
         # Placeholder implementation
         return []
 
+    # ROO-AUDIT-TAG :: feature-007-readme-generation.md :: Extend Architect agent for README generation
+    def generate_readme(self, project_details: Dict[str, Any]) -> str:
+        """Generate a README file based on project details."""
+        readme_template = self._get_readme_template()
+        return self.llm_client.generate(
+            f"Create a comprehensive README using this template:\n{readme_template}\n\nProject Details:\n{project_details}"
+        )
+
+    def _get_readme_template(self) -> str:
+        """Retrieve the README template."""
+        # This will be implemented after creating the template file
+        return "# {Project Name}\n\n## Description\n\n{Project Description}"
+    # ROO-AUDIT-TAG :: feature-007-readme-generation.md :: END
+
 # ROO-AUDIT-TAG :: feature-006-automated-verification.md :: END
