@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, status
 from typing import Optional
 import uuid
 from app.agents.implementer_agent import ImplementerAgent
+from app.agents.architect_agent import ArchitectAgent
 from app.services.project_service import ProjectService
 from app.utils.llm_client import LLMClient
 from app.db.session import SessionLocal
@@ -49,4 +50,30 @@ async def execute_task(
         )
     finally:
         db.close()
+# ROO-AUDIT-TAG :: feature-007-readme-generation.md :: Implement API endpoint for README generation
+@router.post("/generate-readme", status_code=status.HTTP_200_OK)
+async def generate_readme(project_details: dict):
+    """Generate a README file based on project details."""
+    db = SessionLocal()
+    try:
+        # Initialize services
+        llm_client = LLMClient()
+        architect = ArchitectAgent(llm_client)
+        
+        # Generate the README content
+        readme_content = architect.generate_readme(project_details)
+        
+        return {
+            "readme": readme_content,
+            "status": "success"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"README generation failed: {str(e)}"
+        )
+    finally:
+        db.close()
+# ROO-AUDIT-TAG :: feature-007-readme-generation.md :: END
+
 # ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: END
