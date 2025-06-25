@@ -11,10 +11,17 @@ class ArchitectAgent:
         self.index_service = index_service
         
     def verify_implementation(self, code: str, requirements: Dict[str, Any], todo_list: List[str]) -> Dict[str, Any]:
-        """Verify code implementation against project requirements and TODO list."""
-        # ROO-AUDIT-TAG :: feature-006-automated-verification.md :: Implement code verification
-        context = self.index_service.search_codebase(code)
-        verification_prompt = self._build_verification_prompt(code, requirements, todo_list, context)
+        """Verify code implementation against project requirements and TODO list with codebase context."""
+        # ROO-AUDIT-TAG :: feature-006-automated-verification.md :: Add codebase index integration
+        # Get more context with higher similarity threshold
+        context = self.index_service.search_codebase(code, k=10, threshold=0.7)
+        # Filter and format relevant context
+        filtered_context = [
+            f"File: {item['file']}\nContent:\n{item['content']}\n"
+            for item in context
+            if item['score'] > 0.5
+        ]
+        verification_prompt = self._build_verification_prompt(code, requirements, todo_list, filtered_context)
         verification_result = self.llm_client.generate(verification_prompt)
         
         return {
@@ -29,26 +36,32 @@ class ArchitectAgent:
         report_prompt = self._build_report_prompt(verification_results)
         return self.llm_client.generate(report_prompt)
         
-    def _build_verification_prompt(self, code: str, requirements: Dict[str, Any], todo_list: List[str], context: List[Dict]) -> str:
-        """Build verification prompt for LLM including TODO list check."""
+    def _build_verification_prompt(self, code: str, requirements: Dict[str, Any], todo_list: List[str], context: List[str]) -> str:
+        """Build context-aware verification prompt for LLM."""
+        context_str = '\n'.join(context) or "No relevant context found"
         return f"""
-        Verify if this code meets the project requirements and addresses all TODO items:
-        Code:
+        Analyze this code implementation considering the project context:
+        
+        Implementation Code:
         {code}
         
-        Requirements:
+        Project Requirements:
         {requirements}
         
-        TODO List:
+        Pending TODO Items:
         {todo_list}
         
-        Codebase Context:
-        {context}
+        Relevant Codebase Context:
+        {context_str}
         
-        Check specifically for:
-        1. All requirements are implemented
-        2. All TODO items are addressed
-        3. Code follows project conventions
+        Verification Checklist:
+        1. Does the code fulfill all specified requirements?
+        2. Are all relevant TODO items addressed?
+        3. Does the code integrate well with existing patterns?
+        4. Are there any inconsistencies with the codebase?
+        5. Does it follow project conventions and style?
+        
+        Provide detailed feedback on any issues found.
         """
         
     def _parse_verification_issues(self, verification_result: str) -> List[str]:
