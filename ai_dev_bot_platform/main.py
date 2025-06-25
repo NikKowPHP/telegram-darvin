@@ -1,8 +1,12 @@
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from decimal import Decimal
+from pathlib import Path
 
 from app.core.logging_config import setup_logging
 from app.telegram_bot.bot_main import run_bot
@@ -11,10 +15,13 @@ from app.api.health import router as health_router
 from app.db.session import get_db
 from app.services.user_service import UserService
 
+# ROO-AUDIT-TAG :: missing-features.md :: Create payment status endpoints
+# Setup templates directory
+BASE_DIR = Path(__file__).parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # Setup logging at the application's entry point
 setup_logging()
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,17 +38,25 @@ async def lifespan(app: FastAPI):
     except asyncio.CancelledError:
         print("Bot task successfully cancelled.")
 
-
 app = FastAPI(title="AI Development Assistant API", lifespan=lifespan)
 app.include_router(stripe_webhooks.router, prefix="/api/v1", tags=["Stripe"])
 app.include_router(orchestrator.router, prefix="/api/v1", tags=["orchestration"])
 app.include_router(health_router, prefix="/health", tags=["health"])
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def root():
     return {"message": "AI Development Assistant API is running and bot is active!"}
 
+@app.get("/payment-success", response_class=HTMLResponse)
+async def payment_success(request: Request):
+    # ROO-AUDIT-TAG :: missing-features.md :: Implement HTML responses
+    return templates.TemplateResponse("payment_success.html", {"request": request})
+
+@app.get("/payment-cancelled", response_class=HTMLResponse)
+async def payment_cancelled(request: Request):
+    # ROO-AUDIT-TAG :: missing-features.md :: Implement HTML responses
+    return templates.TemplateResponse("payment_cancelled.html", {"request": request})
 
 @app.post("/admin/set-credits/{telegram_user_id}")
 async def set_user_credits(
@@ -64,3 +79,4 @@ async def set_user_credits(
     return {
         "message": f"Successfully set credits for user {telegram_user_id} to {user.credit_balance}"
     }
+# ROO-AUDIT-TAG :: missing-features.md :: END

@@ -32,8 +32,8 @@ class PaymentService:
                     },
                 ],
                 mode="payment",
-                success_url=f"{settings.WEBAPP_URL}/payment-success",
-                cancel_url=f"{settings.WEBAPP_URL}/payment-cancelled",
+                success_url="/payment-success",
+                cancel_url="/payment-cancelled",
                 # IMPORTANT: This links the payment to our internal user ID
                 client_reference_id=str(user.id),
             )
