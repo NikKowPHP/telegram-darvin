@@ -3,9 +3,12 @@ from app.models.project import Project
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from typing import Optional, List
 import uuid
+import subprocess
+import os
 from app.agents.architect_agent import ArchitectAgent
 from app.utils.llm_client import LLMClient
 from app.core.config import settings
+from pathlib import Path
 
 
 class ProjectService:
@@ -47,6 +50,32 @@ class ProjectService:
 
     def get_projects_by_user(self, db: Session, user_id: int) -> List[Project]:
         return db.query(Project).filter(Project.user_id == user_id).all()
+
+    # ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: Add automatic code committing functionality
+    def commit_code_changes(self, project: Project, generated_code: str, file_path: str) -> bool:
+        """Commit generated code changes to the project repository."""
+        try:
+            # Ensure project directory exists
+            project_dir = Path(settings.PROJECTS_DIR) / str(project.id)
+            project_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Write generated code to file
+            full_path = project_dir / file_path
+            with open(full_path, 'w') as f:
+                f.write(generated_code)
+                
+            # Execute git commands
+            subprocess.run(['git', 'add', str(full_path)], cwd=project_dir, check=True)
+            subprocess.run(
+                ['git', 'commit', '-m', f'feat: Auto-commit for project {project.id}\n\n{generated_code[:50]}...'],
+                cwd=project_dir,
+                check=True
+            )
+            return True
+        except Exception as e:
+            print(f"Error committing code changes: {str(e)}")
+            return False
+    # ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: END
 
     def update_project(
         self, db: Session, project_id: uuid.UUID, project_upd: ProjectUpdate
