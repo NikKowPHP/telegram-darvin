@@ -3,6 +3,9 @@ from app.models.project import Project
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from typing import Optional, List
 import uuid
+from app.agents.architect_agent import ArchitectAgent
+from app.utils.llm_client import LLMClient
+from app.core.config import settings
 
 
 class ProjectService:
@@ -20,6 +23,24 @@ class ProjectService:
         db.commit()
         db.refresh(db_project)
         return db_project
+
+    # ROO-AUDIT-TAG :: feature-003-architectural-planning.md :: Implement generate_todo_list method
+    async def generate_todo_list(self, project: Project) -> str:
+        """Generate a TODO list for project implementation"""
+        llm_client = LLMClient()
+        architect_agent = ArchitectAgent(llm_client)
+        
+        # Get initial plan from architect agent
+        plan = await architect_agent.generate_initial_plan_and_docs(
+            project_requirements=project.description,
+            project_title=project.title
+        )
+        
+        if "error" in plan:
+            return f"Error generating TODO list: {plan['error']}"
+            
+        return plan.get("todo_list_markdown", "No TODO list generated")
+    # ROO-AUDIT-TAG :: feature-003-architectural-planning.md :: END
 
     def get_project(self, db: Session, project_id: uuid.UUID) -> Optional[Project]:
         return db.query(Project).filter(Project.id == project_id).first()
