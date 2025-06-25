@@ -117,15 +117,36 @@ class ArchitectAgent:
     # ROO-AUDIT-TAG :: feature-007-readme-generation.md :: Extend Architect agent for README generation
     def generate_readme(self, project_details: Dict[str, Any]) -> str:
         """Generate a README file based on project details."""
+        # ROO-AUDIT-TAG :: feature-007-readme-generation.md :: Implement project summary extraction
+        project_summary = self.extract_project_summary(project_details)
         readme_template = self._get_readme_template()
         return self.llm_client.generate(
-            f"Create a comprehensive README using this template:\n{readme_template}\n\nProject Details:\n{project_details}"
+            f"Create a comprehensive README using this template:\n{readme_template}\n\nProject Summary:\n{project_summary}"
         )
+
+    def extract_project_summary(self, project_details: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract key project information for README generation."""
+        prompt = f"""
+        Extract key information from these project details for a README file:
+        
+        Project Details:
+        {project_details}
+        
+        Extract the following sections:
+        1. Project Name and Description
+        2. Main Features
+        3. Technology Stack
+        4. Key Requirements
+        5. Basic Usage Scenarios
+        
+        Return the information in JSON format with those section names as keys.
+        """
+        return self.llm_client.generate_structured(prompt)
 
     def _get_readme_template(self) -> str:
         """Retrieve the README template."""
-        # This will be implemented after creating the template file
-        return "# {Project Name}\n\n## Description\n\n{Project Description}"
+        from app.prompts.architect_readme_generation import README_TEMPLATE
+        return README_TEMPLATE
     # ROO-AUDIT-TAG :: feature-007-readme-generation.md :: END
 
 # ROO-AUDIT-TAG :: feature-006-automated-verification.md :: END
