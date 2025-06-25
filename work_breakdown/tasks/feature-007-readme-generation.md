@@ -6,4 +6,4 @@
 - [x] (CONTENT) Implement project summary extraction
 - [x] (SETUP) Add setup and usage instructions generation
 - [x] (API) Implement API endpoint for README generation at `POST /api/generate-readme`
-- [ ] (TEST) Write unit tests for README generation
+- [x] (TEST) Write unit tests for README generation
