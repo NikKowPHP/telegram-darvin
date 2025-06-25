@@ -77,6 +77,25 @@ class ProjectService:
             return False
     # ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: END
 
+    # ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: Add task status tracking methods
+    def update_task_status(self, db: Session, project_id: uuid.UUID, task_id: str, status: str) -> Optional[Project]:
+        """Update status for a specific task"""
+        project = self.get_project(db, project_id)
+        if project:
+            statuses = project.task_statuses or {}
+            statuses[task_id] = status
+            project.task_statuses = statuses
+            db.commit()
+            db.refresh(project)
+        return project
+
+    def get_task_status(self, db: Session, project_id: uuid.UUID, task_id: str) -> Optional[str]:
+        """Get status for a specific task"""
+        project = self.get_project(db, project_id)
+        if project and project.task_statuses:
+            return project.task_statuses.get(task_id)
+        return None
+
     def update_project(
         self, db: Session, project_id: uuid.UUID, project_upd: ProjectUpdate
     ) -> Optional[Project]:

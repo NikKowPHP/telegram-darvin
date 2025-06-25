@@ -19,6 +19,8 @@ class Project(Base):
         JSON, nullable=True
     )  # e.g., {"language": "python", "framework": "fastapi"}
     current_todo_markdown = Column(TEXT, nullable=True)
+    # ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: Add task status tracking
+    task_statuses = Column(JSON, nullable=True)  # Stores {"task_id": "status"}
     # codebase_index_status (add later)
     # estimated_credit_cost, actual_credit_cost (add with billing)
     created_at = Column(DateTime, default=func.now())
