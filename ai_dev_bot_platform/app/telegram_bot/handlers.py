@@ -235,22 +235,25 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             "✅ Requirements received. The architect is now generating a plan..."
         )
 
-        # 4. Handoff to the Orchestrator to start the planning phase.
-        # This is the crucial step that was missing.
-        # Note: This should be an async task so it doesn't block the bot.
-        from app.services.orchestrator_service import get_orchestrator_service
-
-        orchestrator = get_orchestrator_service(db)
-
-        # Using asyncio.create_task to run the planning in the background
-        # and immediately return control to the user.
-        loop = asyncio.get_event_loop()
-        loop.create_task(
-            orchestrator.start_planning_phase(
-                project_id=project.id,
-                telegram_chat_id=update.effective_chat.id,
+        # 4. Handoff to Orchestrator via API to decouple from Python implementation
+        # ROO-AUDIT-TAG :: refactoring-epic-001-architectural-conflict.md :: Decouple Telegram handler from Python orchestration
+        import httpx
+        from app.core.config import settings
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{settings.API_INTERNAL_URL}/orchestrate/plan",
+                json={
+                    "project_id": str(project.id),
+                    "telegram_chat_id": update.effective_chat.id
+                }
             )
-        )
+            
+            if response.status_code != 202:
+                logger.error(f"Orchestration API failed: {response.text}")
+                await update.message.reply_text(
+                    "Planning phase could not be started. Please try again."
+                )
         # ROO-FIX-END
 
     except Exception as e:
