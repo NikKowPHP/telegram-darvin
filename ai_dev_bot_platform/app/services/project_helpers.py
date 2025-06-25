@@ -161,3 +161,51 @@ class ProjectHelpers:
 
 def get_project_helpers(db: Session) -> ProjectHelpers:
     return ProjectHelpers(db)
+
+# ROO-AUDIT-TAG :: feature-003-architectural-planning.md :: Technology stack selection logic
+TECH_STACK_OPTIONS = {
+    "frontend": {
+        "react": ["React", "TypeScript", "Next.js", "Tailwind CSS"],
+        "vue": ["Vue.js", "JavaScript", "Nuxt.js", "Vuetify"],
+        "angular": ["Angular", "TypeScript", "RxJS", "Material UI"]
+    },
+    "backend": {
+        "node": ["Node.js", "Express", "NestJS"],
+        "python": ["Python", "FastAPI", "Django"],
+        "java": ["Java", "Spring Boot"]
+    },
+    "database": {
+        "relational": ["PostgreSQL", "MySQL"],
+        "nosql": ["MongoDB", "Redis"],
+        "graph": ["Neo4j"]
+    },
+    "infrastructure": {
+        "cloud": ["AWS", "Docker", "Kubernetes"],
+        "serverless": ["Vercel", "Netlify"],
+        "hybrid": ["Docker", "Nginx"]
+    }
+}
+
+def select_technology_stack(project_description: str) -> dict:
+    """Select appropriate technology stack based on project requirements"""
+    stack = {
+        "frontend": TECH_STACK_OPTIONS["frontend"]["react"],
+        "backend": TECH_STACK_OPTIONS["backend"]["node"],
+        "database": TECH_STACK_OPTIONS["database"]["relational"],
+        "infrastructure": TECH_STACK_OPTIONS["infrastructure"]["cloud"]
+    }
+
+    # Basic heuristic-based selection
+    if "python" in project_description.lower():
+        stack["backend"] = TECH_STACK_OPTIONS["backend"]["python"]
+    elif "java" in project_description.lower():
+        stack["backend"] = TECH_STACK_OPTIONS["backend"]["java"]
+
+    if "mobile" in project_description.lower():
+        stack["frontend"] = TECH_STACK_OPTIONS["frontend"]["react"] + ["React Native"]
+
+    if "real-time" in project_description.lower():
+        stack["database"].append("Redis")
+
+    return stack
+# ROO-AUDIT-TAG :: feature-003-architectural-planning.md :: END
