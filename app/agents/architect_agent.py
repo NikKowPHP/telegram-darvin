@@ -126,8 +126,9 @@ class ArchitectAgent:
 
     def extract_project_summary(self, project_details: Dict[str, Any]) -> Dict[str, Any]:
         """Extract key project information for README generation."""
+        # ROO-AUDIT-TAG :: feature-007-readme-generation.md :: Add setup and usage instructions
         prompt = f"""
-        Extract key information from these project details for a README file:
+        Analyze these project details and extract comprehensive information for a README file:
         
         Project Details:
         {project_details}
@@ -135,9 +136,23 @@ class ArchitectAgent:
         Extract the following sections:
         1. Project Name and Description
         2. Main Features
-        3. Technology Stack
+        3. Technology Stack (including specific versions if available)
         4. Key Requirements
-        5. Basic Usage Scenarios
+        5. Setup Instructions:
+           - Installation steps
+           - Configuration requirements
+           - Environment setup
+           - Dependencies installation
+        6. Usage Examples:
+           - Basic commands
+           - Common use cases
+           - API endpoints if applicable
+        7. Development Guidelines:
+           - Testing instructions
+           - Contribution guidelines
+        
+        For setup instructions, generate specific commands based on the technology stack.
+        For usage examples, provide concrete code snippets or command-line examples.
         
         Return the information in JSON format with those section names as keys.
         """
