@@ -1,7 +1,7 @@
 # Feature: Automated Verification
 
 ## Atomic Tasks
-- [ ] (AGENT) Extend Architect agent for verification in [`app/agents/architect_agent.py`](ai_dev_bot_platform/app/agents/architect_agent.py)
+- [x] (AGENT) Extend Architect agent for verification in [`app/agents/architect_agent.py`](ai_dev_bot_platform/app/agents/architect_agent.py)
 - [ ] (VERIFY) Implement code verification against TODO list and requirements
 - [ ] (INDEX) Add codebase index integration for context-aware verification
 - [ ] (REPORT) Create verification report generation
