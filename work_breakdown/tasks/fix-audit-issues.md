@@ -1,7 +1,7 @@
 # Epic 6: Fix Audit Issues
 
 - [x] (FIX) Complete missing END tags in requirement_gathering.py: `ai_dev_bot_platform/app/telegram_bot/requirement_gathering.py`
-- [ ] (PLAN) Create task plans for missing implementations:
+- [x] (PLAN) Create task plans for missing implementations:
   - plan-002-model-orchestrator.md
   - plan-003-architect-agent.md
   - plan-004-codebase-indexing.md
