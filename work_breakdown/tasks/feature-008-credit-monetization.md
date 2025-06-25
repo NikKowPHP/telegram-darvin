@@ -7,4 +7,4 @@
 - [x] (TRANSACTION) Implement credit transaction logging in [`app/models/transaction.py`](ai_dev_bot_platform/app/models/transaction.py)
 - [x] (API) Add API endpoint for credit purchase at `POST /api/purchase-credits`
 - [x] (NOTIFY) Implement low credit notifications in [`app/services/notification_service.py`](ai_dev_bot_platform/app/services/notification_service.py)
-- [ ] (TEST) Write unit tests for credit management
+- [x] (TEST) Write unit tests for credit management
