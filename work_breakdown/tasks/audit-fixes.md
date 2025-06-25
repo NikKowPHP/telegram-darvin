@@ -2,7 +2,7 @@
 
 ## 1. Fix Placeholder Implementations
 - [x] (CODE) Complete TODO in [`app/telegram_bot/requirement_gathering.py`](ai_dev_bot_platform/app/telegram_bot/requirement_gathering.py)
-- [ ] (CODE) Complete TODO in [`app/api/endpoints/conversations.py`](ai_dev_bot_platform/app/api/endpoints/conversations.py)
+- [x] (CODE) Complete TODO in [`app/api/endpoints/conversations.py`](ai_dev_bot_platform/app/api/endpoints/conversations.py)
 - [ ] (CODE) Complete TODOs in [`app/agents/architect_agent.py`](ai_dev_bot_platform/app/agents/architect_agent.py)
 - [ ] (CODE) Complete TODOs in [`app/agents/implementer_agent.py`](ai_dev_bot_platform/app/agents/implementer_agent.py)
 
