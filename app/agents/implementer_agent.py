@@ -1,5 +1,6 @@
-# ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: Extend Implementer agent to execute tasks
+# ROO-AUDIT-TAG :: feature-009-autonomous-loop.md :: Update ImplementerAgent to handle task execution
 from typing import Dict, Any
+from datetime import datetime
 from app.utils.llm_client import LLMClient
 
 class ImplementerAgent:
@@ -9,8 +10,8 @@ class ImplementerAgent:
         self.llm_client = llm_client
         
     def execute_task(self, task_description: str) -> Dict[str, Any]:
-        """Execute a implementation task and return the results."""
-        # ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: Implement task execution logic with code generation
+        """Execute an implementation task and return detailed results for the autonomous loop."""
+        # ROO-AUDIT-TAG :: feature-009-autonomous-loop.md :: Enhanced task execution for autonomous workflow
         generated_code = self.generate_code(task_description)
         validation_result = self.validate_code(generated_code)
         
@@ -19,7 +20,9 @@ class ImplementerAgent:
             'validation': validation_result,
             'status': 'complete' if validation_result['valid'] else 'failed',
             'timestamp': datetime.now().isoformat(),
-            'task_description': task_description
+            'task_description': task_description,
+            'attempts': 1,
+            'error': None if validation_result['valid'] else "Code validation failed"
         }
         
         if "Error generating code" in generated_code:
@@ -50,10 +53,12 @@ class ImplementerAgent:
     def validate_code(self, code: str) -> Dict[str, Any]:
         """Validate generated code for syntax and logic errors."""
         # ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: Add code validation
-        # Placeholder validation - should be replaced with actual code analysis
+        # Enhanced placeholder validation for autonomous workflow
+        is_valid = not ("error" in code.lower() or "exception" in code.lower())
         return {
-            'valid': True,
-            'errors': []
+            'valid': is_valid,
+            'errors': [] if is_valid else ["Potential error pattern detected"],
+            'warnings': []
         }
 
 # ROO-AUDIT-TAG :: feature-005-iterative-implementation.md :: END
