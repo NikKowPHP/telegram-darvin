@@ -17,6 +17,7 @@ class ArchitectAgent:
     def __init__(self, llm_client: LLMClient):
         self.llm_client = llm_client
 
+    # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: Implement generate_initial_plan_and_docs method
     async def generate_initial_plan_and_docs(
         self, project_requirements: str, project_title: str
     ) -> dict:
@@ -77,12 +78,14 @@ class ArchitectAgent:
                 "todo_list_markdown": todo_list_md,
                 "llm_call_details": llm_response_dict,
             }
+    # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: END
         except Exception as e:
             logger.error(
                 f"Architect Agent: Error parsing LLM response: {e}", exc_info=True
             )
             return {"error": "Failed to parse LLM response for plan."}
 
+    # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: Implement verify_implementation_step method
     async def verify_implementation_step(
         self, project: Project, code_snippet: str, relevant_docs: str, todo_item: str
     ) -> dict:
@@ -139,6 +142,37 @@ class ArchitectAgent:
             "llm_call_details": llm_response_dict,
         }
 
+    # ROO-AUDIT-TAG :: feature-003-architectural-planning.md :: Implement generate_technical_documentation method
+    async def generate_technical_documentation(self, project: Project) -> dict:
+        """Generate comprehensive technical documentation for a project"""
+        logger.info(f"Architect Agent: Generating technical docs for project {project.id}")
+        
+        prompt = f"""Generate detailed technical documentation for project: {project.title}
+        
+        Requirements:
+        {project.description}
+        
+        Include sections for:
+        - Architecture overview
+        - API specifications
+        - Data models
+        - Deployment instructions
+        - Testing strategy"""
+        
+        llm_response_dict = await self.llm_client.call_llm(
+            prompt=prompt, model_name=settings.ARCHITECT_MODEL
+        )
+        response_text = llm_response_dict.get("text_response", "")
+        
+        if response_text.startswith("Error:"):
+            logger.error(f"Technical docs generation error: {response_text}")
+            return {"error": response_text}
+            
+        return {
+            "technical_docs": response_text,
+            "llm_call_details": llm_response_dict
+        }
+
     async def generate_readme(self, project: Project) -> str:
         logger.info(f"Architect Agent: Generating README for project {project.id}")
 
@@ -169,3 +203,4 @@ class ArchitectAgent:
             return f"# ERROR\n{response_text}"
 
         return response_text
+    # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: END

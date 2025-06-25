@@ -1,48 +1,42 @@
-from typing import List, Optional
-from uuid import UUID
+# ROO-AUDIT-TAG :: feature-001-requirement-gathering.md :: Create conversation_service
+from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
+from uuid import uuid4
 from app.models.conversation_model import Conversation
-from app.schemas.conversation import ConversationCreate, ConversationUpdate
-
+from app.schemas.conversation import MessageBase  # Added import
 
 class ConversationService:
     def __init__(self, db: Session):
         self.db = db
 
-    async def create_conversation(
-        self, conversation: ConversationCreate
-    ) -> Conversation:
-        db_conversation = Conversation(**conversation.dict())
-        self.db.add(db_conversation)
-        self.db.commit()
-        self.db.refresh(db_conversation)
-        return db_conversation
-
-    async def get_by_id(self, conversation_id: UUID) -> Optional[Conversation]:
-        return (
-            self.db.query(Conversation)
-            .filter(Conversation.id == conversation_id)
-            .first()
+    def start_conversation(self, user_id: str, project_id: Optional[str] = None) -> Conversation:
+        """Create a new conversation in the database"""
+        conversation = Conversation(
+            id=str(uuid4()),
+            user_id=user_id,
+            project_id=project_id,
+            messages=[]
         )
+        self.db.add(conversation)
+        self.db.commit()
+        self.db.refresh(conversation)
+        return conversation
 
-    async def get_by_user(self, user_id: UUID) -> List[Conversation]:
-        return self.db.query(Conversation).filter(Conversation.user_id == user_id).all()
+    def add_message(self, conversation_id: str, message: Dict[str, Any]) -> Conversation:
+        """Add a validated message to an existing conversation"""
+        # Validate message structure
+        validated_message = MessageBase(**message)  # This will raise ValidationError if invalid
+        
+        conversation = self.db.query(Conversation).filter(Conversation.id == conversation_id).first()
+        if not conversation:
+            raise ValueError(f"Conversation {conversation_id} not found")
+        
+        conversation.messages.append(validated_message.dict())
+        self.db.commit()
+        self.db.refresh(conversation)
+        return conversation
 
-    async def update_conversation(
-        self, conversation_id: UUID, conversation_update: ConversationUpdate
-    ) -> Optional[Conversation]:
-        db_conversation = await self.get_by_id(conversation_id)
-        if db_conversation:
-            for key, value in conversation_update.dict().items():
-                setattr(db_conversation, key, value)
-            self.db.commit()
-            self.db.refresh(db_conversation)
-        return db_conversation
-
-    async def delete_conversation(self, conversation_id: UUID) -> bool:
-        db_conversation = await self.get_by_id(conversation_id)
-        if db_conversation:
-            self.db.delete(db_conversation)
-            self.db.commit()
-            return True
-        return False
+    def get_conversation(self, conversation_id: str) -> Optional[Conversation]:
+        """Retrieve a conversation by its ID"""
+        return self.db.query(Conversation).filter(Conversation.id == conversation_id).first()
+# ROO-AUDIT-TAG :: feature-001-requirement-gathering.md :: END

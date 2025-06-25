@@ -1,16 +1,12 @@
-import uuid
-from datetime import datetime
-from sqlalchemy import Column, DateTime, ForeignKey, JSON, String, Integer
-from sqlalchemy.dialects.postgresql import UUID
-from app.db.session import Base
-
+# ROO-AUDIT-TAG :: feature-001-requirement-gathering.md :: Add Conversation model
+from sqlalchemy import Column, String, JSON
+from app.db.base_class import Base
 
 class Conversation(Base):
     __tablename__ = "conversations"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"))
-    messages = Column(JSON, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    id = Column(String, primary_key=True, index=True)
+    user_id = Column(String, index=True, nullable=False)
+    project_id = Column(String, index=True)
+    messages = Column(JSON, default=list)
+# ROO-AUDIT-TAG :: feature-001-requirement-gathering.md :: END

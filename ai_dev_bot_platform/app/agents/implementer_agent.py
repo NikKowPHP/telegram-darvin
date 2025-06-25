@@ -29,6 +29,7 @@ class ImplementerAgent:
     def __init__(self, llm_client: LLMClient):
         self.llm_client = llm_client
 
+    # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: Implement run_tdd_cycle method
     async def run_tdd_cycle(self, project_root: str, task_description: str):
         """Implement the feature for a given task and return the filename and code."""
         logger.info(f"Implementing task: {task_description}")
@@ -46,6 +47,7 @@ class ImplementerAgent:
             "code": implementation_result.get("code", ""),
         }
 
+    # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: Implement implement_todo_item method
     async def implement_todo_item(
         self,
         todo_item: str,
@@ -93,10 +95,12 @@ class ImplementerAgent:
                 "code": result.get("code", ""),
                 "context_used": implementation_context,
             }
+        # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: END
 
         except Exception as e:
             logger.error(f"Failed to implement TODO item: {e}", exc_info=True)
             return {"status": "error", "error": str(e), "todo_item": todo_item}
+        # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: END
 
     async def apply_changes_with_aider(
         self,

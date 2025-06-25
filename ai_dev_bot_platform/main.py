@@ -6,7 +6,7 @@ from decimal import Decimal
 
 from app.core.logging_config import setup_logging
 from app.telegram_bot.bot_main import run_bot
-from app.api.endpoints import stripe_webhooks
+from app.api.endpoints import stripe_webhooks, orchestrator
 from app.api.health import router as health_router
 from app.db.session import get_db
 from app.services.user_service import UserService
@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AI Development Assistant API", lifespan=lifespan)
 app.include_router(stripe_webhooks.router, prefix="/api/v1", tags=["Stripe"])
+app.include_router(orchestrator.router, prefix="/api/v1", tags=["orchestration"])
 app.include_router(health_router, prefix="/health", tags=["health"])
 
 
