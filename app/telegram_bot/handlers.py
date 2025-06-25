@@ -19,4 +19,10 @@ class TelegramBotHandlers:
         update.message.reply_text("🚀 Starting autonomous implementation...")
         orchestrator.execute_autonomous_loop(project_id=str(user_id))
         update.message.reply_text("✅ Autonomous implementation completed!")
+
+    def send_status_update(self, chat_id: str, message: str) -> None:
+        """Send a status update message to the specified chat."""
+        # ROO-AUDIT-TAG :: feature-009-autonomous-loop.md :: Implement status notifications
+        # In a real implementation, we would use the bot's API to send the message
+        print(f"Sending notification to {chat_id}: {message}")
 # ROO-AUDIT-TAG :: feature-009-autonomous-loop.md :: END
