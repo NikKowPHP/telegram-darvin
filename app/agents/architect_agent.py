@@ -31,9 +31,36 @@ class ArchitectAgent:
         }
         
     def generate_verification_report(self, verification_results: Dict[str, Any]) -> str:
-        """Generate a detailed verification report."""
+        """Generate a comprehensive verification report with detailed analysis."""
         # ROO-AUDIT-TAG :: feature-006-automated-verification.md :: Create verification report
-        report_prompt = self._build_report_prompt(verification_results)
+        report_prompt = f"""
+        Create a detailed verification report with these sections:
+        
+        1. Summary:
+           - Overall validity: {'Valid' if verification_results['valid'] else 'Invalid'}
+           - Total issues found: {len(verification_results.get('issues', []))}
+        
+        2. Requirements Analysis:
+           {self._format_requirements(verification_results.get('requirements', {}))}
+        
+        3. TODO Items Status:
+           {self._format_todo_items(verification_results.get('todo_list', []))}
+        
+        4. Code Quality Assessment:
+           - Architecture alignment
+           - Consistency with codebase
+           - Style and conventions
+        
+        5. Issues Found:
+           {self._format_issues(verification_results.get('issues', []))}
+        
+        6. Recommendations:
+           - Suggested improvements
+           - Refactoring opportunities
+           - Potential optimizations
+        
+        Use clear section headers and bullet points for readability.
+        """
         return self.llm_client.generate(report_prompt)
         
     def _build_verification_prompt(self, code: str, requirements: Dict[str, Any], todo_list: List[str], context: List[str]) -> str:
@@ -64,6 +91,19 @@ class ArchitectAgent:
         Provide detailed feedback on any issues found.
         """
         
+    def _format_requirements(self, requirements: Dict[str, Any]) -> str:
+        """Format requirements for the report."""
+        return '\n'.join([f"- {key}: {'Implemented' if value else 'Missing'}"
+                        for key, value in requirements.items()])
+    
+    def _format_todo_items(self, todo_list: List[str]) -> str:
+        """Format TODO items for the report."""
+        return '\n'.join([f"- {item}" for item in todo_list])
+    
+    def _format_issues(self, issues: List[str]) -> str:
+        """Format issues for the report."""
+        return '\n'.join([f"- {issue}" for issue in issues]) or "No significant issues found"
+    
     def _parse_verification_issues(self, verification_result: str) -> List[str]:
         """Parse verification issues from LLM response."""
         # ROO-AUDIT-TAG :: feature-006-automated-verification.md :: Parse verification issues
