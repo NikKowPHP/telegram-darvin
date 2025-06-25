@@ -1,7 +1,7 @@
 # Feature: Codebase Indexing
 
 ## Atomic Tasks
-- [ ] (SERVICE) Create codebase indexing service in [`app/services/codebase_indexing_service.py`](ai_dev_bot_platform/app/services/codebase_indexing_service.py)
+- [x] (SERVICE) Create codebase indexing service in [`app/services/codebase_indexing_service.py`](ai_dev_bot_platform/app/services/codebase_indexing_service.py)
 - [ ] (INDEX) Implement code parsing and vectorization using FAISS
 - [ ] (STORAGE) Add project file storage in [`app/services/storage_service.py`](ai_dev_bot_platform/app/services/storage_service.py)
 - [ ] (SEARCH) Implement semantic search functionality
