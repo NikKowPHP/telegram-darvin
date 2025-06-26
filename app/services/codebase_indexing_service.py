@@ -37,9 +37,30 @@ class CodebaseIndexingService:
         
     def update_index(self, file_path: str, new_content: str) -> None:
         """Update the index with new file content."""
-        # ROO-AUDIT-TAG :: feature-004-codebase-indexing.md :: Add file change detection
         new_vector = self._code_to_vector(new_content)
-        # Update logic would go here
+        
+        # Find existing file entry
+        found = False
+        for i, meta in enumerate(self.code_metadata):
+            if meta['path'] == file_path:
+                # Update existing entry
+                self.code_vectors[i] = new_vector
+                self.code_metadata[i]['content'] = new_content
+                found = True
+                break
+                
+        if not found:
+            # Add new file entry
+            self.code_vectors.append(new_vector)
+            self.code_metadata.append({
+                'path': file_path,
+                'content': new_content
+            })
+            
+        # Rebuild the FAISS index with updated vectors
+        dimension = len(self.code_vectors[0]) if self.code_vectors else 0
+        self.index = faiss.IndexFlatL2(dimension)
+        self.index.add(np.array(self.code_vectors))
         
     def _code_to_vector(self, code: str) -> List[float]:
         """Convert code to vector representation using AST analysis."""
