@@ -42,8 +42,29 @@ class CodebaseIndexingService:
         # Update logic would go here
         
     def _code_to_vector(self, code: str) -> List[float]:
-        """Convert code to vector representation (placeholder)."""
-        # TODO: Implement actual code vectorization
-        return [0.0] * 128  # Placeholder vector
+        """Convert code to vector representation using AST analysis."""
+        import ast
+        from collections import defaultdict
+        
+        # Parse AST and extract features
+        tree = ast.parse(code)
+        features = defaultdict(int)
+        
+        # Count different node types
+        for node in ast.walk(tree):
+            features[type(node).__name__] += 1
+            
+        # Normalize feature counts
+        total_nodes = sum(features.values())
+        if total_nodes == 0:
+            return [0.0] * 128
+            
+        # Create normalized vector of AST node frequencies
+        vector = []
+        for node_type in sorted(features.keys()):
+            vector.append(features[node_type] / total_nodes)
+            
+        # Pad or truncate to 128 dimensions
+        return (vector + [0.0] * 128)[:128]
 
 # ROO-AUDIT-TAG :: feature-004-codebase-indexing.md :: END
