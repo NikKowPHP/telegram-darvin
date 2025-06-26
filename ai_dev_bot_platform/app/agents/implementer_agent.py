@@ -34,34 +34,128 @@ class ImplementerAgent:
     async def _implement_feature(self, project_root: str, task_description: str) -> dict:
         """Core implementation logic for a feature using TDD approach."""
         logger.info(f"Implementing feature: {task_description}")
+        from app.services.codebase_indexing_service import CodebaseIndexer
+        from app.utils.llm_client import LLMClient
+        
         try:
-            # TODO: Add actual implementation logic here
-            # This is a placeholder implementation
+            # Initialize required services
+            llm_client = LLMClient()
+            indexer = CodebaseIndexer(project_root)
+            
+            # Get relevant context from codebase
+            relevant_code = await indexer.query_codebase(task_description)
+            
+            # Generate implementation prompt
+            prompt = f"""Implement the following feature based on the project context:
+            
+            Feature Requirements:
+            {task_description}
+            
+            Relevant Existing Code:
+            {relevant_code}
+            
+            Please return only the code implementation in the correct language syntax.
+            """
+            
+            # Get LLM response
+            response = await llm_client.call_llm(
+                prompt=prompt,
+                model_name=settings.IMPLEMENTER_MODEL
+            )
+            
+            # Extract filename from first line if specified
+            code = response.get("text_response", "")
+            filename = "implementation.py"  # default
+            if code.startswith("# filename:"):
+                filename_line, _, code = code.partition("\n")
+                filename = filename_line.split(":")[1].strip()
+            
             return {
                 "success": True,
-                "filename": "example.txt",
-                "code": "# Example implementation",
+                "filename": filename,
+                "code": code,
+                "llm_response": response
             }
         except Exception as e:
             logger.error(f"Feature implementation failed: {e}", exc_info=True)
-            return {"success": False, "error": str(e)}
+            return {
+                "success": False,
+                "error": str(e),
+                "task_description": task_description
+            }
 
     async def run_tdd_cycle(self, project_root: str, task_description: str):
-        """Implement the feature for a given task and return the filename and code."""
-        logger.info(f"Implementing task: {task_description}")
-
-        # Implement the feature
-        implementation_result = await self._implement_feature(
-            project_root, task_description
-        )
-        if not implementation_result.get("success"):
-            return implementation_result
-
-        # Return only the filename and code
-        return {
-            "filename": implementation_result.get("filename", ""),
-            "code": implementation_result.get("code", ""),
-        }
+        """Implement a feature using Test-Driven Development approach."""
+        logger.info(f"Starting TDD cycle for: {task_description}")
+        from app.services.codebase_indexing_service import CodebaseIndexer
+        from app.utils.llm_client import LLMClient
+        
+        try:
+            llm_client = LLMClient()
+            indexer = CodebaseIndexer(project_root)
+            
+            # 1. Generate test cases
+            test_prompt = f"""Generate test cases for the following feature:
+            {task_description}
+            
+            Please return the test code in the appropriate testing framework for the project.
+            """
+            test_response = await llm_client.call_llm(
+                prompt=test_prompt,
+                model_name=settings.IMPLEMENTER_MODEL
+            )
+            test_code = test_response.get("text_response", "")
+            test_filename = "test_implementation.py"  # Could be extracted from response
+            
+            # 2. Implement the feature
+            implementation_result = await self._implement_feature(
+                project_root, task_description
+            )
+            if not implementation_result.get("success"):
+                return implementation_result
+                
+            # 3. Validate implementation
+            validation_prompt = f"""Verify the implementation against the test cases:
+            Feature: {task_description}
+            
+            Implementation Code:
+            {implementation_result['code']}
+            
+            Test Cases:
+            {test_code}
+            
+            Does the implementation satisfy all test cases? Respond with only 'YES' or 'NO'.
+            """
+            validation_response = await llm_client.call_llm(
+                prompt=validation_prompt,
+                model_name=settings.VERIFICATION_MODEL
+            )
+            
+            if "YES" not in validation_response.get("text_response", "").upper():
+                return {
+                    "success": False,
+                    "error": "Implementation failed validation against test cases",
+                    "test_code": test_code,
+                    "implementation": implementation_result
+                }
+            
+            # 4. Return comprehensive results
+            return {
+                "success": True,
+                "filename": implementation_result.get("filename", ""),
+                "code": implementation_result.get("code", ""),
+                "test_filename": test_filename,
+                "test_code": test_code,
+                "validation_result": validation_response
+            }
+            
+        except Exception as e:
+            logger.error(f"TDD cycle failed: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": str(e),
+                "task_description": task_description
+            }
 
     # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: Implement implement_todo_item method
     async def implement_todo_item(
