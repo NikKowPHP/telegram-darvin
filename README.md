@@ -11,6 +11,15 @@ This repository contains the source code for an autonomous AI software developme
 -   **Iterative Implementation:** "Implementer" agents write code to complete tasks from the TODO list.
 -   **Aider Integration:** Capable of in-place code refinement and editing.
 -   **Automated Verification:** The Architect agent reviews implemented code against project goals.
+      
+### Automated Verification Details
+The system includes a comprehensive verification system that ensures code quality and adherence to requirements:
+
+- **VerificationService**: Core service that performs syntax checks, architecture validation, and requirement compliance verification.
+- **API Endpoints**:
+  - `POST /api/v1/verify` - Main endpoint for code verification
+  - Returns JSON with validation status, issues list, and detailed report
+- **Integration**: Seamlessly works with the Architect agent to validate implementations
 -   **Credit-Based System:** Users operate on a credit balance, with costs deducted for LLM usage.
 -   **Conversation Logging:** All user interactions are stored in the database for quality assurance and continuous improvement.
 -   **Project Delivery:** Completed projects, including a generated `README.md`, are delivered as a ZIP file.
