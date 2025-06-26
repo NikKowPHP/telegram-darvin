@@ -26,19 +26,40 @@ async def start_requirement_gathering(update: Update, context: CallbackContext) 
         )
 
 async def handle_requirement_message(update: Update, context: CallbackContext) -> None:
-    """Handle subsequent messages in requirement gathering."""
+    """Handle subsequent messages in requirement gathering and extract requirements."""
     user_message = update.message.text
+    
+    # Extract key requirements from message
+    requirements = {
+        "raw": user_message,
+        "features": [],
+        "technologies": [],
+        "constraints": []
+    }
+    
+    # Simple pattern matching for requirements extraction
+    if "need" in user_message.lower():
+        requirements['features'].append(user_message)
+    if "using" in user_message.lower():
+        requirements['technologies'].append(user_message.split("using")[-1].strip())
+    if "must" in user_message.lower() or "require" in user_message.lower():
+        requirements['constraints'].append(user_message)
+    
     # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: Implement conversation storage
     from app.services.conversation_service import add_message_to_conversation
     await add_message_to_conversation(
         conversation_id=context.user_data['conversation_id'],
         message=user_message,
-        role="user"
+        role="user",
+        requirements=requirements  # Store structured requirements
     )
     # ROO-AUDIT-TAG :: refactoring-epic-010-audit-fixes.md :: END
-    await update.message.reply_text(
-        f"Received your requirement: {user_message}\nPlease continue describing or type /done when finished."
-    )
+    
+    # Provide more helpful feedback
+    response = f"✅ Recorded requirement: {user_message}"
+    if requirements['features']:
+        response += f"\n\nDetected features:\n- " + "\n- ".join(requirements['features'])
+    await update.message.reply_text(response + "\n\nPlease continue or type /done when finished.")
 
 async def finish_requirement_gathering(update: Update, context: CallbackContext) -> None:
     """Finalize the requirement gathering session with /done command."""
