@@ -11,7 +11,8 @@ This repository contains the source code for an autonomous AI software developme
 -   **Iterative Implementation:** "Implementer" agents write code to complete tasks from the TODO list.
 -   **Aider Integration:** Capable of in-place code refinement and editing.
 -   **Automated Verification:** The Architect agent reviews implemented code against project goals.
-      
+-   **Codebase Indexing:** Fast semantic search across project code using AST analysis and FAISS indexing.
+
 ### Automated Verification Details
 The system includes a comprehensive verification system that ensures code quality and adherence to requirements:
 
@@ -65,6 +66,27 @@ search_results = conversation_service.search_conversations(
 -   **Database:** PostgreSQL
 -   **Cache/Queue:** Redis
 -   **Database Migrations:** Alembic
+
+### Codebase Indexing Details
+The system includes a powerful code search capability that understands code structure:
+
+- **AST-based Vectorization:** Converts code to vectors based on abstract syntax tree node frequencies
+- **FAISS Indexing:** Efficient similarity search using Facebook's FAISS library
+- **Real-time Updates:** Index stays in sync with code changes
+
+Example usage:
+```python
+from app.services.codebase_indexing_service import CodebaseIndexingService
+
+indexer = CodebaseIndexingService()
+indexer.index_codebase([
+    {'path': 'src/main.py', 'content': 'def main(): print("Hello")'},
+    {'path': 'src/utils.py', 'content': 'def helper(): return 42'}
+])
+
+results = indexer.search_codebase('print', k=1)
+print(results[0]['file'])  # Output: src/main.py
+```
 -   **Telegram Integration:** `python-telegram-bot`
 -   **Containerization:** Docker, Docker Compose
 -   **Deployment:** Kubernetes
