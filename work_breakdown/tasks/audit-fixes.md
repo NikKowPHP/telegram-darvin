@@ -2,7 +2,7 @@
 
 [x] **Complete TODO implementations**:
 - Replace all placeholder code in `app/telegram_bot/requirement_gathering.py`
-- Implement missing functionality in `app/api/endpoints/conversations.py`
+- [x] Implement missing functionality in `app/api/endpoints/conversations.py`
 - Finalize architect/implementer agent logic in `app/agents/architect_agent.py` and `app/agents/implementer_agent.py`
 
 [ ] **Add missing ROO-AUDIT-TAG blocks**:
