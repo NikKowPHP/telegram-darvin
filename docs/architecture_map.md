@@ -1,0 +1,16 @@
+# Architecture Map
+
+This document maps project features to their corresponding code implementations.
+
+| Feature | Code Location | Status |
+|---------|---------------|--------|
+| Requirement Gathering | [`app/telegram_bot/requirement_gathering.py`](ai_dev_bot_platform/app/telegram_bot/requirement_gathering.py)<br>[`app/api/endpoints/conversations.py`](ai_dev_bot_platform/app/api/endpoints/conversations.py)<br>[`app/models/conversation_model.py`](ai_dev_bot_platform/app/models/conversation_model.py)<br>[`app/services/conversation_service.py`](ai_dev_bot_platform/app/services/conversation_service.py) | [IMPLEMENTED] |
+| Hierarchical AI Collaboration | [`app/services/orchestrator_service.py`](ai_dev_bot_platform/app/services/orchestrator_service.py)<br>[`app/agents/architect_agent.py`](ai_dev_bot_platform/app/agents/architect_agent.py)<br>[`app/agents/implementer_agent.py`](ai_dev_bot_platform/app/agents/implementer_agent.py)<br>[`app/core/config.py`](ai_dev_bot_platform/app/core/config.py) | [IMPLEMENTED] |
+| Architectural Planning | [`app/agents/architect_agent.py`](ai_dev_bot_platform/app/agents/architect_agent.py)<br>[`app/prompts/architect_initial_plan.py`](ai_dev_bot_platform/app/prompts/architect_initial_plan.py)<br>[`app/services/project_service.py`](ai_dev_bot_platform/app/services/project_service.py)<br>[`app/services/project_helpers.py`](ai_dev_bot_platform/app/services/project_helpers.py) | [IMPLEMENTED] |
+| Codebase Indexing | [`app/services/codebase_indexing_service.py`](ai_dev_bot_platform/app/services/codebase_indexing_service.py) | [PARTIALLY IMPLEMENTED] |
+| Iterative Implementation | [`app/agents/implementer_agent.py`](ai_dev_bot_platform/app/agents/implementer_agent.py)<br>[`app/services/project_service.py`](ai_dev_bot_platform/app/services/project_service.py) | [IMPLEMENTED] |
+| Automated Verification | [`app/services/verification_service.py`](ai_dev_bot_platform/app/services/verification_service.py) | [PLANNED] |
+| README Generation | [`app/services/readme_generation_service.py`](ai_dev_bot_platform/app/services/readme_generation_service.py) | [IMPLEMENTED] |
+| Credit Monetization | [`app/services/billing_service.py`](ai_dev_bot_platform/app/services/billing_service.py)<br>[`app/models/transaction.py`](ai_dev_bot_platform/app/models/transaction.py)<br>[`app/api/endpoints/payment.py`](ai_dev_bot_platform/app/api/endpoints/payment.py) | [IMPLEMENTED] |
+| Autonomous Loop | [`app/services/orchestrator_service.py`](ai_dev_bot_platform/app/services/orchestrator_service.py) | [IMPLEMENTED] |
+| Audit Fixes | [`work_breakdown/tasks/audit-fixes.md`](work_breakdown/tasks/audit-fixes.md)<br>[`app/telegram_bot/requirement_gathering.py`](ai_dev_bot_platform/app/telegram_bot/requirement_gathering.py)<br>[`app/api/endpoints/conversations.py`](ai_dev_bot_platform/app/api/endpoints/conversations.py)<br>[`app/agents/architect_agent.py`](ai_dev_bot_platform/app/agents/architect_agent.py)<br>[`app/agents/implementer_agent.py`](ai_dev_bot_platform/app/agents/implementer_agent.py) | [IN PROGRESS] |

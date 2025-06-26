@@ -56,11 +56,14 @@ class ArchitectAgent:
                     "infrastructure": [],
                 }
                 for line in tech_lines:
-                    if ":" in line:
-                        category, items = line.split(":", 1)
-                        category = category.strip().lower()
-                        if category in tech_stack:
-                            tech_stack[category] = [i.strip() for i in items.split(",")]
+                    try:
+                        if ":" in line:
+                            category, items = line.split(":", 1)
+                            category = category.strip().lower()
+                            if category in tech_stack:
+                                tech_stack[category] = [i.strip() for i in items.split(",") if i.strip()]
+                    except Exception as e:
+                        logger.warning(f"Failed to parse tech stack line: {line} - {str(e)}")
 
             # Extract TODO list
             if "### Implementation TODO List" in response_text:
@@ -147,17 +150,11 @@ class ArchitectAgent:
         """Generate comprehensive technical documentation for a project"""
         logger.info(f"Architect Agent: Generating technical docs for project {project.id}")
         
-        prompt = f"""Generate detailed technical documentation for project: {project.title}
-        
-        Requirements:
-        {project.description}
-        
-        Include sections for:
-        - Architecture overview
-        - API specifications
-        - Data models
-        - Deployment instructions
-        - Testing strategy"""
+        prompt = architect_readme_generation.TECH_DOCS_PROMPT.format(
+            project_title=project.title,
+            project_description=project.description,
+            tech_stack=project.tech_stack
+        )
         
         llm_response_dict = await self.llm_client.call_llm(
             prompt=prompt, model_name=settings.ARCHITECT_MODEL
@@ -165,7 +162,7 @@ class ArchitectAgent:
         response_text = llm_response_dict.get("text_response", "")
         
         if response_text.startswith("Error:"):
-            logger.error(f"Technical docs generation error: {response_text}")
+            logger.error(f"Technical docs generation error: {response_text}", exc_info=True)
             return {"error": response_text}
             
         return {
