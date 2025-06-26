@@ -92,42 +92,69 @@ class ArchitectAgent:
     async def verify_implementation_step(
         self, project: Project, code_snippet: str, relevant_docs: str, todo_item: str
     ) -> dict:
-        """Verify a single implementation step against project requirements"""
+        """Verify a single implementation step against project requirements with detailed analysis"""
         logger.info(
-            f"Architect Agent: Verifying step for project {project.id}: '{todo_item}'"
+            f"Architect Agent: Verifying implementation step for project {project.id}: '{todo_item}'"
         )
+        
+        # Build verification prompt with structured criteria
         prompt = architect_code_verification.PROMPT.format(
             project_title=project.title,
             project_description=project.description,
             relevant_docs=relevant_docs,
             todo_item=todo_item,
             code_snippet=code_snippet,
+            quality_criteria="""
+            - Functional correctness: Does the code correctly implement the requirement?
+            - Code quality: Is the code clean, readable and maintainable?
+            - Security: Are there any potential vulnerabilities?
+            - Performance: Are there any obvious inefficiencies?
+            - Error handling: Are exceptions properly handled?
+            - Testing: Is there adequate test coverage?
+            - Documentation: Is the code properly documented?
+            """
         )
 
         llm_response_dict = await self.llm_client.call_llm(
-            prompt=prompt, model_name=settings.VERIFICATION_MODEL
+            prompt=prompt,
+            model_name=settings.VERIFICATION_MODEL,
+            temperature=0.2  # More deterministic output for verification
         )
+        
         response_text = llm_response_dict.get("text_response", "")
+        analysis = {}
 
-        if response_text.startswith("Error:"):
-            return {
-                "status": "ERROR",
-                "feedback": response_text,
-                "llm_call_details": llm_response_dict,
-            }
+        # Parse structured response
+        if "VERIFICATION REPORT:" in response_text:
+            report_sections = response_text.split("VERIFICATION REPORT:")[1].split("\n\n")
+            for section in report_sections:
+                if ":" in section:
+                    key, value = section.split(":", 1)
+                    analysis[key.strip().lower()] = value.strip()
 
-        if "APPROVED" in response_text.upper():
-            return {
-                "status": "APPROVED",
-                "feedback": response_text,
-                "llm_call_details": llm_response_dict,
+        # Determine verification status
+        status = "REJECTED"
+        if "overall_status" in analysis:
+            if "approved" in analysis["overall_status"].lower():
+                status = "APPROVED"
+            elif "needs_revision" in analysis["overall_status"].lower():
+                status = "NEEDS_REVISION"
+
+        return {
+            "status": status,
+            "feedback": response_text,
+            "analysis": analysis,
+            "llm_call_details": llm_response_dict,
+            "verification_criteria": {
+                "functional_correctness": analysis.get("functional correctness", ""),
+                "code_quality": analysis.get("code quality", ""),
+                "security": analysis.get("security", ""),
+                "performance": analysis.get("performance", ""),
+                "error_handling": analysis.get("error handling", ""),
+                "testing": analysis.get("testing", ""),
+                "documentation": analysis.get("documentation", "")
             }
-        else:
-            return {
-                "status": "REJECTED",
-                "feedback": response_text,
-                "llm_call_details": llm_response_dict,
-            }
+        }
 
     async def validate_architecture(self, project: Project) -> dict:
         """Validate the overall project architecture"""
