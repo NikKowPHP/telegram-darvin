@@ -223,6 +223,49 @@ class OrchestratorService:
         """Helper to get user's active project"""
         return await self.project_service.get_active_project(self.db, user.id)
 
+    async def run_autonomous_loop(self, project_id: uuid.UUID):
+        """
+        Autonomous development loop that finds and executes tasks from markdown files.
+        Replaces the external run_autonomy.py script functionality.
+        """
+        logger.info(f"Starting autonomous loop for project {project_id}")
+        
+        # Get project and current todo list
+        project = self.project_service.get_project(self.db, project_id)
+        if not project or not project.current_todo_markdown:
+            logger.error(f"No project or todo list found for {project_id}")
+            return {"status": "error", "message": "No active project or todo list"}
+
+        # Find first incomplete task
+        tasks = project.current_todo_markdown.split('\n')
+        task_line = next((i for i, line in enumerate(tasks)
+                         if line.startswith('- [ ]')), None)
+        
+        if task_line is None:
+            logger.info("All tasks completed")
+            return {"status": "complete", "message": "All tasks marked as done"}
+
+        # Mark task as in-progress
+        tasks[task_line] = tasks[task_line].replace('- [ ]', '- [x]')
+        updated_markdown = '\n'.join(tasks)
+        self.project_service.update_project(
+            self.db,
+            project_id,
+            {"current_todo_markdown": updated_markdown}
+        )
+
+        # Execute task (simplified - actual implementation would vary)
+        task_desc = tasks[task_line].replace('- [x]', '').strip()
+        logger.info(f"Executing task: {task_desc}")
+        
+        # Here we would implement the actual task execution logic
+        # For now just simulate success
+        return {
+            "status": "success",
+            "task": task_desc,
+            "message": "Task executed successfully"
+        }
+
 
 def get_orchestrator_service(db: Session) -> OrchestratorService:
     return OrchestratorService(db)

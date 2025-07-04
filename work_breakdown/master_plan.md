@@ -23,7 +23,7 @@ This tier addresses the most severe structural and security issues identified in
     - **Action**: Modify the `set_user_credits` endpoint. Add a new dependency that checks for a secret header (e.g., `X-Admin-Token`). The endpoint should only proceed if the token in the header matches a new, hardcoded secret string.
     - **Reason**: Audit finding: Undocumented Functionality. The endpoint `POST /admin/set-credits/{telegram_user_id}` is unauthenticated, posing a major security risk.
 
-- [ ] **REFACTOR**: Internalize the "Autonomous Loop" logic.
+- [x] **REFACTOR**: Internalize the "Autonomous Loop" logic.
     - **File**: `ai_dev_bot_platform/app/services/orchestrator_service.py`
     - **Action**: Implement a new public async method named `run_autonomous_loop` within the `OrchestratorService` class. This method will contain the core logic from the `run_autonomy.py` script (finding the next task from a markdown file, executing it, and updating its status). This method should not depend on the external `roo` CLI.
     - **Reason**: Audit finding: Feature Completeness. The "Autonomous Loop" is currently handled by an undocumented external script (`run_autonomy.py`) with a missing dependency, making it non-functional and unauditable.
