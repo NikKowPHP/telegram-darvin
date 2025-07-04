@@ -66,7 +66,7 @@ This tier ensures that all configurations, endpoints, and scripts are properly d
     - **Action**: Add the following environment variables to the file with placeholder values: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY`, `MOCK_STRIPE_PAYMENTS`, `SUPABASE_URL`, `SUPABASE_KEY`, `WEBAPP_URL`.
     - **Reason**: Audit finding: Configuration Mismatches. Critical variables for payment processing and file storage were used in the code but not documented.
 
-- [ ] **DOCS**: Document the newly secured admin credit endpoint.
+- [x] **DOCS**: Document the newly secured admin credit endpoint.
     - **File**: `documentation/srs.md`
     - **Action**: Add a new section under "Functional Requirements" for the `POST /admin/set-credits` endpoint, clearly stating its purpose and that it requires an `X-Admin-Token` header for authentication.
     - **Reason**: Audit finding: Undocumented Functionality. The admin endpoint needs to be documented for operational awareness.
