@@ -76,7 +76,7 @@ This tier ensures that all configurations, endpoints, and scripts are properly d
     - **Action**: Add a subsection under "Monitoring" that lists the available health endpoints (`/health`, `/ready`, `/telegram`, `/metrics`) and their purpose.
     - **Reason**: Audit finding: Undocumented Functionality. The health endpoints are crucial for operations but were not documented.
 
-- [ ] **DOCS**: Document the utility scripts `cli_runner.py` and `seed_db.py`.
+- [x] **DOCS**: Document the utility scripts `cli_runner.py` and `seed_db.py`.
     - **File**: `documentation/operations_manual.md`
     - **Action**: Add a new section titled "Utility Scripts" describing the purpose and basic usage of `cli_runner.py` and `seed_db.py`.
     - **Reason**: Audit finding: Undocumented Functionality. The utility scripts were not documented.

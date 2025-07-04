@@ -29,7 +29,35 @@ kubectl scale deployment orchestrator --replicas=0
 - CPU >80% for 5 minutes
 - Error rate >5% in 15-minute window
 
-## 4. Backup Procedures
+## 4. Utility Scripts
+
+### 4.1 CLI Runner
+The `cli_runner.py` script provides command-line access to core application functionality.
+
+**Usage**:
+```bash
+python cli_runner.py [command] [options]
+```
+
+**Common Commands**:
+- `run-task [task_id]`: Execute a specific development task
+- `verify-project [project_id]`: Run verification checks on a project
+- `--help`: Show available commands
+
+### 4.2 Database Seeder
+The `seed_db.py` script populates the database with initial test data.
+
+**Usage**:
+```bash
+python seed_db.py [options]
+```
+
+**Options**:
+- `--reset`: Clear existing data before seeding
+- `--sample-size=N`: Number of test records to create
+- `--env=ENV`: Target environment (dev/test/prod)
+
+## 5. Backup Procedures
 ### 4.1 PostgreSQL
 ```bash
 pg_dump -Fc -U botadmin -d botdb > botdb.dump
