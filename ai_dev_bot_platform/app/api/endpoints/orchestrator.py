@@ -55,3 +55,32 @@ async def create_architecture_plan(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 # ROO-AUDIT-TAG :: feature-003-architectural-planning.md :: END
+
+@router.post("/orchestrate/run-loop")
+async def trigger_autonomous_loop(
+    request_data: dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Trigger the autonomous development loop for a project"""
+    try:
+        project_id = request_data.get("project_id")
+        if not project_id:
+            raise HTTPException(
+                status_code=400,
+                detail="project_id is required"
+            )
+
+        orchestrator = OrchestratorService(db)
+        result = await orchestrator.run_autonomous_loop(project_id)
+        
+        return {
+            "status": "success",
+            "project_id": project_id,
+            "result": result
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to run autonomous loop: {str(e)}"
+        )
