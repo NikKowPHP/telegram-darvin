@@ -58,19 +58,31 @@ async def payment_cancelled(request: Request):
     # ROO-AUDIT-TAG :: missing-features.md :: Implement HTML responses
     return templates.TemplateResponse("payment_cancelled.html", {"request": request})
 
+# Hardcoded admin token - should be moved to environment variables in production
+ADMIN_SECRET_TOKEN = "x7F#9pL$2qR*5vE!1zY"
+
 @app.post("/admin/set-credits/{telegram_user_id}")
 async def set_user_credits(
-    telegram_user_id: int, credits: float, db: Session = Depends(get_db)
+    telegram_user_id: int,
+    credits: float,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """
-    Temporary admin endpoint to set a user's credit balance.
+    Admin endpoint to set a user's credit balance.
+    Requires X-Admin-Token header with valid secret.
     """
     from decimal import Decimal
+    
+    # Check admin token
+    admin_token = request.headers.get("X-Admin-Token")
+    if admin_token != ADMIN_SECRET_TOKEN:
+        return {"error": "Invalid or missing admin token"}, 401
 
     user_service = UserService()
     user = user_service.get_user_by_telegram_id(db, telegram_user_id)
     if not user:
-        return {"error": "User not found"}
+        return {"error": "User not found"}, 404
 
     user.credit_balance = Decimal(str(credits))
     db.commit()

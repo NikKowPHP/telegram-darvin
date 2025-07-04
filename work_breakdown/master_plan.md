@@ -18,7 +18,7 @@ This tier addresses the most severe structural and security issues identified in
     - **Action**: After consolidating necessary files in the previous step, delete the entire top-level `app` directory and all its contents.
     - **Reason**: Audit finding: Undocumented Functionality. The presence of two `app` directories is a critical structural flaw causing massive confusion and code duplication.
 
-- [ ] **FIX**: Secure the administrative credit-setting endpoint.
+- [x] **FIX**: Secure the administrative credit-setting endpoint.
     - **File**: `ai_dev_bot_platform/main.py`
     - **Action**: Modify the `set_user_credits` endpoint. Add a new dependency that checks for a secret header (e.g., `X-Admin-Token`). The endpoint should only proceed if the token in the header matches a new, hardcoded secret string.
     - **Reason**: Audit finding: Undocumented Functionality. The endpoint `POST /admin/set-credits/{telegram_user_id}` is unauthenticated, posing a major security risk.
