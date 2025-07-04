@@ -71,7 +71,7 @@ This tier ensures that all configurations, endpoints, and scripts are properly d
     - **Action**: Add a new section under "Functional Requirements" for the `POST /admin/set-credits` endpoint, clearly stating its purpose and that it requires an `X-Admin-Token` header for authentication.
     - **Reason**: Audit finding: Undocumented Functionality. The admin endpoint needs to be documented for operational awareness.
 
-- [ ] **DOCS**: Document the application health check endpoints.
+- [x] **DOCS**: Document the application health check endpoints.
     - **File**: `documentation/operations_manual.md`
     - **Action**: Add a subsection under "Monitoring" that lists the available health endpoints (`/health`, `/ready`, `/telegram`, `/metrics`) and their purpose.
     - **Reason**: Audit finding: Undocumented Functionality. The health endpoints are crucial for operations but were not documented.

@@ -24,7 +24,40 @@ The system is composed of several key services: a Telegram Bot Interface, a Mode
   - **AI Integration:** Google Gemini (direct), OpenRouter (aggregator)
   - **Infrastructure:** PostgreSQL, Redis, Celery, Docker, Kubernetes
 
-## 4. Database Schema
+## 4. API Endpoints
+
+### Autonomous Development Loop Trigger
+- **Endpoint**: `POST /orchestrate/run-loop`
+- **Authentication**: Required (JWT token)
+- **Parameters**:
+  ```json
+  {
+    "project_id": "UUID of the project to run loop for"
+  }
+  ```
+- **Success Response**:
+  ```json
+  {
+    "status": "success",
+    "project_id": "UUID of the project",
+    "result": {
+      "task": "Description of executed task",
+      "message": "Task execution status"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Missing or invalid project_id
+  - `500 Internal Server Error`: Failed to run autonomous loop
+- **Example**:
+  ```bash
+  curl -X POST http://api.example.com/orchestrate/run-loop \
+    -H "Authorization: Bearer {token}" \
+    -H "Content-Type: application/json" \
+    -d '{"project_id": "123e4567-e89b-12d3-a456-426614174000"}'
+  ```
+
+## 5. Database Schema
 
 The system will use the following PostgreSQL schema:
 
