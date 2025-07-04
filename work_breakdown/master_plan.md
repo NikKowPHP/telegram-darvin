@@ -61,7 +61,7 @@ This tier ensures that all configurations, endpoints, and scripts are properly d
     - **Action**: Add the following environment variables to the file with placeholder values: `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`, `ARCHITECT_MODEL`, `IMPLEMENTER_MODEL`, `VERIFICATION_MODEL`, `DEFAULT_GEMINI_MODEL`.
     - **Reason**: Audit finding: Configuration Mismatches. Critical variables for Redis and LLM models were used in the code but not documented.
 
-- [ ] **DOCS**: Update `.env.example` with missing Stripe and Supabase variables.
+- [x] **DOCS**: Update `.env.example` with missing Stripe and Supabase variables.
     - **File**: `ai_dev_bot_platform/.env.example`
     - **Action**: Add the following environment variables to the file with placeholder values: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY`, `MOCK_STRIPE_PAYMENTS`, `SUPABASE_URL`, `SUPABASE_KEY`, `WEBAPP_URL`.
     - **Reason**: Audit finding: Configuration Mismatches. Critical variables for payment processing and file storage were used in the code but not documented.
