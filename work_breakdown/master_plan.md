@@ -81,7 +81,7 @@ This tier ensures that all configurations, endpoints, and scripts are properly d
     - **Action**: Add a new section titled "Utility Scripts" describing the purpose and basic usage of `cli_runner.py` and `seed_db.py`.
     - **Reason**: Audit finding: Undocumented Functionality. The utility scripts were not documented.
 
-- [ ] **DOCS**: Update the architecture map to reflect the consolidated code structure.
+- [x] **DOCS**: Update the architecture map to reflect the consolidated code structure.
     - **File**: `docs/architecture_map.md`
     - **Action**: Review all file paths in the architecture map. Remove any references to files that were in the deleted top-level `app` directory and ensure all paths point to their new locations within `ai_dev_bot_platform/app/`.
     - **Reason**: Audit finding: The codebase structure was changed, and documentation must now reflect the single source of truth.
